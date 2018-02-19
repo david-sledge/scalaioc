@@ -1,0 +1,7 @@
+import scala.ioc._
+
+prototype("say hello", println("No."))
+
+prototype("scope", "Universe")
+
+singleton("requestHandler", "I'll handle it")
