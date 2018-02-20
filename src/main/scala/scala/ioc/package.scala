@@ -18,66 +18,69 @@ package object ioc {
     println("singleton")
   }
 
+  /**
+   * merely a place-holder.  Calls to this method are replaced via macro
+   */
   def ref(id: Any): Any = {
     println("ref")
   }
 
+  /**
+   * merely a place-holder.  Calls to this method are replaced via macro
+   */
   def reloadRef(id: Any): Any = {
     println("reloadRef")
   }
 
+  /**
+   * merely a place-holder.  Calls to this method are replaced via macro
+   */
   def let(name: Any, value: Any, block: Any): Any = {
     println("let")
   }
 
+  /**
+   * merely a place-holder.  Calls to this method are replaced via macro
+   */
   def resource(fileName: String): Any = {
     println("resource")
   }
 
+  /**
+   * Takes the given arguments and assigns them to the given argument names
+   * using the following rules:
+   * - named arguments are handled first
+   */
   // TODO:  create unit test
-  def makeArgs(seqArgNames: Seq[String], args: Seq[Seq[Term.Arg]]) = {
+  def makeArgs(seqArgNames: Seq[String], args: Seq[Seq[Term.Arg]]):
+      (Map[String, Term.Arg], Seq[Term.Arg], Seq[String]) = {
     // address the named arguments first, then handle the ordinal arguments
-    val (ordNames, named, ordinal) = args.flatten.foldRight((seqArgNames, Map[String, Term.Arg](), List[Term.Arg]()))(
-        (t: Term.Arg, acc: (Seq[String], Map[String, Term.Arg], List[Term.Arg])) =>
+    val (named, ordinal, ordNames) = args.flatten.foldRight(Map[String, Term.Arg](), List[Term.Arg](), seqArgNames)(
+        (t: Term.Arg, acc: (Map[String, Term.Arg], List[Term.Arg], Seq[String])) =>
           acc match {
-            case (ordArgNames, map, list) =>
+            case (map, list, ordArgNames) =>
               t match {
                 case Term.Arg.Named(Term.Name(name), expr) => (
-                    {
+                    map + (name -> expr), list, {
                       val ndx = ordArgNames indexOf name
                       if (ndx == -1) ordArgNames else ordArgNames.take(ndx) ++ ordArgNames.drop(ndx + 1)
-                    }
-                    , map + (name -> expr), list)
-                case _ => (ordArgNames, map, t :: list)
+                    })
+                case _ => (map, t :: list, ordArgNames)
               }
             }
         )
 
     // fill the gaps with the ordinal arguments
-    ordinal.foldLeft(named, ordNames)(
-        (acc: (Map[String, Term.Arg], Seq[String]), t: Term.Arg) =>
+    ordinal.foldLeft(named, Seq[Term.Arg](), ordNames)(
+        (acc: (Map[String, Term.Arg], Seq[Term.Arg], Seq[String]), t: Term.Arg) =>
           acc match {
-            case (map, ordArgNames) => {
+            case (map, ord, ordArgNames) => {
               ordArgNames.size match {
-                case 0 => map -> ordArgNames
-                case _ => map + (ordArgNames(0) -> t) -> ordArgNames.drop(1)
+                case 0 => (map, ord :+ t, ordArgNames)
+                case _ => (map + (ordArgNames(0) -> t), ord, ordArgNames.drop(1))
               }
             }
           }
         )
-  }
-
-  private def postManagerJob(name: Term.Name)(args: Seq[Seq[Term.Arg]]): Tree = {
-    val (named, leftovers) = makeArgs(Seq("id", "worker"), args)
-    q"""
-factory.$name(${named("id")}, (c: scala.collection.Map[Any, Any]) => ${named("worker").asInstanceOf[Term]})
-"""
-  }
-
-  private def postRefJob(name: Term.Name)(args: Seq[Seq[Term.Arg]]): Tree = {
-    val (named, leftovers) = makeArgs(Seq("id"), args)
-    q"""
-factory.$name(${named("id")}, c)
-"""
   }
 }

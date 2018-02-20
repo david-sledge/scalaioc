@@ -3,9 +3,12 @@ package scala.ioc
 import scala.collection.concurrent.TrieMap
 import scala.collection._
 
+/**
+ * A factory, the kind with workers including managers.
+ */
 final class Factory(val id: Any)
 {
-  abstract class Manager
+  private abstract class Manager
 
   private case class EvaledThunk(value: Any, worker: Map[Any, Any] => Any) extends Manager
 
@@ -31,17 +34,25 @@ final class Factory(val id: Any)
     }
   }
 
-  // TODO:  create unit test
+  /**
+   * The lazy ones just give you the same-old same-old.
+   */
   def getCachedResult(id: Any, c: Map[Any, Any]) = getResult(true, id, c)
 
-  // TODO:  create unit test
+  /**
+   * Makes even the lazy ones work hard.
+   */
   def putToWork(id: Any, c: Map[Any, Any]) = getResult(false, id, c)
 
-  // TODO:  create unit test
+  /**
+   * Didn't we already hire this gal?
+   */
   def hasManager(id: Any) = managers contains id
 
-  // TODO:  create unit test
-  def getWorker(id: Any): Map[Any, Any] => Any = {
+  /**
+   * Look up someone in the company directory
+   */
+  def getManager(id: Any): Map[Any, Any] => Any = {
     managers(id) match {
       case EvaledThunk(value, worker) => worker
       case Thunk(worker) => worker
@@ -49,18 +60,27 @@ final class Factory(val id: Any)
     }
   }
 
-  // TODO:  create unit test
+  /**
+   * This guy?  Way too eager.  He'll work hard just to produce something you've
+   * he's already given you.
+   */
   def setManager(id: Any, worker: Map[Any, Any] => Any) = {
     managers += id -> Strict(worker)
     ()
   }
 
-  // TODO:  create unit test
+  /**
+   * This guy?  Really lazy.  Does the minimal amount of work.  He'll work the
+   * first time you ask him to, but after that he just hands you stuff he's
+   * already produced unless you force him to do otherwise.
+   */
   def setCacheManager(id: Any, worker: Map[Any, Any] => Any) = {
     managers += id -> Thunk(worker)
     ()
   }
 
-  // TODO:  create unit test
+  /**
+   * Get the managers on roll.
+   */
   def getManagerIds() = managers.keys
 }

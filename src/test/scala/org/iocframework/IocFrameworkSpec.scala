@@ -1,12 +1,12 @@
-package scala.ioc
+package org.iocframework
 
-import scala.collection._
-import org.iocframework._
 import org.scalatest._
-import scala.tools.reflect.ToolBox
+import scala.collection._
 import scala.meta._
+import org.scalactic.source.Position.apply
+import scala.ioc.Factory
 
-class Spec extends FlatSpec with Matchers {
+class IocFrameworkSpec extends FlatSpec with Matchers {
 
   "Something" should "do something else" in {
 //    val q"$expr(...$args)" = q"name(argOrd, param = argNamed)"

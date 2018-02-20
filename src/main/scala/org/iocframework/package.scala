@@ -8,9 +8,12 @@ import scala.reflect.runtime.universe.runtimeMirror
 
 package object iocframework {
   // TODO:  scaladoc
-  def staffFactory(conf: String, factory: Factory = new Factory(), staffing: Staffing = new Staffing()) = {
-    val code = staffing.transformIoC(s"(factory: scala.ioc.Factory) => (staffing: scala.ioc.Staffing) => {$conf}".parse[Stat].get).syntax
-    println(code)
+  def staffFactory(conf: String, factory: Factory = new Factory(),
+      staffing: Staffing = new Staffing()): (Factory, Staffing) = {
+    val code = staffing.transformIoC(s"""
+(factory: scala.ioc.Factory) =>
+  (staffing: scala.ioc.Staffing) => {$conf}
+""".parse[Stat].get).syntax
     // obtain toolbox
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
     // generate the AST
