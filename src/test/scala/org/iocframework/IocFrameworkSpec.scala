@@ -8,7 +8,7 @@ import scala.ioc.Factory
 
 class IocFrameworkSpec extends FlatSpec with Matchers {
 
-  "Something" should "do something else" in {
+  "Staffing a factory" should "populate it with workers" in {
 //    val q"$expr(...$args)" = q"name(argOrd, param = argNamed)"
 //    println(args.flatten.structure)
 //    println(expr.structure)

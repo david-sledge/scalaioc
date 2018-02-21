@@ -21,7 +21,7 @@ class FactorySpec extends FlatSpec with Matchers {
 
   "Lazy manager" should "produce the same thing until forced otherwise" in {
     val factory = new Factory()
-    factory.setCacheManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance()}")
+    factory.setLazyManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance()}")
     val result = factory.putToWork("lazyManager", Map())
     result should be (factory.getCachedResult("lazyManager", Map()))
     result should not be (factory.putToWork("lazyManager", Map()))

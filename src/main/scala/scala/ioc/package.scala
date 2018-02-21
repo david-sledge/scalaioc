@@ -1,7 +1,6 @@
 package scala
 
 import meta._
-//import scala.collection.immutable.{Seq, List}
 
 package object ioc {
   /**
@@ -52,7 +51,7 @@ package object ioc {
    * - named arguments are handled first
    */
   // TODO:  create unit test
-  def makeArgs(seqArgNames: Seq[String], args: Seq[Seq[Term.Arg]]):
+  def mapArgs(seqArgNames: Seq[String], args: Seq[Seq[Term.Arg]]):
       (Map[String, Term.Arg], Seq[Term.Arg], Seq[String]) = {
     // address the named arguments first, then handle the ordinal arguments
     val (named, ordinal, ordNames) = args.flatten.foldRight(Map[String, Term.Arg](), List[Term.Arg](), seqArgNames)(

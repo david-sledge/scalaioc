@@ -5,35 +5,35 @@ import scala.meta._
 
 final class Staffing {
   private def postManagerJob(name: Term.Name)(args: Seq[Seq[Term.Arg]]): Tree = {
-    val (named, _, leftovers) = makeArgs(Seq("id", "worker"), args)
+    val (named, _, leftovers) = mapArgs(Seq("id", "worker"), args)
     q"""
 factory.$name(${named("id")}, (c: scala.collection.Map[Any, Any]) => ${named("worker").asInstanceOf[Term]})
 """
   }
 
   private def postRefJob(name: Term.Name)(args: Seq[Seq[Term.Arg]]): Tree = {
-    val (named, _, leftovers) = makeArgs(Seq("id"), args)
+    val (named, _, leftovers) = mapArgs(Seq("id"), args)
     q"""
 factory.$name(${named("id")}, c)
 """
   }
 
   private val recruiters = TrieMap[String, Seq[Seq[Term.Arg]] => Tree](
-      "singleton" -> postManagerJob(q"setCacheManager"),
+      "singleton" -> postManagerJob(q"setLazyManager"),
       "prototype" -> postManagerJob(q"setManager"),
       "ref" -> postRefJob(q"getCachedResult"),
       "reloadRef" -> postRefJob(q"putToWork"),
       "let" -> (args => {
-        val (named, _, leftovers) = makeArgs(Seq("id", "value", "block"), args)
+        val (named, _, leftovers) = mapArgs(Seq("id", "value", "block"), args)
         q"""((c: scala.collection.Map[Any, Any]) => ${named("block").asInstanceOf[Term]})
 (c + (${named("id").asInstanceOf[Term]} -> ${named("value").asInstanceOf[Term]}))"""
       }),
       "resource" -> (args => {
-        val (named, _, leftovers) = makeArgs(Seq("fileName"), args)
+        val (named, _, leftovers) = mapArgs(Seq("fileName"), args)
         q"org.iocframework.staffFactoryFromFile(${named("fileName")}, factory, staffing)"
       }),
       "recruiterDef" -> (args => {
-        val (named, _, leftovers) = makeArgs(Seq("name", "defn"), args)
+        val (named, _, leftovers) = mapArgs(Seq("name", "defn"), args)
         org.iocframework.staffFactory(
             q"staffing.addRecruiter(${named("name")}, ${named("defn")})".syntax, null, this)
         q"()"

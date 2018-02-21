@@ -74,7 +74,7 @@ final class Factory(val id: Any)
    * first time you ask him to, but after that he just hands you stuff he's
    * already produced unless you force him to do otherwise.
    */
-  def setCacheManager(id: Any, worker: Map[Any, Any] => Any) = {
+  def setLazyManager(id: Any, worker: Map[Any, Any] => Any) = {
     managers += id -> Thunk(worker)
     ()
   }
