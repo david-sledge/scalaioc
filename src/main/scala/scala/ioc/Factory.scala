@@ -82,7 +82,13 @@ final class Factory(val id: Any)
   /**
    * Get the managers on roll.
    */
-  def getManagerIds() = managers.keys
+  def getManagerIds = managers.keys
+
+  def clearCache =
+    managers.foreach {
+      case (id, EvaledThunk(_, worker)) => managers += id -> Thunk(worker)
+      case _ => ()
+    }
 }
 
 object Factory {
