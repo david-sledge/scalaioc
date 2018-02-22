@@ -86,5 +86,5 @@ final class Factory(val id: Any)
 }
 
 object Factory {
-  def apply(id: Any) = new Factory(id)
+  def apply(id: Any = "factory") = new Factory(id)
 }
