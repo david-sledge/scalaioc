@@ -26,4 +26,9 @@ class FactorySpec extends FlatSpec with Matchers {
     result should be (factory.getCachedResult("lazyManager", Map()))
     result should not be (factory.putToWork("lazyManager", Map()))
   }
+
+  "The companion Factory object" should "allow construction without the \"new\" keyword" in {
+    val factory = Factory()
+    factory shouldBe (a [Factory])
+  }
 }

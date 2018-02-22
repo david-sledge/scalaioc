@@ -84,3 +84,7 @@ final class Factory(val id: Any)
    */
   def getManagerIds() = managers.keys
 }
+
+object Factory {
+  def apply(id: Any) = new Factory(id)
+}
