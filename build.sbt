@@ -20,7 +20,10 @@ version := "1.0"
 // mostly only necessary if you intend to publish your library's binaries on a
 // place like Sonatype or Bintray.
 
-scalacOptions += "-Xplugin-require:macroparadise"
+scalacOptions ++= Seq(
+  "-Xplugin-require:macroparadise",
+  "-deprecation"
+)
 
 // Want to use a published library in your project?
 // You can define other libraries as dependencies in your build like this:

@@ -41,6 +41,8 @@ prototype("scope", "World")
 prototype("scoped hello", println(s"Hello, ${ref("scope")}!"))
 
 prototype("scoped hello2", let("who", ref("scope"), ref("hello to...")))
+
+//test("idTest", "valueTest", "blockTest")
 """
     val (factory, _) = staffFactory(conf)
     factoryCalls(factory)

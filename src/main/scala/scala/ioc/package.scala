@@ -45,6 +45,21 @@ package object ioc {
     println("resource")
   }
 
+  def flattenBlock(block: Term.Block): Seq[Stat] = block match {
+    case Term.Block(s) => s.foldRight(Seq[Stat]())(
+        (t, acc) => t match {
+          case b @ Term.Block(_) => acc ++ flattenBlock(b)
+          case _ => acc :+ t
+        }
+      )
+  }
+
+  def toWorker(stat: Term) = {
+    q"""
+(c: scala.collection.Map[Any, Any]) => $stat
+"""
+  }
+
   /**
    * Takes the given arguments and assigns them to the given argument names
    * using the following rules:
@@ -52,26 +67,26 @@ package object ioc {
    */
   // TODO:  create unit test
   def mapArgs(seqArgNames: Seq[String], args: Seq[Seq[Term.Arg]]):
-      (Map[String, Term.Arg], Seq[Term.Arg], Seq[String]) = {
+      (Map[String, Term], Seq[Term], Seq[String]) = {
     // address the named arguments first, then handle the ordinal arguments
-    val (named, ordinal, ordNames) = args.flatten.foldRight(Map[String, Term.Arg](), List[Term.Arg](), seqArgNames)(
-        (t: Term.Arg, acc: (Map[String, Term.Arg], List[Term.Arg], Seq[String])) =>
+    val (named, ordinal, ordNames) = args.flatten.foldRight(Map[String, Term](), List[Term](), seqArgNames)(
+        (t, acc) =>
           acc match {
             case (map, list, ordArgNames) =>
               t match {
                 case Term.Arg.Named(Term.Name(name), expr) => (
-                    map + (name -> expr), list, {
+                    map + (name -> expr.asInstanceOf[Term]), list, {
                       val ndx = ordArgNames indexOf name
                       if (ndx == -1) ordArgNames else ordArgNames.take(ndx) ++ ordArgNames.drop(ndx + 1)
                     })
-                case _ => (map, t :: list, ordArgNames)
+                case _ => (map, t.asInstanceOf[Term] :: list, ordArgNames)
               }
             }
         )
 
     // fill the gaps with the ordinal arguments
-    ordinal.foldLeft(named, Seq[Term.Arg](), ordNames)(
-        (acc: (Map[String, Term.Arg], Seq[Term.Arg], Seq[String]), t: Term.Arg) =>
+    ordinal.foldLeft(named, Seq[Term](), ordNames)(
+        (acc, t) =>
           acc match {
             case (map, ord, ordArgNames) => {
               ordArgNames.size match {

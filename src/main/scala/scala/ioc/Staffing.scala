@@ -7,7 +7,7 @@ final class Staffing {
   private def postManagerJob(name: Term.Name)(args: Seq[Seq[Term.Arg]]): Tree = {
     val (named, _, leftovers) = mapArgs(Seq("id", "worker"), args)
     q"""
-factory.$name(${named("id")}, (c: scala.collection.Map[Any, Any]) => ${named("worker").asInstanceOf[Term]})
+factory.$name(${named("id")}, ${toWorker(named("worker"))})
 """
   }
 
@@ -19,14 +19,15 @@ factory.$name(${named("id")}, c)
   }
 
   private val recruiters = TrieMap[String, Seq[Seq[Term.Arg]] => Tree](
+      //"test" -> (args => q"""let("id", "value", "block")"""),
       "singleton" -> postManagerJob(q"setLazyManager"),
       "prototype" -> postManagerJob(q"setManager"),
       "ref" -> postRefJob(q"getCachedResult"),
       "reloadRef" -> postRefJob(q"putToWork"),
       "let" -> (args => {
         val (named, _, leftovers) = mapArgs(Seq("id", "value", "block"), args)
-        q"""((c: scala.collection.Map[Any, Any]) => ${named("block").asInstanceOf[Term]})
-(c + (${named("id").asInstanceOf[Term]} -> ${named("value").asInstanceOf[Term]}))"""
+        q"""${toWorker(named("block"))}
+(c + (${named("id")} -> ${named("value")}))"""
       }),
       "resource" -> (args => {
         val (named, _, leftovers) = mapArgs(Seq("fileName"), args)
@@ -41,14 +42,18 @@ factory.$name(${named("id")}, c)
     )
 
   // TODO:  create unit test
-  def transformIoC(defn: Tree) = {
+  def transformIoC(defn: Tree): Tree = {
     defn.transform {
-      case t @ q"$expr(...$args)" =>
+      case t @ q"$expr(...$args)" => {
+        //println("*******************************************************************************")
+        //println(t.syntax)
         expr match {
-          case Term.Name(name) =>
-            if (recruiters contains name) recruiters(name)(args) else t
+          case Term.Name(name) => {
+            if (recruiters contains name) transformIoC(recruiters(name)(args)) else t
+          }
           case _ => t
         }
+      }
       case t => t
     }
   }
@@ -63,4 +68,8 @@ factory.$name(${named("id")}, c)
 
   // TODO:  create unit test
   def hasRecruiter(name: String) = recruiters contains name
+}
+
+object Staffing {
+  def apply() = new Staffing
 }
