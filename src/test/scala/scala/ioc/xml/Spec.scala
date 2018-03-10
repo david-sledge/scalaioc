@@ -1,63 +1,61 @@
 package scala.ioc
 
 import org.scalatest._
+import scala.ioc.xml._
+import scala.xml.stream._
+import scala.meta._
+import org.iocframework.staffFactory
 
 class Spec extends FlatSpec with Matchers {
-//  def postJobXml(args: Seq[Seq[Term.Arg]]): Tree = {
-//    val (argMap, leftovers, unspecified) =
-//      mapArgs(Seq("version", "encoding", "nodes"), args)
-//    q"""
-//c("xmlWriter").writeStartDocument(
-//  ${argMap("encoding")},
-//  ${argMap("version")})"""
-//      ++ postJobContent(Seq(argMap("nodes") match {
-//        case q"""cn(..$nodes)""" => nodes
-//        case node => Seq(node)
-//      }))
-//      ++ q"""
-//val (xmlWriter, typeclass) = c("xmlWriter").asInstanceof[(Any, XmlWriterTypeclass[_])]
-//typeclass.writeEndDocument(typeclass.cast(xmlWriter))
-//"""
-//    }
-//  }
+  "XML worker defs" should "output using an XML writer" in {
+    val staffing = Staffing()
+    staffing.addRecruiter("scala.xml", "xml", postJobXml)
+    //staffing.addRecruiter("scala.xml", "dtd", postJobDtd)
+    staffing.addRecruiter("scala.xml.element", null, postJobElement)
+    val conf = """
+`namespace x|scala.xml`
+`namespace|scala.xml.element`
+`namespace ioc|scala.ioc`
 
-//  def postJobContent(args: Seq[Seq[Term.Arg]]): Tree = {
-//    Term.Block(args.flatten.foldRight(Seq())(
-//        (node, acc) => acc :+ q""")
-//let("char",
-//  $node,
-//  if (c("char") == ()) () else c("xmlWriter").writeCharacters(c("char").toString))"""
-//      )
-//  }
+`#ioc|prototype`("xml", `#x|xml`(`#html`))
+"""
+    val xformed = staffing.transformIoC(s"{$conf}".parse[Stat].get)
+ 
+    val (factory, _) = staffFactory(conf, staffing = staffing)
+//    val xformed = staffing.transformIoC(
+//        q"""
+//`namespace x|scala.xml`
+//`namespace|scala.xml.element`
 //
-//  def postJobDtd(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("dtd"), args)
-//    q"""c("xmlWriter").writeDTD(${argMap("dtd").asInstanceOf[Term]})"""
-//  }
-//
-//  def postJobComment(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
-//    q"""c("xmlWriter").writeComment(${argMap("cdata").asInstanceOf[Term]})"""
-//  }
-//
-//  def postJobProcInstr(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("target", "data"), args)
-//    q"""c("xmlWriter").writeProcessingInstruction(${argMap("target").asInstanceOf[Term]}, ${argMap("data").asInstanceOf[Term]})"""
-//  }
-//
-//  def postJobCdata(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
-//    q"""c("xmlWriter").writeCData(${argMap("cdata").asInstanceOf[Term]})"""
-//  }
-//
-//  def postJobElement(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("tagName", "attrs", "nodes"), args)
-//    q"""c("xmlWriter").writeStartElement(${argMap("tagName").asInstanceOf[Term]})"""
-//      ++ argMap.foldRight(Seq()) {
-//        (attr, acc) => {
-//          case q"($name, $value)" => acc :+ q"""c("xmlWriter").writeAttribute($name, $value)"""
-//        }
-//      }
-//      :+ q"""c("xmlWriter").writeEndElement"""
-//  }
+//`#x|xml`(encoding = "utf-8", version = "1.0"
+//, dtd = "<!DOCTYPE html>"
+//, `#html`(xmlns="http://www.w3.org/1999/xhtml", lang="en-us"
+//  , "insert text here", "comments can be inseted, too"
+//  )
+//)
+//"""
+//    )
+//    println(xformed)
+    xformed.syntax shouldBe q"""{
+  factory.setManager("xml", (c: Map[Any, Any]) => {
+    val (writer, typeclass) = scala.ioc.xml.f(c("xmlWriter"))
+    typeclass.writeStartDocument(typeclass.cast(writer))
+    ((c: Map[Any, Any]) => {
+      ((c: Map[Any, Any]) => if (c("cdata") == ()) () else {
+        val (writer, typeclass) = scala.ioc.xml.f(c("xmlWriter"))
+        typeclass.writeCharacters(typeclass.cast(writer), c("cdata").toString)
+      })(c + ("cdata" -> {
+        val (writer, typeclass) = scala.ioc.xml.f(c("xmlWriter"))
+        typeclass.writeStartElement(typeclass.cast(writer), "html")
+        ((c: Map[Any, Any]) => {})(c)
+        typeclass.writeEndElement(typeclass.cast(writer))
+      }))
+    })(c)
+    typeclass.writeEndDocument(typeclass.cast(writer))
+  })
+}""".syntax
+    val stringWriter = new java.io.StringWriter()
+    factory.putToWork("xml", Map("xmlWriter" -> (javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(stringWriter), XmlStreamWriter)))
+    stringWriter.toString shouldBe "<?xml version=\"1.0\" ?><html></html>"
+  }
 }

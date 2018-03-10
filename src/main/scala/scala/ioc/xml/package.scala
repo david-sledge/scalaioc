@@ -25,11 +25,22 @@ package object xml {
 """ :: acc))
   }
 
-  def postJobXml(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
-    val (argMap, leftovers, unspecified) =
-      mapArgs(Seq("version", "encoding", "dtd"), args)
+  def postJobXml(namespaceName: String, localName: String)(args: Seq[Term.Arg])
+  : Tree = {
+    val (argMap, leftovers, _) = mapArgs(Seq(), args)
+
     Term.Block(
-        xmlWriter(q"writeStartDocument", Seq[Term](argMap("encoding"), argMap("version"))) ++
+        xmlWriter(q"writeStartDocument",
+            if (argMap.contains("version"))
+              if (argMap.contains("encoding"))
+                Seq[Term](argMap("encoding"), argMap("version"))
+              else
+                Seq[Term](argMap("version"))
+            else if (argMap contains "encoding")
+              Seq[Term](argMap("encoding"), Lit.String("1.0"))
+            else
+              Seq[Term]()
+          ) ++
         (
           (
             if (argMap contains "dtd")
@@ -49,6 +60,21 @@ package object xml {
     Term.Block(xmlWriter(q"writeDTD", Seq(argMap("dtd"))))
   }
 
+  def postJobCdata(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+    val (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
+    Term.Block(xmlWriter(q"writeCData", Seq(argMap("cdata"))))
+  }
+
+  def postJobComment(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+    val (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
+    Term.Block(xmlWriter(q"writeComment", Seq(argMap("cdata"))))
+  }
+
+  def postJobProcInstr(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+    val (argMap, leftovers, unspecified) = mapArgs(Seq("target", "data"), args)
+    Term.Block(xmlWriter(q"writeProcessingInstruction", Seq(argMap("target"), argMap("data"))))
+  }
+
   def postJobElement(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq(), args)
     Term.Block(
@@ -63,19 +89,4 @@ $k.toString, $v.toString)""" :: a
         }
     )
   }
-
-//  def postJobComment(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
-//    q"""c("xmlWriter").writeComment(${argMap("cdata").asInstanceOf[Term]})"""
-//  }
-//
-//  def postJobProcInstr(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("target", "data"), args)
-//    q"""c("xmlWriter").writeProcessingInstruction(${argMap("target").asInstanceOf[Term]}, ${argMap("data").asInstanceOf[Term]})"""
-//  }
-//
-//  def postJobCdata(args: Seq[Seq[Term.Arg]]): Tree = {
-//    (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
-//    q"""c("xmlWriter").writeCData(${argMap("cdata").asInstanceOf[Term]})"""
-//  }
 }

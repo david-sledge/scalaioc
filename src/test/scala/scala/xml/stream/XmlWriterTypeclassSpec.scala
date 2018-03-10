@@ -5,8 +5,8 @@ import javax.xml.stream.XMLOutputFactory
 
 class XmlWriterTypeclassSpec extends FlatSpec with Matchers {
   "An XmlWriter implementation" should "spit out XML" in {
-    val wrtr = XMLOutputFactory.newInstance.createXMLStreamWriter(System.out)
-    val obj: Any = (wrtr, XmlStreamWriter)
+    //val wrtr = XMLOutputFactory.newInstance.createXMLStreamWriter(System.out)
+    val obj: Any = (javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(System.out), XmlStreamWriter)
     //val (writer, tcImpl) = obj.asInstanceOf[(Any, XmlWriterTypeclass[T])]
     def f[T] = obj.asInstanceOf[(Any, XmlWriterTypeclass[T])]
     val (writer, tcImpl) = f

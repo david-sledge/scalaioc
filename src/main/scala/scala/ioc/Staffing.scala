@@ -55,7 +55,7 @@ ${named("defn")})""".syntax, null, this)
 
   def transformIoC(defn: Tree): Tree = {
 
-    val referrers = scala.collection.concurrent.TrieMap[String, String]()
+    val referrers = scala.collection.mutable.Map[String, String]()
 
     def handlePrefix(name: String, args: Seq[Term.Arg], els: Term) = {
       if (name.startsWith("#")) {
@@ -67,7 +67,7 @@ ${named("defn")})""".syntax, null, this)
       
             if (namespaceNameEnd == -1)
               // default namespace
-              (referrers(null), name.substring(1))
+              (if (referrers contains null) referrers(null) else null, name.substring(1))
             else if (namespaceNameEnd == 1)
               // no namespace
               (null, name.substring(namespaceNameEnd + 1))

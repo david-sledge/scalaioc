@@ -14,13 +14,11 @@ package object iocframework {
 (factory: scala.ioc.Factory) =>
   (staffing: scala.ioc.Staffing) => {$conf}
 """.parse[Stat].get).syntax
-    //println(code)
     // obtain toolbox
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
     // generate the AST
     val tree = tb.parse(code)
     // compile
-    //println(tree)
     val f = tb.compile(tree)
     // ... execute
     f().asInstanceOf[Factory => Staffing => Any](factory)(staffing)

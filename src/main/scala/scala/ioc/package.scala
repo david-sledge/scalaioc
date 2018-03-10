@@ -18,8 +18,8 @@ package object ioc {
    * - ordinal arguments will be assigned to the variable names in the order
    *   they appear
    */
-  def mapArgs(seqArgNames: immutable.Seq[String], args: immutable.Seq[Term.Arg]):
-      (Map[String, Term], immutable.Seq[Term.Arg], immutable.Seq[String]) = {
+  def mapArgs(seqArgNames: immutable.Seq[String], args: immutable.Seq[Term.Arg])
+  = {
     // address the named arguments first, then handle the ordinal arguments
     val (named, ordinal, ordNames) = args.foldRight(Map[String, Term](), List[Term.Arg](), seqArgNames)(
         (t, acc) =>
