@@ -35,8 +35,8 @@ factory.$name(${named("id")}, c)
             "let" -> ((namespaceName, localName) => args => {
               val (named, _, leftovers) =
                 mapArgs(Seq("id", "value", "block"), args)
-              q"""${toWorker(named("block"))}
-(c + (${named("id")} -> ${named("value")}))"""
+              q"""${toWorker(named("block"))}(
+c + (${named("id")} -> ${named("value")}))"""
             }),
             "resource" -> ((namespaceName, localName) => args => {
               val (named, _, leftovers) = mapArgs(Seq("fileName"), args)
@@ -114,6 +114,7 @@ ${named("defn")})""".syntax, null, this)
       }
     }
 
+    // TODO: handle infix and prefix applications
     defn.transform {
       case t @ Term.Apply(Term.Name(name), args) => handlePrefix(name, args, t)
       case t @ Term.Block(stats) => {
@@ -130,7 +131,7 @@ ${named("defn")})""".syntax, null, this)
   }
 
   // TODO:  create unit test
-  // TODO:  prevent core recruiters from being removed or replaced
+  // TODO:  possibly prevent any recruiters from being removed or replaced
   def addRecruiter(namespaceName: String, localName: String,
       recruiter: (String, String) => Seq[Term.Arg] => Tree) =
     if (namespaceName == Staffing.ScalaIocNamespaceName) () // TODO:  throw exception

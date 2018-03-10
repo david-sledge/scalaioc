@@ -3,20 +3,6 @@ package scala.ioc
 import org.scalatest._
 
 class Spec extends FlatSpec with Matchers {
-  def xml(version: String, encoding: String)(nodes: Any*): Unit = {}
-
-  def dtd(dtd: String): Unit = {}
-
-  def ^(nodes: Any*): Unit = {}
-
-  def !(cdata: String): Unit = {}
-
-  def ?(target: String, data: String): Unit = {}
-
-  def cdata(cdata: String): Unit = {}
-
-  def </>(tagName: String)(attrs: (String, String)*)(nodes: Any*): Unit = {}
-
 //  def postJobXml(args: Seq[Seq[Term.Arg]]): Tree = {
 //    val (argMap, leftovers, unspecified) =
 //      mapArgs(Seq("version", "encoding", "nodes"), args)
