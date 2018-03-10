@@ -1,7 +1,6 @@
 package scala.ioc
 
 import scala.collection.concurrent.TrieMap
-import scala.collection._
 
 /**
  * A factory, the kind with workers including managers.

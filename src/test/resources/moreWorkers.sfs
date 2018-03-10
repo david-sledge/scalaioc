@@ -1,7 +1,7 @@
-import scala.ioc._
+`namespace|scala.ioc`
 
-prototype("say hello", println("No."))
+`#prototype`("say hello", println("No."))
 
-prototype("scope", "Universe")
+`#prototype`("scope", "Universe")
 
-singleton("requestHandler", "I'll handle it")
+`#singleton`("requestHandler", "I'll handle it")

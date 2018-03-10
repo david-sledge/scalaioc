@@ -1,11 +1,10 @@
 package scala.ioc
 
 import org.scalatest._
-import scala.collection._
 
 class FactorySpec extends FlatSpec with Matchers {
   "A factory" should "have managers" in {
-    val factory = new Factory()
+    val factory = Factory()
     val worker = (c: Map[Any, Any]) => "I'm a manager"
     factory.setManager("manager", worker)
     factory.hasManager("manager") should be (true)
@@ -13,7 +12,7 @@ class FactorySpec extends FlatSpec with Matchers {
   }
 
   it should "note who's on roll" in {
-    val factory = new Factory()
+    val factory = Factory()
     val worker = (c: Map[Any, Any]) => "I'm a manager"
     factory.setManager("manager", worker)
     factory.getManagerIds should be (Set("manager"))
@@ -33,7 +32,7 @@ class FactorySpec extends FlatSpec with Matchers {
   }
 
   "Lazy manager" should "produce the same thing until forced otherwise" in {
-    val factory = new Factory()
+    val factory = Factory()
     factory.setLazyManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance()}")
     val result = factory.putToWork("lazyManager", Map())
     result should be (factory.getCachedResult("lazyManager", Map()))
