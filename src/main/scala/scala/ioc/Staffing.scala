@@ -155,7 +155,6 @@ ${named("defn")})""".syntax, null, this)
   private def hasRecruitersInNamespace(namespaceName: String) =
     (recruiters contains namespaceName)
 
-  // TODO:  create unit test
   def hasRecruiter(namespaceName: String, localName: String) =
     hasRecruitersInNamespace(namespaceName: String) &&
     (
@@ -163,7 +162,6 @@ ${named("defn")})""".syntax, null, this)
         (recruiters(namespaceName) contains null)
     )
 
-  // TODO:  create unit test
   def hasOwnRecruiter(namespaceName: String, localName: String) =
     hasRecruitersInNamespace(namespaceName: String) &&
     (recruiters(namespaceName) contains localName)

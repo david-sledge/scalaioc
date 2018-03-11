@@ -3,6 +3,7 @@ package scala.ioc
 import scala.ioc.xml._
 import org.scalatest._
 import scala.meta._
+import scala.collection.immutable.Seq
 
 class StaffingSpec extends FlatSpec with Matchers {
   "The IoC transformer" should "manipulate the scala AST" in {
@@ -20,47 +21,31 @@ class StaffingSpec extends FlatSpec with Matchers {
     staffing.addRecruiter("scala.xml", "?", postJobProcInstr)
     staffing.addRecruiter("scala.xml.element", null, postJobElement)
 
-    (() => {
-      val namespaceName = "scala.xml"
-      val localName = "xml"
-      val workerDefn = postJobXml
-      val args = scala.collection.immutable.Seq()
-      (staffing.getRecruiter("scala.xml", "xml") match {
-        case Some(f) => f(args)
-        case None => q"nope"
-      }).structure shouldBe workerDefn("scala.xml", "xml")(args).structure
-    })()
-
-    // TODO:  don't repeat yourself
-    (() => {
-      val namespaceName = "scala.xml"
-      val localName = "dtd"
-      val workerDefn: (String, String) => (scala.collection.immutable.Seq[Term.Arg]) => Tree = postJobDtd
-      val args = scala.collection.immutable.Seq(Lit.String(""))
+    def testWorkerDef(namespaceName: String, localName: String,
+        workerDefn: (String, String) => Seq[Term.Arg] => Tree,
+        args: Seq[Term.Arg]) = {
       staffing.getRecruiter(namespaceName, localName) match {
         case Some(f) => f(args).structure shouldBe workerDefn(namespaceName, localName)(args).structure
         case None => fail(s"Did not find a recruiter for $localName in namespace $namespaceName")
       }
-    })()
-
-    staffing.getRecruiter("scala.xml", "cdata") match {
-      case Some(f) => f(scala.collection.immutable.Seq(Lit.String(""))).structure shouldBe postJobCdata("scala.xml", "cdata")(scala.collection.immutable.Seq(Lit.String(""))).structure
-      case None => 3 shouldBe 5
     }
 
-    staffing.getRecruiter("scala.xml", "!") match {
-      case Some(f) => f(scala.collection.immutable.Seq(Lit.String(""))).structure shouldBe postJobComment("scala.xml", "!")(scala.collection.immutable.Seq(Lit.String(""))).structure
-      case None => 3 shouldBe 5
-    }
+    testWorkerDef("scala.xml", "xml", postJobXml, Seq())
+    testWorkerDef("scala.xml", "dtd", postJobDtd, Seq(Lit.String("")))
+    testWorkerDef("scala.xml", "cdata", postJobCdata, Seq(Lit.String("")))
+    testWorkerDef("scala.xml", "!", postJobComment, Seq(Lit.String("")))
+    testWorkerDef("scala.xml", "?", postJobProcInstr, Seq(Lit.String("")))
+    testWorkerDef("scala.xml.element", "html", postJobElement, Seq(Lit.String("")))
 
-    staffing.getRecruiter("scala.xml", "?") match {
-      case Some(f) => f(scala.collection.immutable.Seq(Lit.String(""))).structure shouldBe postJobProcInstr("scala.xml", "?")(scala.collection.immutable.Seq(Lit.String(""))).structure
-      case None => 3 shouldBe 5
-    }
+    staffing.hasRecruiter("scala.xml", "dtd") shouldBe true
+    staffing.hasOwnRecruiter("scala.xml", "dtd") shouldBe true
+    staffing.hasRecruiter("scala.xml.element", "dtd") shouldBe true
+    staffing.hasOwnRecruiter("scala.xml.element", "dtd") shouldBe false
+    staffing.hasRecruiter("scala.xml", null) shouldBe false
+    staffing.hasOwnRecruiter("scala.xml", null) shouldBe false
 
-    staffing.getRecruiter("scala.xml.element", "html") match {
-      case Some(f) => f(scala.collection.immutable.Seq(Lit.String(""))).structure shouldBe postJobElement("scala.xml.element", "html")(scala.collection.immutable.Seq(Lit.String(""))).structure
-      case None => 3 shouldBe 5
-    }
+    staffing.hasRecruiter("scala.xml.element", "dtd") shouldBe true
+    staffing.hasOwnRecruiter("scala.xml.element", "dtd") shouldBe false
+    staffing.hasRecruiter("scala.xml.element", null) shouldBe true
   }
 }
