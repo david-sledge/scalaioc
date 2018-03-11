@@ -36,12 +36,12 @@ final class Factory(val id: Any)
   /**
    * The lazy ones just give you the same-old same-old.
    */
-  def getCachedResult(id: Any, c: Map[Any, Any]) = getResult(true, id, c)
+  def getCachedResult(id: Any, c: Map[Any, Any] = Map()) = getResult(true, id, c)
 
   /**
    * Makes even the lazy ones work hard.
    */
-  def putToWork(id: Any, c: Map[Any, Any]) = getResult(false, id, c)
+  def putToWork(id: Any, c: Map[Any, Any] = Map()) = getResult(false, id, c)
 
   /**
    * Didn't we already hire this gal?
@@ -88,6 +88,15 @@ final class Factory(val id: Any)
       case (id, EvaledThunk(_, worker)) => managers += id -> Thunk(worker)
       case _ => ()
     }
+
+  def fireManager(id: Any) = {
+    managers -= id
+    ()
+  }
+
+  def fireEveryone() = {
+    managers.clear()
+  }
 }
 
 object Factory {

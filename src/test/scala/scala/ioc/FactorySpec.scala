@@ -43,4 +43,18 @@ class FactorySpec extends FlatSpec with Matchers {
     val factory = Factory()
     factory shouldBe (a [Factory])
   }
+
+  "In a factory it" should "be possible to fire workers" in {
+    val factory = Factory()
+    factory.setLazyManager("Mr. Sloth", c => {})
+    factory.setManager("Mr. Eager", c => {})
+    factory.hasManager("Mr. Sloth") shouldBe true
+    factory.hasManager("Mr. Eager") shouldBe true
+    factory.fireManager("Mr. Sloth")
+    factory.hasManager("Mr. Sloth") shouldBe false
+    factory.hasManager("Mr. Eager") shouldBe true
+    factory.fireEveryone()
+    factory.hasManager("Mr. Sloth") shouldBe false
+    factory.hasManager("Mr. Eager") shouldBe false
+  }
 }

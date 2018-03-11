@@ -25,12 +25,12 @@ class IocFrameworkSpec extends FlatSpec with Matchers {
   }
 
   def factoryCalls(factory: Factory) = {
-    factory.putToWork("say hello", Map())
-    factory.putToWork("say hello once", Map())
+    factory.putToWork("say hello")
+    factory.putToWork("say hello once")
     factory.putToWork("hello to...", Map("who" -> "IoC World"))
     factory.putToWork("say hello once again", Map("who" -> "IoC World"))
-    factory.putToWork("say hello once again, NOW!", Map())
-    factory.putToWork("scoped hello", Map())
-    factory.putToWork("scoped hello2", Map())
+    factory.putToWork("say hello once again, NOW!")
+    factory.putToWork("scoped hello")
+    factory.putToWork("scoped hello2")
   }
 }
