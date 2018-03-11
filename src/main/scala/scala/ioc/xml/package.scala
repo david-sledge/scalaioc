@@ -72,7 +72,11 @@ package object xml {
 
   def postJobProcInstr(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq("target", "data"), args)
-    Term.Block(xmlWriter(q"writeProcessingInstruction", Seq(argMap("target"), argMap("data"))))
+    Term.Block(xmlWriter(q"writeProcessingInstruction",
+        if (argMap contains "data")
+          Seq(argMap("target"), argMap("data"))
+        else
+          Seq(argMap("target"))))
   }
 
   def postJobElement(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
