@@ -21,7 +21,7 @@ class IocFrameworkSpec extends FlatSpec with Matchers {
     val (factory, _) = staffFactory(conf)
     val (fFactory, _) = staffFactoryFromFile("src/test/resources/FactoryStaff.sfs")
     factoryCalls(fFactory)
-    println(fFactory.getCachedResult("requestHandler", Map()))
+    fFactory.getCachedResult("requestHandler", Map()) shouldBe "I'll handle it"
   }
 
   def factoryCalls(factory: Factory) = {

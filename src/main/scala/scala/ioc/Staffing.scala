@@ -80,7 +80,6 @@ ${named("defn")})""".syntax, null, this)
             // explicitly named namespace
             (name.substring(1, referrerEnd), name.substring(referrerEnd + 1))
         }
-        //println(s"Here's where the recruiter look up for $namespaceName#$localName ($name) is performed with args $args")
         getRecruiter(namespaceName, localName) match {
           case Some(recruiter) => recruiter(args)
           case None => Term.Name("xformedName") // TODO: throwException
@@ -130,7 +129,6 @@ ${named("defn")})""".syntax, null, this)
     }
   }
 
-  // TODO:  create unit test
   // TODO:  possibly prevent any recruiters from being removed or replaced
   def addRecruiter(namespaceName: String, localName: String,
       recruiter: (String, String) => Seq[Term.Arg] => Tree) =
@@ -140,7 +138,6 @@ ${named("defn")})""".syntax, null, this)
         recruiters(namespaceName) += localName -> recruiter
       else recruiters += namespaceName -> TrieMap(localName -> recruiter)
 
-  // TODO:  create unit test
   def getRecruiter(namespaceName: String, localName: String)
       : Option[Seq[Term.Arg] => Tree] =
     recruiters.get(namespaceName) match {
