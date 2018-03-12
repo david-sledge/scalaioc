@@ -17,6 +17,7 @@ class XmlWriterSpec extends FlatSpec with Matchers {
     writeStartElement(cast(writer))("This")
     writeEndElement(cast(writer))
     writeEndDocument(cast(writer))
+    w.flush
 
     println()
 
