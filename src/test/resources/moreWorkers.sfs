@@ -1,7 +1,7 @@
 `namespace|scala.ioc`
 
-`#prototype`("say hello", println("No."))
+`#=>`("say hello", println("No."))
 
-`#prototype`("scope", "Universe")
+`#=>`("scope", "Universe")
 
-`#singleton`("requestHandler", "I'll handle it")
+`#=`("requestHandler", "I'll handle it")

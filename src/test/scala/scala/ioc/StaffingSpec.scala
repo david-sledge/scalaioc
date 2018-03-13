@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 class StaffingSpec extends FlatSpec with Matchers {
   "The IoC transformer" should "manipulate the scala AST" in {
     val staffing = Staffing()
-    staffing.transformIoC(q"""`#scala.ioc#singleton`("id", "value")""").structure should be
+    staffing.transformIoC(q""""id" `#scala.ioc#=` "value"""").structure should be
       q"""factory.setLazyManager("id", (c: Map[Any, Any]) => "value")""".structure
   }
 

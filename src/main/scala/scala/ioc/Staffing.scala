@@ -28,10 +28,10 @@ factory.$name(${named("id")}, c)
     TrieMap[String, TrieMap[String, (String, String) => Seq[Term.Arg] => Tree]](
         Staffing.ScalaIocNamespaceName -> TrieMap[String,
           (String, String) => Seq[Term.Arg] => Tree](
-            "singleton" -> postManagerJob(q"setLazyManager"),
-            "prototype" -> postManagerJob(q"setManager"),
-            "ref" -> postRefJob(q"getCachedResult"),
-            "reloadRef" -> postRefJob(q"putToWork"),
+            "=" -> postManagerJob(q"setLazyManager"),
+            "=>" -> postManagerJob(q"setManager"),
+            "ref" -> postRefJob(q"putToWork"),
+            "reloadRef" -> postRefJob(q"crackTheWhip"),
             "let" -> ((namespaceName, localName) => args => {
               val (named, _, leftovers) =
                 mapArgs(Seq("id", "value", "block"), args)
@@ -116,6 +116,7 @@ ${named("defn")})""".syntax, null, this)
     // TODO: handle infix and prefix applications
     defn.transform {
       case t @ Term.Apply(Term.Name(name), args) => handlePrefix(name, args, t)
+      case t @ Term.ApplyInfix(expr, Term.Name(name), Nil, args) => handlePrefix(name, expr +: args, t)
       case t @ Term.Block(stats) => {
         Term.Block(for {
           stat <- stats

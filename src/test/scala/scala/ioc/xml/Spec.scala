@@ -32,7 +32,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`))
+`#ioc|=>`("xml", `#x|xml`(`#html`))
 """, "<?xml version=\"1.0\" ?><html></html>")
 
     test("""
@@ -40,7 +40,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(version = "1.0", `#html`(xmlns = "http://www.w3.org/1999/xhtml")))
+`#ioc|=>`("xml", `#x|xml`(version = "1.0", `#html`(xmlns = "http://www.w3.org/1999/xhtml")))
 """, """<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml"></html>""")
 
     test("""
@@ -48,7 +48,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(encoding = "utf-8", `#html`(xmlns = "http://www.w3.org/1999/xhtml")))
+`#ioc|=>`("xml", `#x|xml`(encoding = "utf-8", `#html`(xmlns = "http://www.w3.org/1999/xhtml")))
 """, """<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"></html>""")
 
     test("""
@@ -56,7 +56,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(encoding = "utf-8", `#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0"))
+`#ioc|=>`("xml", `#x|xml`(encoding = "utf-8", `#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0"))
 """, """<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"></html>""")
 
     test("""
@@ -64,7 +64,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0", dtd="<!DOCTYPE html>"))
+`#ioc|=>`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0", dtd="<!DOCTYPE html>"))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"></html>""")
 
     test("""
@@ -72,7 +72,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#x|dtd`("<!DOCTYPE html>"), `#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0"))
+`#ioc|=>`("xml", `#x|xml`(`#x|dtd`("<!DOCTYPE html>"), `#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0"))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"></html>""")
 
     test("""
@@ -80,7 +80,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0", dtd="<!DOCTYPE html>", `#x|!`("end of document")))
+`#ioc|=>`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0", dtd="<!DOCTYPE html>", `#x|!`("end of document")))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"></html><!--end of document-->""")
 
     test("""
@@ -88,7 +88,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0", dtd="<!DOCTYPE html>", `#x|cdata`("end of document")))
+`#ioc|=>`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), version = "1.0", dtd="<!DOCTYPE html>", `#x|cdata`("end of document")))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"></html><![CDATA[end of document]]>""")
 
     test("""
@@ -96,7 +96,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml", `#x|?`("scala")), version = "1.0", dtd="<!DOCTYPE html>"))
+`#ioc|=>`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml", `#x|?`("scala")), version = "1.0", dtd="<!DOCTYPE html>"))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><?scala?></html>""")
 
     test("""
@@ -104,7 +104,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml", `#x|?`("scala", "cheese")), version = "1.0", dtd="<!DOCTYPE html>"))
+`#ioc|=>`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml", `#x|?`("scala", "cheese")), version = "1.0", dtd="<!DOCTYPE html>"))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><?scala cheese?></html>""")
 
     test("""
@@ -112,7 +112,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml", "textual data"), version = "1.0", dtd="<!DOCTYPE html>"))
+`#ioc|=>`("xml", `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml", "textual data"), version = "1.0", dtd="<!DOCTYPE html>"))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml">textual data</html>""")
 
     test("""
@@ -120,7 +120,7 @@ class Spec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-`#ioc|prototype`("xml", `#x|xml`(`#html`(`#head`, xmlns = "http://www.w3.org/1999/xhtml", "textual data"), version = "1.0", dtd="<!DOCTYPE html>"))
+`#ioc|=>`("xml", `#x|xml`(`#html`(`#head`, xmlns = "http://www.w3.org/1999/xhtml", "textual data"), version = "1.0", dtd="<!DOCTYPE html>"))
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head></head>textual data</html>""")
   }
 }
