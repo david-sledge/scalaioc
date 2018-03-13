@@ -9,7 +9,8 @@ import javax.xml.stream.XMLOutputFactory
 
 class XmlWriterSpec extends FlatSpec with Matchers {
   "An XmlWriter implementation" should "spit out XML" in {
-    val w = XMLOutputFactory.newInstance.createXMLStreamWriter(System.out)
+    val strWriter = new java.io.StringWriter
+    val w = XMLOutputFactory.newInstance.createXMLStreamWriter(strWriter)
     val obj: Any = (w, javaXmlStreamWriter)
     //val (writer, tcImpl) = obj.asInstanceOf[(Any, XmlWriterTypeclass[T])]
     def f[T] = obj.asInstanceOf[(Any, XmlWriter[T])]
@@ -19,16 +20,12 @@ class XmlWriterSpec extends FlatSpec with Matchers {
     writeStartElement(cast(writer))("This")
     writeEndElement(cast(writer))
     writeEndDocument(cast(writer))
-    System.out.flush
-
-    println()
+    strWriter.toString shouldBe "<?xml version=\"1.0\"?><This></This>"
 
     w.writeStartDocumentVer("1.1")
     w.writeStartElement("This")
     w.writeEndElement
     w.writeEndDocument
-    System.out.flush
-
-    println()
+    strWriter.toString shouldBe "<?xml version=\"1.0\"?><This></This><?xml version=\"1.1\"?><This></This>"
   }
 }
