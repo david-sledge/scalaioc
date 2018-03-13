@@ -1,9 +1,6 @@
 package scala.xml.writer
 
 import org.scalatest._
-
-import scala.xml.writer.XmlStreamWriter;
-
 import javax.xml.stream.XMLOutputFactory
 
 class XmlWriterTypeclassSpec extends FlatSpec with Matchers {
