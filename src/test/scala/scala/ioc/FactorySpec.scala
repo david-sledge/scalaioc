@@ -22,11 +22,11 @@ class FactorySpec extends FlatSpec with Matchers {
     val factory = Factory()
     val id = "lazy bastard"
     factory.setLazyManager(id, c => System.currentTimeMillis)
-    val result = factory.getCachedResult(id, Map())
-    val result2 = factory.getCachedResult(id, Map())
+    val result = factory.putToWork(id, Map())
+    val result2 = factory.putToWork(id, Map())
     result shouldBe result2
     factory.clearCache
-    val result3 = factory.getCachedResult(id, Map())
+    val result3 = factory.putToWork(id, Map())
     result should not be result3
     
   }
@@ -34,9 +34,9 @@ class FactorySpec extends FlatSpec with Matchers {
   "Lazy manager" should "produce the same thing until forced otherwise" in {
     val factory = Factory()
     factory.setLazyManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance()}")
-    val result = factory.putToWork("lazyManager", Map())
-    result should be (factory.getCachedResult("lazyManager", Map()))
-    result should not be (factory.putToWork("lazyManager", Map()))
+    val result = factory.crackTheWhip("lazyManager", Map())
+    result should be (factory.putToWork("lazyManager", Map()))
+    result should not be (factory.crackTheWhip("lazyManager", Map()))
   }
 
   "The companion Factory object" should "allow construction without the \"new\" keyword" in {

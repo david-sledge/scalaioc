@@ -3,7 +3,7 @@ package scala.ioc
 import ioc._
 import scala.collection.immutable.Seq
 import scala.meta._
-import scala.xml.stream.XmlWriterTypeclass
+import scala.xml.writer.XmlWriterTypeclass
 
 package object xml {
   def f[T](obj: Any) = obj.asInstanceOf[(Any, XmlWriterTypeclass[T])]
