@@ -43,7 +43,7 @@ c + (${named("id")} -> ${named("value")}))"""
               q"""org.iocframework.staffFactoryFromFile(${named("fileName")},
 factory, staffing)"""
             }),
-            "recruiterDef" -> ((namespaceName, localName) => args => {
+            "recruiter" -> ((namespaceName, localName) => args => {
               val (named, _, leftovers) = mapArgs(Seq("name", "defn"), args)
               org.iocframework.staffFactory(
                   q"""staffing.addRecruiter(${named("name")},
