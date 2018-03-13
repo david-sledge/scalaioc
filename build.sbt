@@ -1,6 +1,6 @@
 // The simplest possible sbt build file is just one line:
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.4"
 // That is, to create a valid sbt build, all you've got to do is define the
 // version of Scala you'd like your project to use.
 
@@ -14,31 +14,23 @@ scalaVersion := "2.12.3"
 
 name := "scalaioc"
 organization := "iocframework.org"
-version := "1.0"
+version := "0.5"
 
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a
 // place like Sonatype or Bintray.
 
 scalacOptions ++= Seq(
-  "-Xplugin-require:macroparadise",
   "-deprecation"
 )
 
 // Want to use a published library in your project?
 // You can define other libraries as dependencies in your build like this:
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % "2.12.3",
-  "org.scala-lang" % "scala-compiler" % "2.12.3",
-  "org.scalaz" %% "scalaz-core" % "7.2.19",
+  "org.scala-lang" % "scala-compiler" % "2.12.4",
   "org.scalameta" %% "scalameta" % "1.8.0",
   "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 )
-
-resolvers += Resolver.sonatypeRepo("releases")
-resolvers += Resolver.bintrayRepo("scalameta", "maven")
-resolvers += Resolver.sonatypeRepo("releases")
-addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M10" cross CrossVersion.full)
 
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,
 // we're adding the cats dependency to the set of dependencies that sbt will go
