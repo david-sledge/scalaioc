@@ -1,4 +1,4 @@
-package scala.xml.stream
+package scala.xml.writer
 
 trait XmlWriterTypeclass[T] {
   def writeAttribute(writer: T, localName: String, value: String): Unit

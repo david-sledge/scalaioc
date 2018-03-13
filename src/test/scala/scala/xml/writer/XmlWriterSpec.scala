@@ -1,7 +1,9 @@
-package scala.xml.stream
+package scala.xml.writer
 
 import JavaXmlStreamWriter.javaXmlStreamWriter
 import XmlWriter.ops.XmlWriterOps
+import scala.xml.writer.JavaXmlStreamWriter.javaXmlStreamWriter;
+
 import org.scalatest._
 import javax.xml.stream.XMLOutputFactory
 
@@ -17,7 +19,7 @@ class XmlWriterSpec extends FlatSpec with Matchers {
     writeStartElement(cast(writer))("This")
     writeEndElement(cast(writer))
     writeEndDocument(cast(writer))
-    w.flush
+    System.out.flush
 
     println()
 
@@ -25,7 +27,7 @@ class XmlWriterSpec extends FlatSpec with Matchers {
     w.writeStartElement("This")
     w.writeEndElement
     w.writeEndDocument
-    w.flush
+    System.out.flush
 
     println()
   }
