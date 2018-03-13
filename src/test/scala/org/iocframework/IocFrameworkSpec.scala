@@ -22,15 +22,17 @@ class IocFrameworkSpec extends FlatSpec with Matchers {
     val (fFactory, _) = staffFactoryFromFile("src/test/resources/FactoryStaff.sfs")
     factoryCalls(fFactory)
     fFactory.putToWork("requestHandler", Map()) shouldBe "I'll handle it"
+    val (ffFactory, _) = staffFactoryFromResource("FactoryStaff.sfs")
+    factoryCalls(ffFactory)
   }
 
   def factoryCalls(factory: Factory) = {
-    factory.crackTheWhip("say hello")
-    factory.crackTheWhip("say hello once")
-    factory.crackTheWhip("hello to...", Map("who" -> "IoC World"))
-    factory.crackTheWhip("say hello once again", Map("who" -> "IoC World"))
-    factory.crackTheWhip("say hello once again, NOW!")
-    factory.crackTheWhip("scoped hello")
-    factory.crackTheWhip("scoped hello2")
+    factory.putToWork("say hello")
+    factory.putToWork("say hello once")
+    factory.putToWork("hello to...", Map("who" -> "IoC World"))
+    factory.putToWork("say hello once again", Map("who" -> "IoC World"))
+    factory.putToWork("say hello once again, NOW!")
+    factory.putToWork("scoped hello")
+    factory.putToWork("scoped hello2")
   }
 }

@@ -30,4 +30,9 @@ package object iocframework {
   def staffFactoryFromFile(fileName: String, factory: Factory = Factory()
       , staffing: Staffing = Staffing()) =
     staffFactory(fromFile(fileName).mkString, factory, staffing)
+
+  // TODO:  scaladoc
+  def staffFactoryFromResource(path: String, factory: Factory = Factory()
+      , staffing: Staffing = Staffing()) =
+    staffFactory(scala.io.Source.fromInputStream(getClass.getClassLoader.getResourceAsStream(path), "utf-8").mkString, factory, staffing)
 }
