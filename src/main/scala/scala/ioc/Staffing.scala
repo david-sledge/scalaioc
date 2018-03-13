@@ -113,7 +113,6 @@ ${named("defn")})""".syntax, null, this)
       }
     }
 
-    // TODO: handle infix and prefix applications
     defn.transform {
       case t @ Term.Apply(Term.Name(name), args) => handlePrefix(name, args, t)
       case t @ Term.ApplyInfix(expr, Term.Name(name), Nil, args) => handlePrefix(name, expr +: args, t)
