@@ -48,4 +48,13 @@ class StaffingSpec extends FlatSpec with Matchers {
     staffing.hasOwnRecruiter("scala.xml.element", "dtd") shouldBe false
     staffing.hasRecruiter("scala.xml.element", null) shouldBe true
   }
+
+  it should "allow recruiters to be specified in the sfs" in {
+    val conf = """
+`namespace|scala.ioc`
+
+`#recruiter`("scala.ioc.xml", "dtd", scala.ioc.xml.postJobDtd)
+"""
+    val (factory, staffing) = org.iocframework.staffFactory(conf)
+  }
 }

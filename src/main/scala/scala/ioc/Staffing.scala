@@ -25,7 +25,8 @@ factory.$name(${named("id")}, c)
   }
 
   private val recruiters = {
-    TrieMap[String, TrieMap[String, (String, String) => (Term, Seq[Term.Arg]) => Tree]](
+    TrieMap[String, TrieMap[String,
+      (String, String) => (Term, Seq[Term.Arg]) => Tree]](
         Staffing.ScalaIocNamespaceName -> TrieMap[String,
           (String, String) => (Term, Seq[Term.Arg]) => Tree](
             "=" -> postManagerJob(q"setLazyManager"),
@@ -44,9 +45,16 @@ c + (${named("id")} -> ${named("value")}))"""
 factory, staffing)"""
             }),
             "recruiter" -> ((namespaceName, localName) => (expr, args) => {
-              val (named, _, leftovers) = mapArgs(Seq("namespaceName", "localName", "defn"), args)
+              val (named, _, leftovers) =
+                mapArgs(Seq("namespaceName", "localName", "defn"), args)
               org.iocframework.staffFactory(
-                  q"""staffing.addRecruiter(${if (named contains "namespaceName") named("namespaceName") else Lit.Null(null)}, ${named("localName")},
+                  q"""staffing.addRecruiter(${
+                    if (named contains "namespaceName") named("namespaceName")
+                    else Lit.Null(null)
+                  }, ${
+                    if (named contains "localName") named("localName")
+                    else Lit.Null(null)
+                  },
 ${named("defn")})""".syntax, null, this)
               q"()"
             })
@@ -57,7 +65,8 @@ ${named("defn")})""".syntax, null, this)
 
     val referrers = scala.collection.mutable.Map[String, String]()
 
-    def handlePrefix(name: String, expr: Term, args: Seq[Term.Arg], els: Term) = {
+    def handlePrefix(name: String, expr: Term, args: Seq[Term.Arg], els: Term) =
+    {
       if (name.startsWith("#")) {
         val (namespaceName, localName) = {
           val referrerEnd = name.indexOf('#', 1)
@@ -67,7 +76,8 @@ ${named("defn")})""".syntax, null, this)
       
             if (namespaceNameEnd == -1)
               // default namespace
-              (if (referrers contains null) referrers(null) else null, name.substring(1))
+              (if (referrers contains null) referrers(null) else null,
+                  name.substring(1))
             else if (namespaceNameEnd == 1)
               // no namespace
               (null, name.substring(namespaceNameEnd + 1))
@@ -114,10 +124,14 @@ ${named("defn")})""".syntax, null, this)
     }
 
     defn.transform {
-      case t @ Term.Apply(Term.Name(name), args) => handlePrefix(name, null, args, t)
-      case t @ Term.Apply(Term.Select(expr, Term.Name(name)), args) => handlePrefix(name, expr, args, t)
-      case t @ Term.ApplyInfix(expr, Term.Name(name), Nil, args) => handlePrefix(name, expr, args, t)
-      case t @ Term.Select(expr, Term.Name(name)) => handlePrefix(name, expr, List(), t)
+      case t @ Term.Apply(Term.Name(name), args) =>
+        handlePrefix(name, null, args, t)
+      case t @ Term.Apply(Term.Select(expr, Term.Name(name)), args) =>
+        handlePrefix(name, expr, args, t)
+      case t @ Term.ApplyInfix(expr, Term.Name(name), Nil, args) =>
+        handlePrefix(name, expr, args, t)
+      case t @ Term.Select(expr, Term.Name(name)) =>
+        handlePrefix(name, expr, List(), t)
       case t @ Term.Block(stats) => {
         Term.Block(for {
           stat <- stats
