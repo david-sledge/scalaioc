@@ -92,7 +92,7 @@ ${named("defn")})""".syntax, null, this)
         }
         getRecruiter(namespaceName, localName) match {
           case Some(recruiter) => recruiter(expr, args)
-          case None => Term.Name("xformedName") // TODO: throwException
+          case None => throw new NoSuchRecruiterException(namespaceName, localName)
         }
       }
       else els
@@ -145,14 +145,20 @@ ${named("defn")})""".syntax, null, this)
     }
   }
 
-  // TODO:  possibly prevent any recruiters from being removed or replaced
   def addRecruiter(namespaceName: String, localName: String,
-      recruiter: (String, String) => (Term, Seq[Term.Arg]) => Tree) =
-    if (namespaceName == Staffing.ScalaIocNamespaceName) () // TODO:  throw exception
-    else
-      if (recruiters contains namespaceName)
-        recruiters(namespaceName) += localName -> recruiter
-      else recruiters += namespaceName -> TrieMap(localName -> recruiter)
+      recruiter: (String, String) => (Term, Seq[Term.Arg]) => Tree) = {
+    if (recruiters contains namespaceName)
+    {
+      val recruitersInNamespace = recruiters(namespaceName)
+      if (recruitersInNamespace contains localName)
+        throw new RecruiterDefinedException(namespaceName, localName)
+      else
+        recruitersInNamespace += localName -> recruiter
+    }
+    else recruiters += namespaceName -> TrieMap(localName -> recruiter)
+
+    ()
+  }
 
   def getRecruiter(namespaceName: String, localName: String)
       : Option[(Term, Seq[Term.Arg]) => Tree] =
