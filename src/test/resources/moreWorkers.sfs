@@ -1,7 +1,7 @@
 `namespace|scala.ioc`
 
-`#=>`("say hello", println("No."))
+"say hello" `#=>` println("No.")
 
-`#=>`("scope", "Universe")
+"scope" `#=>` "Universe"
 
-`#=`("requestHandler", "I'll handle it")
+"requestHandler" `#=` "I'll handle it"

@@ -22,10 +22,10 @@ class StaffingSpec extends FlatSpec with Matchers {
     staffing.addRecruiter("scala.xml.element", null, postJobElement)
 
     def testWorkerDef(namespaceName: String, localName: String,
-        workerDefn: (String, String) => Seq[Term.Arg] => Tree,
+        workerDefn: (String, String) => (Term, Seq[Term.Arg]) => Tree,
         args: Seq[Term.Arg]) = {
       staffing.getRecruiter(namespaceName, localName) match {
-        case Some(f) => f(args).structure shouldBe workerDefn(namespaceName, localName)(args).structure
+        case Some(f) => f(null, args).structure shouldBe workerDefn(namespaceName, localName)(null, args).structure
         case None => fail(s"Did not find a recruiter for $localName in namespace $namespaceName")
       }
     }

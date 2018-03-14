@@ -8,16 +8,16 @@ final class Staffing {
 
   private def postManagerJob(name: Term.Name)
       (namespaceName: String, localName: String)
-      (args: Seq[Term.Arg]): Tree = {
-    val (named, _, leftovers) = mapArgs(Seq("id", "worker"), args)
+      (expr: Term, args: Seq[Term.Arg]): Tree = {
+    val (named, _, leftovers) = mapArgs(Seq("worker"), args)
     q"""
-factory.$name(${named("id")}, ${toWorker(named("worker"))})
+factory.$name($expr, ${toWorker(named("worker"))})
 """
   }
 
   private def postRefJob(name: Term.Name)
       (namespaceName: String, localName: String)
-      (args: Seq[Term.Arg]): Tree = {
+      (expr: Term, args: Seq[Term.Arg]): Tree = {
     val (named, _, leftovers) = mapArgs(Seq("id"), args)
     q"""
 factory.$name(${named("id")}, c)
@@ -25,28 +25,28 @@ factory.$name(${named("id")}, c)
   }
 
   private val recruiters = {
-    TrieMap[String, TrieMap[String, (String, String) => Seq[Term.Arg] => Tree]](
+    TrieMap[String, TrieMap[String, (String, String) => (Term, Seq[Term.Arg]) => Tree]](
         Staffing.ScalaIocNamespaceName -> TrieMap[String,
-          (String, String) => Seq[Term.Arg] => Tree](
+          (String, String) => (Term, Seq[Term.Arg]) => Tree](
             "=" -> postManagerJob(q"setLazyManager"),
             "=>" -> postManagerJob(q"setManager"),
             "ref" -> postRefJob(q"putToWork"),
-            "reloadRef" -> postRefJob(q"crackTheWhip"),
-            "let" -> ((namespaceName, localName) => args => {
+            "ref!" -> postRefJob(q"crackTheWhip"),
+            "let" -> ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) =
                 mapArgs(Seq("id", "value", "block"), args)
               q"""${toWorker(named("block"))}(
 c + (${named("id")} -> ${named("value")}))"""
             }),
-            "resource" -> ((namespaceName, localName) => args => {
-              val (named, _, leftovers) = mapArgs(Seq("fileName"), args)
-              q"""org.iocframework.staffFactoryFromFile(${named("fileName")},
+            "resource" -> ((namespaceName, localName) => (expr, args) => {
+              val (named, _, leftovers) = mapArgs(Seq("path"), args)
+              q"""org.iocframework.staffFactoryFromResource(${named("path")},
 factory, staffing)"""
             }),
-            "recruiter" -> ((namespaceName, localName) => args => {
-              val (named, _, leftovers) = mapArgs(Seq("name", "defn"), args)
+            "recruiter" -> ((namespaceName, localName) => (expr, args) => {
+              val (named, _, leftovers) = mapArgs(Seq("namespaceName", "localName", "defn"), args)
               org.iocframework.staffFactory(
-                  q"""staffing.addRecruiter(${named("name")},
+                  q"""staffing.addRecruiter(${if (named contains "namespaceName") named("namespaceName") else Lit.Null(null)}, ${named("localName")},
 ${named("defn")})""".syntax, null, this)
               q"()"
             })
@@ -57,7 +57,7 @@ ${named("defn")})""".syntax, null, this)
 
     val referrers = scala.collection.mutable.Map[String, String]()
 
-    def handlePrefix(name: String, args: Seq[Term.Arg], els: Term) = {
+    def handlePrefix(name: String, expr: Term, args: Seq[Term.Arg], els: Term) = {
       if (name.startsWith("#")) {
         val (namespaceName, localName) = {
           val referrerEnd = name.indexOf('#', 1)
@@ -81,7 +81,7 @@ ${named("defn")})""".syntax, null, this)
             (name.substring(1, referrerEnd), name.substring(referrerEnd + 1))
         }
         getRecruiter(namespaceName, localName) match {
-          case Some(recruiter) => recruiter(args)
+          case Some(recruiter) => recruiter(expr, args)
           case None => Term.Name("xformedName") // TODO: throwException
         }
       }
@@ -114,8 +114,10 @@ ${named("defn")})""".syntax, null, this)
     }
 
     defn.transform {
-      case t @ Term.Apply(Term.Name(name), args) => handlePrefix(name, args, t)
-      case t @ Term.ApplyInfix(expr, Term.Name(name), Nil, args) => handlePrefix(name, expr +: args, t)
+      case t @ Term.Apply(Term.Name(name), args) => handlePrefix(name, null, args, t)
+      case t @ Term.Apply(Term.Select(expr, Term.Name(name)), args) => handlePrefix(name, expr, args, t)
+      case t @ Term.ApplyInfix(expr, Term.Name(name), Nil, args) => handlePrefix(name, expr, args, t)
+      case t @ Term.Select(expr, Term.Name(name)) => handlePrefix(name, expr, List(), t)
       case t @ Term.Block(stats) => {
         Term.Block(for {
           stat <- stats
@@ -123,7 +125,7 @@ ${named("defn")})""".syntax, null, this)
         } yield stat)
       }
       case t => if (extractReferrer(t)) q"()" else t match {
-        case t @ Term.Name(name) => handlePrefix(name, List(), t)
+        case t @ Term.Name(name) => handlePrefix(name, null, List(), t)
         case t => t
       }
     }
@@ -131,7 +133,7 @@ ${named("defn")})""".syntax, null, this)
 
   // TODO:  possibly prevent any recruiters from being removed or replaced
   def addRecruiter(namespaceName: String, localName: String,
-      recruiter: (String, String) => Seq[Term.Arg] => Tree) =
+      recruiter: (String, String) => (Term, Seq[Term.Arg]) => Tree) =
     if (namespaceName == Staffing.ScalaIocNamespaceName) () // TODO:  throw exception
     else
       if (recruiters contains namespaceName)
@@ -139,7 +141,7 @@ ${named("defn")})""".syntax, null, this)
       else recruiters += namespaceName -> TrieMap(localName -> recruiter)
 
   def getRecruiter(namespaceName: String, localName: String)
-      : Option[Seq[Term.Arg] => Tree] =
+      : Option[(Term, Seq[Term.Arg]) => Tree] =
     recruiters.get(namespaceName) match {
       case Some(recruitersInNamespace) =>
           recruitersInNamespace.get(localName) match {

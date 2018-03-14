@@ -25,7 +25,7 @@ package object xml {
 """ :: acc))
   }
 
-  def postJobXml(namespaceName: String, localName: String)(args: Seq[Term.Arg])
+  def postJobXml(namespaceName: String, localName: String)(expr: Term, args: Seq[Term.Arg])
   : Tree = {
     val (argMap, leftovers, _) = mapArgs(Seq(), args)
 
@@ -55,22 +55,22 @@ package object xml {
     )
   }
 
-  def postJobDtd(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+  def postJobDtd(namespaceName: String, localName: String)(expr: Term, args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq("dtd"), args)
     Term.Block(xmlWriter(q"writeDTD", Seq(argMap("dtd"))))
   }
 
-  def postJobCdata(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+  def postJobCdata(namespaceName: String, localName: String)(expr: Term, args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
     Term.Block(xmlWriter(q"writeCData", Seq(argMap("cdata"))))
   }
 
-  def postJobComment(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+  def postJobComment(namespaceName: String, localName: String)(expr: Term, args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq("cdata"), args)
     Term.Block(xmlWriter(q"writeComment", Seq(argMap("cdata"))))
   }
 
-  def postJobProcInstr(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+  def postJobProcInstr(namespaceName: String, localName: String)(expr: Term, args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq("target", "data"), args)
     Term.Block(xmlWriter(q"writeProcessingInstruction",
         if (argMap contains "data")
@@ -79,7 +79,7 @@ package object xml {
           Seq(argMap("target"))))
   }
 
-  def postJobElement(namespaceName: String, localName: String)(args: Seq[Term.Arg]): Tree = {
+  def postJobElement(namespaceName: String, localName: String)(expr: Term, args: Seq[Term.Arg]): Tree = {
     val (argMap, leftovers, unspecified) = mapArgs(Seq(), args)
     Term.Block(
         xmlWriter(q"writeStartElement", Seq[Term](Lit.String(localName))) ++

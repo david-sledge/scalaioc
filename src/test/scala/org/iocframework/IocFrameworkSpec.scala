@@ -9,14 +9,13 @@ class IocFrameworkSpec extends FlatSpec with Matchers {
 
   "Staffing a factory" should "populate it with workers" in {
     val conf = """
-`#scala.ioc#=`("id", "worker")
-`#scala.ioc#=`(id = "id", "worker")
-`#scala.ioc#=`("worker", id = "id")
-`#scala.ioc#=`(id = "id", worker = "worker")
-`#scala.ioc#=`(worker = "worker", id = "id")
-`#scala.ioc#=`("id", worker = "worker")
-`#scala.ioc#=`(worker = "worker", "id")
-"id" `#scala.ioc#=>` "worker"
+`namespace|scala.ioc`
+
+"id" `#=` "worker"
+"id".`#=`("worker")
+"id" `#=` (worker = "worker")
+"id".`#=`(worker = "worker")
+"id" `#=>` "worker"
 """
     val (factory, _) = staffFactory(conf)
     val (fFactory, _) = staffFactoryFromFile("src/test/resources/FactoryStaff.sfs")
