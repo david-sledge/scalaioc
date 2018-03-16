@@ -1,0 +1,4 @@
+import org.iocframework.example.hello.HelloWorld
+`namespace|scala.ioc`
+
+"helloWorld" `#=` new HelloWorld("Hello World!")

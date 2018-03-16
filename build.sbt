@@ -1,5 +1,11 @@
 // The simplest possible sbt build file is just one line:
 
+lazy val commonSettings = Seq(
+    organization := "iocframework.org",
+    version := "0.5.0-SNAPSHOT",
+    scalaVersion := "2.12.4"
+  )
+
 scalaVersion := "2.12.4"
 // That is, to create a valid sbt build, all you've got to do is define the
 // version of Scala you'd like your project to use.
@@ -15,6 +21,17 @@ scalaVersion := "2.12.4"
 name := "scalaioc"
 organization := "iocframework.org"
 version := "0.5"
+
+lazy val root = (project in file("."))
+  .settings(
+    commonSettings
+  )
+
+lazy val simpleExample = (project in file("examples/simple"))
+  .settings(
+    commonSettings,
+    unmanagedClasspath in Runtime += baseDirectory.value / "src/resources"
+  ).dependsOn(root)
 
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a
