@@ -4,9 +4,8 @@ import org.iocframework.staffFactoryFromResource
 import scala.ioc.Factory
 
 object MainApp extends App {
-  def printEq(obj1: Any, obj2: Any) = {
+  def printEq(obj1: Any, obj2: Any) =
     println(if (obj1 == obj2) "Same object" else "Not the same object")
-  }
 
   // instantiate the factory
   val (factory, _) = staffFactoryFromResource("FactoryStaff.sfs")
