@@ -18,19 +18,23 @@ scalaVersion := "2.12.4"
 
 // It's possible to define many kinds of settings, such as:
 
-name := "scalaioc"
-organization := "iocframework.org"
-version := "0.5"
-
 lazy val root = (project in file("."))
   .settings(
-    commonSettings
+    commonSettings,
+    name := "scalaioc"
   )
 
 lazy val simpleExample = (project in file("examples/simple"))
   .settings(
     commonSettings,
-    unmanagedClasspath in Runtime += baseDirectory.value / "src/resources"
+    unmanagedClasspath in Runtime += baseDirectory.value / "src/resources",
+    name := "simpleExample"
+  ).dependsOn(root)
+
+lazy val servletExample = (project in file("examples/servlet"))
+  .settings(
+    commonSettings,
+    name := "servletExample"
   ).dependsOn(root)
 
 // Note, it's not required for you to define these three settings. These are
