@@ -1,4 +1,8 @@
-import org.iocframework.example.hello.HelloWorld
 `namespace|scala.ioc`
+import org.iocframework.example.hello.HelloWorld
 
-"helloWorld" `#=` new HelloWorld("Hello World!")
+// This is a (lazy) manager
+"helloWorld1" `#=` new HelloWorld("Hello World!")
+
+// This is a way-too-eager-to-work manager
+"helloWorld2" `#=>` new HelloWorld("Hello World!")
