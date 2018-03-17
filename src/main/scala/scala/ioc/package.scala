@@ -7,7 +7,7 @@ package object ioc {
 
   def toWorker(stat: Term) = {
     q"""
-(c: Map[Any, Any]) => $stat
+(c: scala.collection.immutable.Map[Any, Any]) => $stat
 """
   }
 

@@ -147,15 +147,18 @@ ${named("defn")})""".syntax, null, this)
 
   def addRecruiter(namespaceName: String, localName: String,
       recruiter: (String, String) => (Term, Seq[Term.Arg]) => Tree) = {
-    if (recruiters contains namespaceName)
-    {
-      val recruitersInNamespace = recruiters(namespaceName)
-      if (recruitersInNamespace contains localName)
-        throw new RecruiterDefinedException(namespaceName, localName)
-      else
-        recruitersInNamespace += localName -> recruiter
-    }
-    else recruiters += namespaceName -> TrieMap(localName -> recruiter)
+    if (recruiter == null)
+      throw new IllegalArgumentException("A recruiter may not be null")
+    else
+      if (recruiters contains namespaceName)
+      {
+        val recruitersInNamespace = recruiters(namespaceName)
+        if (recruitersInNamespace contains localName)
+          throw new RecruiterDefinedException(namespaceName, localName)
+        else
+          recruitersInNamespace += localName -> recruiter
+      }
+      else recruiters += namespaceName -> TrieMap(localName -> recruiter)
 
     ()
   }

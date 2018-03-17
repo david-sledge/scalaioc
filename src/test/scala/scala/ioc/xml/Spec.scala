@@ -23,7 +23,7 @@ class Spec extends FlatSpec with Matchers {
     def test(conf: String, expected: String) = {
       val (factory, _) = staffFactory(conf, staffing = staffing)
       val stringWriter = new java.io.StringWriter()
-      factory.putToWork("xml", Map("xmlWriter" -> (javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(stringWriter), XmlStreamWriter)))
+      factory.putToWork("xml", Map("xmlWriter" -> (javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(stringWriter), XmlStreamWriter.xmlStreamWriter)))
       stringWriter.toString shouldBe expected
     }
 

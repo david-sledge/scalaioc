@@ -68,9 +68,9 @@ object XmlWriter {
 
 import javax.xml.stream.XMLStreamWriter
 
-object JavaXmlStreamWriter {
+object XmlStreamWriter {
 
-  implicit val javaXmlStreamWriter: XmlWriter[XMLStreamWriter] = new XmlWriter[XMLStreamWriter]{
+  implicit val xmlStreamWriter: XmlWriter[XMLStreamWriter] = new XmlWriter[XMLStreamWriter]{
 
   override def writeAttribute(writer: XMLStreamWriter)(localName: String
       , value: String): Unit = writer.writeAttribute(localName, value)

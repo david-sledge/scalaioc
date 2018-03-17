@@ -1,8 +1,8 @@
 package scala.xml.writer
 
-import JavaXmlStreamWriter.javaXmlStreamWriter
+import XmlStreamWriter.xmlStreamWriter
 import XmlWriter.ops.XmlWriterOps
-import scala.xml.writer.JavaXmlStreamWriter.javaXmlStreamWriter;
+import scala.xml.writer.XmlStreamWriter.xmlStreamWriter;
 
 import org.scalatest._
 import javax.xml.stream.XMLOutputFactory
@@ -11,8 +11,7 @@ class XmlWriterSpec extends FlatSpec with Matchers {
   "An XmlWriter implementation" should "spit out XML" in {
     val strWriter = new java.io.StringWriter
     val w = XMLOutputFactory.newInstance.createXMLStreamWriter(strWriter)
-    val obj: Any = (w, javaXmlStreamWriter)
-    //val (writer, tcImpl) = obj.asInstanceOf[(Any, XmlWriterTypeclass[T])]
+    val obj: Any = (w, xmlStreamWriter)
     def f[T] = obj.asInstanceOf[(Any, XmlWriter[T])]
     val (writer, tcImpl) = f
     import tcImpl._
