@@ -42,7 +42,7 @@ c + (${named("id")} -> ${named("value")}))"""
             "resource" -> ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) = mapArgs(Seq("path"), args)
               q"""org.iocframework.staffFactoryFromResource(${named("path")},
-factory, staffing)"""
+factory = factory, staffing = staffing)"""
             }),
             "recruiter" -> ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) =

@@ -27,17 +27,17 @@ package object iocframework {
   }
 
   // TODO:  scaladoc
-  def staffFactoryFromFile(fileName: String, factory: Factory = Factory()
+  def staffFactoryFromFile(fileName: String, encoding: String = "utf-8", factory: Factory = Factory()
       , staffing: Staffing = Staffing()) =
-    staffFactory(fromFile(fileName).mkString, factory, staffing)
+    staffFactory(fromFile(fileName, encoding).mkString, factory, staffing)
 
   // TODO:  scaladoc
-  def staffFactoryFromResource(path: String, factory: Factory = Factory()
+  def staffFactoryFromResource(path: String, encoding: String = "utf-8", factory: Factory = Factory()
       , staffing: Staffing = Staffing()) =
-    staffFactoryFromStream(getClass.getClassLoader.getResourceAsStream(path), factory, staffing)
+    staffFactoryFromStream(getClass.getClassLoader.getResourceAsStream(path), encoding, factory, staffing)
 
   // TODO:  scaladoc
-  def staffFactoryFromStream(stream: java.io.InputStream, factory: Factory = Factory()
+  def staffFactoryFromStream(stream: java.io.InputStream, encoding: String = "utf-8", factory: Factory = Factory()
       , staffing: Staffing = Staffing()) =
-    staffFactory(scala.io.Source.fromInputStream(stream, "utf-8").mkString, factory, staffing)
+    staffFactory(scala.io.Source.fromInputStream(stream, encoding).mkString, factory, staffing)
 }
