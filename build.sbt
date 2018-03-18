@@ -21,7 +21,9 @@ scalaVersion := "2.12.4"
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
-    name := "scalaioc"
+    name := "scalaioc",
+    libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
+      "provided"
   )
 
 lazy val simpleExample = (project in file("examples/simple"))
@@ -34,8 +36,12 @@ lazy val simpleExample = (project in file("examples/simple"))
 lazy val servletExample = (project in file("examples/servlet"))
   .settings(
     commonSettings,
-    name := "servletExample"
+    name := "servletExample",
+    libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
+      "provided"
   ).dependsOn(root)
+
+enablePlugins(TomcatPlugin)
 
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a

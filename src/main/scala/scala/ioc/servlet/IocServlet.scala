@@ -1,19 +1,17 @@
-package org.iocframework.servlet
+package scala.ioc.servlet
 
 import scala.collection.JavaConverters._
-import org.iocframework.staffFactoryFromResource
+import org.iocframework.staffFactoryFromStream
 import scala.ioc._
-
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
+import javax.servlet.GenericServlet
+import javax.servlet.ServletException
+import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse;
 
 /**
  * @author David M. Sledge
  */
-class IocServlet extends GenericServlet
-{
+class IocServlet extends GenericServlet {
   private val serialVersionUID = 797867274650863128L
 
   // results
@@ -31,7 +29,7 @@ class IocServlet extends GenericServlet
    * @throws ServletException if an error occured
    */
   override def init() = {
-    val paramNames: List[String] = getInitParameterNames.asScala
+    val paramNames: List[String] = getInitParameterNames.asScala.toList
     // get the path to the sfs
     val staffPath =
       if (paramNames contains IocServlet.StaffPathParam)
@@ -52,7 +50,7 @@ class IocServlet extends GenericServlet
           + handlerName + "' to handle HTTP requests")
 
     // optional worker to perform initializing procedures
-    initializerName = getInitParameter(InitializerParam);
+    initializerName = getInitParameter(IocServlet.InitializerParam)
 
     if (initializerName != null && !factory.hasManager(initializerName))
     {
@@ -62,7 +60,7 @@ class IocServlet extends GenericServlet
     }
 
     // optional worker to perform shutdown procedures
-    destroyerName = getInitParameter(DestroyerParam);
+    destroyerName = getInitParameter(IocServlet.DestroyerParam);
 
     if (destroyerName != null && !factory.hasManager(destroyerName))
     {
@@ -71,15 +69,20 @@ class IocServlet extends GenericServlet
     }
 
     // key for local request object
-    reqName = if (paramNames.contains(IocServlet.RequestNameParam))
-        ? getInitParameter(IocServlet.RequestNameParam) : IocServlet.DefaultRequestKey;
+    reqName =
+      if (paramNames.contains(IocServlet.RequestNameParam))
+        getInitParameter(IocServlet.RequestNameParam)
+      else IocServlet.DefaultRequestKey
     // key for local response object
-    respName = paramNames.contains(IocServlet.ResponseNameParam)
-        ? getInitParameter(IocServlet.ResponseNameParam) : IocServlet.DefaultResponseKey;
+    respName =
+      if (paramNames.contains(IocServlet.ResponseNameParam))
+        getInitParameter(IocServlet.ResponseNameParam)
+      else IocServlet.DefaultResponseKey
     // key for local servletConfig object
-    servletConfigName = paramNames.contains(IocServlet.ServletConfigNameParam)
-        ? getInitParameter(IocServlet.ServletConfigNameParam)
-            : IocServlet.DefaultServletConfig;
+    servletConfigName =
+      if (paramNames.contains(IocServlet.ServletConfigNameParam))
+        getInitParameter(IocServlet.ServletConfigNameParam)
+      else IocServlet.DefaultServletConfig
 
     if (initializerName != null)
     {
@@ -98,7 +101,7 @@ class IocServlet extends GenericServlet
    * @see javax.servlet.GenericServlet#service(javax.servlet.ServletRequest,
    * javax.servlet.ServletResponse)
    */
-  override def service(ServletRequest req, ServletResponse resp) =
+  override def service(req: ServletRequest, resp: ServletResponse) =
     factory.putToWork(handlerName, Map(reqName -> req, respName -> resp))
 }
 
@@ -113,7 +116,7 @@ object IocServlet {
   val ServletConfigNameParam = "servletConfigName"
 
   // defaults
-  val DefaultStaffPath = "WEB-INF/FactoryStaff.sfs"
+  val DefaultStaffPath = "WEB-INF/staff.sfs"
   val DefaultHandlerName = "requestHandler"
   val DefaultRequestKey = "req"
   val DefaultResponseKey = "resp"
