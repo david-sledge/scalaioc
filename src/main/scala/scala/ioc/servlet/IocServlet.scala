@@ -82,7 +82,7 @@ class IocServlet extends GenericServlet {
     servletConfigName =
       if (paramNames.contains(IocServlet.ServletConfigNameParam))
         getInitParameter(IocServlet.ServletConfigNameParam)
-      else IocServlet.DefaultServletConfig
+      else IocServlet.DefaultServletConfigKey
 
     if (initializerName != null)
     {
@@ -116,9 +116,9 @@ object IocServlet {
   val ServletConfigNameParam = "servletConfigName"
 
   // defaults
-  val DefaultStaffPath = "WEB-INF/staff.sfs"
+  val DefaultStaffPath = "staff.sfs"
   val DefaultHandlerName = "requestHandler"
   val DefaultRequestKey = "req"
   val DefaultResponseKey = "resp"
-  val DefaultServletConfig = "servletConfig"
+  val DefaultServletConfigKey = "servletConfig"
 }
