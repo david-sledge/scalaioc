@@ -18,10 +18,10 @@ class IocFrameworkSpec extends FlatSpec with Matchers {
 "id" `#=>` "worker"
 """
     val (factory, _) = staffFactory(conf)
-    val (fFactory, _) = staffFactoryFromFile("src/test/resources/FactoryStaff.sfs")
+    val (fFactory, _) = staffFactoryFromFile("src/test/resources/staff.sfs")
     factoryCalls(fFactory)
     fFactory.putToWork("requestHandler", Map()) shouldBe "I'll handle it"
-    val (ffFactory, _) = staffFactoryFromResource("FactoryStaff.sfs")
+    val (ffFactory, _) = staffFactoryFromResource("staff.sfs")
     factoryCalls(ffFactory)
   }
 

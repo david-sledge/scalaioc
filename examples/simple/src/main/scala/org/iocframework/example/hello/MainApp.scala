@@ -8,7 +8,7 @@ object MainApp extends App {
     println(if (obj1 == obj2) "Same object" else "Not the same object")
 
   // instantiate the factory
-  val (factory, _) = staffFactoryFromResource("FactoryStaff.sfs")
+  val (factory, _) = staffFactoryFromResource("staff.sfs")
   // put the manager to work and get the fruits of her labor
   val obj1 = factory.putToWork("helloWorld1").asInstanceOf[HelloWorld]
   obj1.getMessage()
