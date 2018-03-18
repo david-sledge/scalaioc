@@ -53,7 +53,7 @@ class StaffingSpec extends FlatSpec with Matchers {
     val conf = """
 `namespace|scala.ioc`
 
-`#recruiter`("scala.ioc.xml", "dtd", scala.ioc.xml.postJobDtd)
+"scala.ioc.xml" `#def` ("dtd", scala.ioc.xml.postJobDtd)
 """
     val (factory, staffing) = org.iocframework.staffFactory(conf)
   }

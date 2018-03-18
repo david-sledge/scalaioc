@@ -15,6 +15,6 @@
 
 "scoped hello" `#=>` println(s"Hello, ${`#ref`("scope")}!")
 
-"scoped hello2" `#=>` `#let`("who", `#ref`("scope"), `#ref`("hello to..."))
+"scoped hello2" `#=>` `#let`("who" -> `#ref`("scope"), `#ref`("hello to..."))
 
 `#resource`("moreWorkers.sfs")

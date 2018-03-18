@@ -21,7 +21,7 @@ package object ioc {
   def mapArgs(seqArgNames: immutable.Seq[String], args: immutable.Seq[Term.Arg])
   = {
     // address the named arguments first, then handle the ordinal arguments
-    val (named, ordinal, ordNames) = args.foldRight(Map[String, Term](), List[Term.Arg](), seqArgNames)(
+    val (named, ordinal, ordNames) = (args :\ (Map[String, Term](), List[Term.Arg](), seqArgNames))(
         (t, acc) =>
           acc match {
             case (map, list, ordArgNames) =>
@@ -37,7 +37,7 @@ package object ioc {
         )
 
     // fill the gaps with the ordinal arguments
-    val (named0, ordinal0, ordNames0) = ordinal.foldLeft(named, immutable.Seq[Term.Arg](), ordNames)(
+    val (named0, ordinal0, ordNames0) = ((named, immutable.Seq[Term.Arg](), ordNames) /: ordinal)(
         (acc, t) =>
           acc match {
             case (map, ord, ordArgNames) => {

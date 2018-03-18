@@ -17,8 +17,8 @@ package object xml {
   }
 
   private def postJobContent(args: Seq[Term.Arg]): Term = {
-    Term.Block(args.foldLeft(List[Term]())((acc, arg) => q"""
-`#scala.ioc#let`("cdata", $arg,
+    Term.Block((List[Term]() /: args)((acc, arg) => q"""
+`#scala.ioc#let`("cdata" -> ${arg.asInstanceOf[Term]},
   if (c("cdata") == ()) ()
   else ${Term.Block(xmlWriter(q"writeCharacters",
       Seq[Term](q"""c("cdata").toString""")))}
@@ -97,10 +97,10 @@ package object xml {
     val (argMap, leftovers, unspecified) = mapArgs(Seq(), args)
     Term.Block(
         xmlWriter(q"writeStartElement", Seq[Term](Lit.String(localName))) ++
-        argMap.foldLeft(List(
+        (List(
             q"""${toWorker(postJobContent(leftovers))}(c)"""
           , q"""typeclassImpl.writeEndElement(typeclassImpl.cast(writer))"""
-        )){
+        ) /: argMap){
           case (a, (k, v)) =>
             q"""typeclassImpl.writeAttribute(typeclassImpl.cast(writer))($k, $v)""" :: a
         }

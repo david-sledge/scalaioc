@@ -33,8 +33,9 @@ class FactorySpec extends FlatSpec with Matchers {
 
   "Lazy manager" should "produce the same thing until forced otherwise" in {
     val factory = Factory()
-    factory.setLazyManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance()}")
-    val result = factory.crackTheWhip("lazyManager", Map())
+    factory.setLazyManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance.getTime}")
+    val result = factory.putToWork("lazyManager", Map())
+    Thread sleep 2000
     result should be (factory.putToWork("lazyManager", Map()))
     result should not be (factory.crackTheWhip("lazyManager", Map()))
   }

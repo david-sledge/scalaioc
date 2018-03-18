@@ -6,7 +6,7 @@ import scala.meta._
 
 final class Staffing {
 
-  private def postManagerJob(name: Term.Name)
+  def postManagerJob(name: Term.Name)
       (namespaceName: String, localName: String)
       (expr: Term, args: Seq[Term.Arg]): Tree = {
     val (named, _, leftovers) = mapArgs(Seq("worker"), args)
@@ -15,7 +15,7 @@ factory.$name($expr, ${toWorker(named("worker"))})
 """
   }
 
-  private def postRefJob(name: Term.Name)
+  def postRefJob(name: Term.Name)
       (namespaceName: String, localName: String)
       (expr: Term, args: Seq[Term.Arg]): Tree = {
     val (named, _, leftovers) = mapArgs(Seq("id"), args)
@@ -34,23 +34,21 @@ factory.$name(${named("id")}, c)
             "ref" -> postRefJob(q"putToWork"),
             "ref!" -> postRefJob(q"crackTheWhip"),
             "let" -> ((namespaceName, localName) => (expr, args) => {
-              val (named, _, leftovers) =
-                mapArgs(Seq("id", "value", "block"), args)
-              q"""${toWorker(named("block"))}(
-c + (${named("id")} -> ${named("value")}))"""
-            }),
+              (null.asInstanceOf[Term] /: args)((acc, block) =>
+                if (acc == null) block.asInstanceOf[Term]
+                else q"""${toWorker(block.asInstanceOf[Term])}(c + ($acc))""")
+              }),
             "resource" -> ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) = mapArgs(Seq("path"), args)
               q"""org.iocframework.staffFactoryFromResource(${named("path")},
 factory = factory, staffing = staffing)"""
             }),
-            "recruiter" -> ((namespaceName, localName) => (expr, args) => {
+            "def" -> ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) =
-                mapArgs(Seq("namespaceName", "localName", "defn"), args)
+                mapArgs(Seq("localName", "defn"), args)
               org.iocframework.staffFactory(
                   q"""staffing.addRecruiter(${
-                    if (named contains "namespaceName") named("namespaceName")
-                    else Lit.Null(null)
+                    if (expr == null) Lit.Null(null) else expr
                   }, ${
                     if (named contains "localName") named("localName")
                     else Lit.Null(null)
