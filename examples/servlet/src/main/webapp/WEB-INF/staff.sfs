@@ -1,0 +1,41 @@
+`namespace|scala.ioc`
+`namespace x|scala.xml`
+`namespace|scala.xml.element`
+`namespace ioc|scala.ioc`
+
+"scala.xml" `#ioc|def` ("xml", scala.ioc.xml.postJobXml)
+"scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.postJobDtd)
+"scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.postJobCdata)
+"scala.xml" `#ioc|def` ("!", scala.ioc.xml.postJobComment)
+"scala.xml" `#ioc|def` ("?", scala.ioc.xml.postJobProcInstr)
+"scala.xml.element" `#ioc|def` (null, scala.ioc.xml.postJobElement)
+
+import javax.servlet.http.HttpServletResponse
+import javax.xml.stream.XMLOutputFactory
+import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
+
+"requestHandler" `#ioc|=>` {
+  val stream = c("resp").asInstanceOf[HttpServletResponse].getOutputStream
+  val enc = "utf-8"
+  `#ioc|let`(
+    "xmlWriter" -> (
+      XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
+      xmlStreamWriter
+    ),
+    "enc" -> enc,
+    {
+      `#x|xml`(encoding = enc, version = "1.0",
+        dtd = "<!DOCTYPE html>",
+        `#html`(xmlns = "http://www.w3.org/1999/xhtml",
+          `#head`(`#title`("IoC Servlet Example")),
+          `#body`(
+            `#h1`("IoC Servlet Example"),
+            `#p`("Hello, World!")
+          )// body
+        )// html
+      )// xml
+    }
+  )
+  stream.flush
+  stream.close
+}

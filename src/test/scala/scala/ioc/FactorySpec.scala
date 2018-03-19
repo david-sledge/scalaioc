@@ -23,6 +23,7 @@ class FactorySpec extends FlatSpec with Matchers {
     val id = "lazy bastard"
     factory.setLazyManager(id, c => System.currentTimeMillis)
     val result = factory.putToWork(id, Map())
+    Thread sleep 2000
     val result2 = factory.putToWork(id, Map())
     result shouldBe result2
     factory.clearCache

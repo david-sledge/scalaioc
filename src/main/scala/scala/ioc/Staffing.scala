@@ -33,11 +33,12 @@ factory.$name(${named("id")}, c)
             "=>" -> postManagerJob(q"setManager"),
             "ref" -> postRefJob(q"putToWork"),
             "ref!" -> postRefJob(q"crackTheWhip"),
-            "let" -> ((namespaceName, localName) => (expr, args) => {
-              (null.asInstanceOf[Term] /: args)((acc, block) =>
-                if (acc == null) block.asInstanceOf[Term]
-                else q"""${toWorker(block.asInstanceOf[Term])}(c + ($acc))""")
-              }),
+            "let" -> ((namespaceName, localName) => (expr, args) =>
+              (args :\ null.asInstanceOf[Term])((block, acc) =>
+                  if (acc == null) block.asInstanceOf[Term]
+                  else q"""${toWorker(acc)}(c + (${block.asInstanceOf[Term]}))"""
+                )
+              ),
             "resource" -> ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) = mapArgs(Seq("path"), args)
               q"""org.iocframework.staffFactoryFromResource(${named("path")},

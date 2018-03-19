@@ -37,6 +37,7 @@ class IocServlet extends GenericServlet {
       else IocServlet.DefaultStaffPath
     val stream = getServletContext.getResourceAsStream(staffPath)
     val (factory, _) = staffFactoryFromStream(stream)
+    this.factory = factory
 
     // get the name of the worker to handle HTTP requests
     handlerName =
@@ -116,7 +117,7 @@ object IocServlet {
   val ServletConfigNameParam = "servletConfigName"
 
   // defaults
-  val DefaultStaffPath = "staff.sfs"
+  val DefaultStaffPath = "/WEB-INF/staff.sfs"
   val DefaultHandlerName = "requestHandler"
   val DefaultRequestKey = "req"
   val DefaultResponseKey = "resp"
