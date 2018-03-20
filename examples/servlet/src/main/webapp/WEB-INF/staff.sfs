@@ -13,7 +13,39 @@
 import javax.servlet.http.HttpServletResponse
 import javax.xml.stream.XMLOutputFactory
 import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
+import scala.servlet.http.HttpRequestHandler
 
+/*
+"requestHandler" `#ioc|=` HttpRequestHandler(optionHandleGet =
+  (req: HttpServletRequest, resp: HttpServletResponse) => {
+    val stream = resp.asInstanceOf[HttpServletResponse].getOutputStream
+    val enc = "utf-8"
+    `#ioc|let`(
+      "xmlWriter" -> (
+        XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
+        xmlStreamWriter
+      ),
+      {
+        `#x|xml`(encoding = enc, version = "1.0",
+          dtd = "<!DOCTYPE html>",
+          `#html`(xmlns = "http://www.w3.org/1999/xhtml",
+            `#head`(`#title`("IoC Servlet Example")),
+            `#body`(
+              `#h1`("IoC Servlet Example"),
+              `#p`("Hello, World!")
+            )// body
+          )// html
+        )// xml
+      }
+    )
+  }).handleRequest
+
+"handleRequest" `#ioc|=>` `#ioc|ref`("requestHandler")(
+  c("req").asInstanceOf[HttpServletRequest],
+  c("resp").asInstanceOf[HttpServletResponse])
+// */
+
+//*
 "requestHandler" `#ioc|=>` {
   val stream = c("resp").asInstanceOf[HttpServletResponse].getOutputStream
   val enc = "utf-8"
@@ -22,7 +54,6 @@ import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
       XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
       xmlStreamWriter
     ),
-    "enc" -> enc,
     {
       `#x|xml`(encoding = enc, version = "1.0",
         dtd = "<!DOCTYPE html>",
@@ -36,6 +67,5 @@ import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
       )// xml
     }
   )
-  stream.flush
-  stream.close
 }
+// */
