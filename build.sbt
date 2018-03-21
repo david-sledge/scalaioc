@@ -39,9 +39,7 @@ lazy val servletExample = (project in file("examples/servlet"))
     name := "servletExample",
     libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
       "provided"
-  ).dependsOn(root)
-
-enablePlugins(TomcatPlugin)
+  ).enablePlugins(TomcatPlugin).dependsOn(root)
 
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a

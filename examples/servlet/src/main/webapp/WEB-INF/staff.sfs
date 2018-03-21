@@ -15,7 +15,7 @@ import javax.xml.stream.XMLOutputFactory
 import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
 import scala.servlet.http.HttpRequestHandler
 
-/*
+//*
 "requestHandler" `#ioc|=` HttpRequestHandler(optionHandleGet =
   (req: HttpServletRequest, resp: HttpServletResponse) => {
     val stream = resp.asInstanceOf[HttpServletResponse].getOutputStream
@@ -32,7 +32,8 @@ import scala.servlet.http.HttpRequestHandler
             `#head`(`#title`("IoC Servlet Example")),
             `#body`(
               `#h1`("IoC Servlet Example"),
-              `#p`("Hello, World!")
+              `#p`("Hello, World!"),
+              `#p`(style = "display:none", "Hello, Scala World!"),
             )// body
           )// html
         )// xml
@@ -45,7 +46,7 @@ import scala.servlet.http.HttpRequestHandler
   c("resp").asInstanceOf[HttpServletResponse])
 // */
 
-//*
+/*
 "requestHandler" `#ioc|=>` {
   val stream = c("resp").asInstanceOf[HttpServletResponse].getOutputStream
   val enc = "utf-8"
