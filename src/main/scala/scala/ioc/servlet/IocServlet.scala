@@ -6,7 +6,7 @@ import scala.ioc._
 import javax.servlet.GenericServlet
 import javax.servlet.ServletException
 import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse;
+import javax.servlet.ServletResponse
 
 /**
  * @author David M. Sledge
@@ -30,13 +30,19 @@ class IocServlet extends GenericServlet {
    */
   override def init() = {
     val paramNames: List[String] = getInitParameterNames.asScala.toList
+    val staffing = Staffing()
+    val ctx = getServletContext
+    staffing.addRecruiter("scala.servlet", "include", includeImpl(ctx))
     // get the path to the sfs
-    val staffPath =
-      if (paramNames contains IocServlet.StaffPathParam)
-        getInitParameter(IocServlet.StaffPathParam)
-      else IocServlet.DefaultStaffPath
-    val stream = getServletContext.getResourceAsStream(staffPath)
-    val (factory, _) = staffFactoryFromStream(stream)
+    val (factory, _) = staffFactoryFromStream(
+        ctx.getResourceAsStream(
+          if (paramNames contains IocServlet.StaffPathParam)
+            getInitParameter(IocServlet.StaffPathParam)
+          else IocServlet.DefaultStaffPath
+        ),
+        // TODO: address encoding
+        staffing = staffing
+      )
     this.factory = factory
 
     // get the name of the worker to handle HTTP requests
@@ -88,14 +94,14 @@ class IocServlet extends GenericServlet {
     if (initializerName != null)
     {
       factory.putToWork(initializerName,
-          Map(servletConfigName -> getServletConfig()))
+          Map(servletConfigName -> getServletConfig))
     }
   }
 
   override def destroy() =
     if (destroyerName != null)
       factory.putToWork(destroyerName,
-          Map(servletConfigName -> getServletConfig()))
+          Map(servletConfigName -> getServletConfig))
 
   /*
    * (non-Javadoc)

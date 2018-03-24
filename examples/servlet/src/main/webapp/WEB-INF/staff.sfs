@@ -1,7 +1,7 @@
-`namespace|scala.ioc`
-`namespace x|scala.xml`
 `namespace|scala.xml.element`
+`namespace x|scala.xml`
 `namespace ioc|scala.ioc`
+`namespace web|scala.servlet`
 
 "scala.xml" `#ioc|def` ("xml", scala.ioc.xml.postJobXml)
 "scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.postJobDtd)
@@ -10,21 +10,24 @@
 "scala.xml" `#ioc|def` ("?", scala.ioc.xml.postJobProcInstr)
 "scala.xml.element" `#ioc|def` (null, scala.ioc.xml.postJobElement)
 
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.xml.stream.XMLOutputFactory
 import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
 import scala.servlet.http.HttpRequestHandler
 
-//*
-"requestHandler" `#ioc|=` HttpRequestHandler(optionHandleGet =
+val requestHandler = HttpRequestHandler(optionHandleGet =
   (req: HttpServletRequest, resp: HttpServletResponse) => {
     val stream = resp.asInstanceOf[HttpServletResponse].getOutputStream
     val enc = "utf-8"
+    val c = scala.collection.immutable.Map[Any, Any]("req" -> req, "resp" -> resp)
     `#ioc|let`(
       "xmlWriter" -> (
         XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
         xmlStreamWriter
       ),
+      `#web|include`("/WEB-INF/hello.sfs")
+      /*
       {
         `#x|xml`(encoding = enc, version = "1.0",
           dtd = "<!DOCTYPE html>",
@@ -38,35 +41,10 @@ import scala.servlet.http.HttpRequestHandler
           )// html
         )// xml
       }
+      // */
     )
-  }).handleRequest
+  })
 
-"handleRequest" `#ioc|=>` `#ioc|ref`("requestHandler")(
+"requestHandler" `#ioc|=>` requestHandler(
   c("req").asInstanceOf[HttpServletRequest],
   c("resp").asInstanceOf[HttpServletResponse])
-// */
-
-/*
-"requestHandler" `#ioc|=>` {
-  val stream = c("resp").asInstanceOf[HttpServletResponse].getOutputStream
-  val enc = "utf-8"
-  `#ioc|let`(
-    "xmlWriter" -> (
-      XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
-      xmlStreamWriter
-    ),
-    {
-      `#x|xml`(encoding = enc, version = "1.0",
-        dtd = "<!DOCTYPE html>",
-        `#html`(xmlns = "http://www.w3.org/1999/xhtml",
-          `#head`(`#title`("IoC Servlet Example")),
-          `#body`(
-            `#h1`("IoC Servlet Example"),
-            `#p`("Hello, World!")
-          )// body
-        )// html
-      )// xml
-    }
-  )
-}
-// */

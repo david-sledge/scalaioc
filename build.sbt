@@ -46,7 +46,7 @@ lazy val servletExample = (project in file("examples/servlet"))
 // place like Sonatype or Bintray.
 
 scalacOptions ++= Seq(
-  "-deprecation"
+  "-deprecation", "-feature"
 )
 
 // Want to use a published library in your project?

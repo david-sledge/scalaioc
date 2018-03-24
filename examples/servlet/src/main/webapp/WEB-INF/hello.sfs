@@ -1,0 +1,11 @@
+`#x|xml`(encoding = enc, version = "1.0",
+  dtd = "<!DOCTYPE html>",
+  `#html`(xmlns = "http://www.w3.org/1999/xhtml",
+    `#head`(`#title`("IoC Servlet Example")),
+    `#body`(
+      `#h1`("IoC Servlet Example"),
+      `#p`("Hello, World!"),
+      `#p`(style = "display:none", "Hello, Scala World!"),
+    )// body
+  )// html
+)// xml

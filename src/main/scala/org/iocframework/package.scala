@@ -14,6 +14,7 @@ package object iocframework {
 (factory: scala.ioc.Factory) =>
   (staffing: scala.ioc.Staffing) => {$conf}
 """.parse[Stat].get).syntax
+    //println(code)
     // obtain toolbox
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
     // generate the AST

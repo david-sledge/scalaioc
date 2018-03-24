@@ -30,7 +30,6 @@ package object xml {
   : Tree = {
     val (argMap, leftovers, _) = mapArgs(Seq(), args)
 
-
     Term.Block(
         (
           if (argMap.contains("version"))

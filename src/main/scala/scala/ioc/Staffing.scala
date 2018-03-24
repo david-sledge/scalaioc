@@ -34,7 +34,7 @@ factory.$name(${named("id")}, c)
             "ref" -> postRefJob(q"putToWork"),
             "ref!" -> postRefJob(q"crackTheWhip"),
             "let" -> ((namespaceName, localName) => (expr, args) =>
-              (args :\ null.asInstanceOf[Term])((block, acc) =>
+                (args :\ null.asInstanceOf[Term])((block, acc) =>
                   if (acc == null) block.asInstanceOf[Term]
                   else q"""${toWorker(acc)}(c + (${block.asInstanceOf[Term]}))"""
                 )
@@ -55,6 +55,28 @@ factory = factory, staffing = staffing)"""
                     else Lit.Null(null)
                   },
 ${named("defn")})""".syntax, null, this)
+              q"()"
+            }),
+            "include" -> ((namespaceName, localName) => (expr, args) => {
+              val (named, _, leftovers) = mapArgs(Seq("path", "encoding"), args)
+              if (named contains "path")
+                named("path") match {
+                  case Lit.String(path) => {
+                    val encoding =
+                      if (named contains "encoding")
+                        named("encoding") match {
+                          case Lit.String(encoding) => encoding
+                          case _ => throw new IllegalArgumentException(
+                            "The optional 'encoding' argument if supplied must be a string literal")
+                        }
+                      else "utf-8"
+                    scala.io.Source.fromFile(path, encoding).mkString.parse[Stat].get
+                  }
+                  case _ => throw new IllegalArgumentException(
+                      "'path' argument must be a string literal")
+                }
+              else
+                throw new IllegalArgumentException("'path' argument must be provided as a string literal")
               q"()"
             })
           ))
