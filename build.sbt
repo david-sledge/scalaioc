@@ -3,10 +3,10 @@
 lazy val commonSettings = Seq(
     organization := "iocframework.org",
     version := "0.5.0-SNAPSHOT",
-    scalaVersion := "2.12.4"
+    scalaVersion := "2.12.8"
   )
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.8"
 // That is, to create a valid sbt build, all you've got to do is define the
 // version of Scala you'd like your project to use.
 
@@ -21,7 +21,7 @@ scalaVersion := "2.12.4"
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
-    name := "scalaioc",
+    name := "scala-blm",
     libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
       "provided"
   )
@@ -29,7 +29,7 @@ lazy val root = (project in file("."))
 lazy val simpleExample = (project in file("examples/simple"))
   .settings(
     commonSettings,
-    unmanagedClasspath in Runtime += baseDirectory.value / "src/resources",
+    unmanagedClasspath in Runtime += baseDirectory.value / "src/main/resources",
     name := "simpleExample"
   ).dependsOn(root)
 
@@ -52,8 +52,7 @@ scalacOptions ++= Seq(
 // Want to use a published library in your project?
 // You can define other libraries as dependencies in your build like this:
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-compiler" % "2.12.4",
-  "org.scalameta" %% "scalameta" % "1.8.0",
+  "org.scala-lang" % "scala-compiler" % "2.12.8",
   "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 )
 

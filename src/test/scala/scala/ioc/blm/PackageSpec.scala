@@ -1,11 +1,9 @@
-package org.iocframework
+package scala.ioc.blm
 
+import scala.ioc._
 import org.scalatest._
-import scala.meta._
-import org.scalactic.source.Position.apply
-import scala.ioc.Factory
 
-class IocFrameworkSpec extends FlatSpec with Matchers {
+class PackageSpec extends FlatSpec with Matchers {
 
   "Staffing a factory" should "populate it with workers" in {
     val conf = """
@@ -16,13 +14,26 @@ class IocFrameworkSpec extends FlatSpec with Matchers {
 "id" `#=` (worker = "worker")
 "id".`#=`(worker = "worker")
 "id" `#=>` "worker"
+`#def`(None, {
+  import scala.collection.immutable._
+  import scala.reflect.runtime.universe._
+
+  (namespaceName: Option[String], localName: Option[String]) => (expr: Option[Tree], args: Seq[Tree]) => {
+    import scala.reflect.runtime.universe._
+    Right(q"()")
+  }
+})
 """
-    val (factory, _) = staffFactory(conf)
+    val (factory, preprocessor) = staffFactory(conf)
+    preprocessor.hasMacro(None, "") shouldBe true
+    preprocessor.hasOwnMacro(None, "") shouldBe false
     val (fFactory, _) = staffFactoryFromFile("src/test/resources/staff.sfs")
     factoryCalls(fFactory)
     fFactory.putToWork("requestHandler", Map()) shouldBe "I'll handle it"
     val (ffFactory, _) = staffFactoryFromResource("staff.sfs")
     factoryCalls(ffFactory)
+    /*
+    */
   }
 
   def factoryCalls(factory: Factory) = {

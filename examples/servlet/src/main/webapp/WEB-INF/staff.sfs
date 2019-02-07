@@ -3,29 +3,29 @@
 `namespace ioc|scala.ioc`
 `namespace web|scala.servlet`
 
-"scala.xml" `#ioc|def` ("xml", scala.ioc.xml.postJobXml)
-"scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.postJobDtd)
-"scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.postJobCdata)
-"scala.xml" `#ioc|def` ("!", scala.ioc.xml.postJobComment)
-"scala.xml" `#ioc|def` ("?", scala.ioc.xml.postJobProcInstr)
-"scala.xml.element" `#ioc|def` (null, scala.ioc.xml.postJobElement)
+"scala.xml" `#ioc|def` ("xml", scala.ioc.xml.blm.postJobXml _)
+"scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.blm.postJobDtd _)
+"scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.blm.postJobCdata _)
+"scala.xml" `#ioc|def` ("!", scala.ioc.xml.blm.postJobComment _)
+"scala.xml" `#ioc|def` ("?", scala.ioc.xml.blm.postJobProcInstr _)
+"scala.xml.element" `#ioc|def` (None, scala.ioc.xml.blm.postJobElement _)
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.xml.stream.XMLOutputFactory
-import scala.xml.writer.XmlStreamWriter.xmlStreamWriter
+import scala.xml.stream.{writer => xmlStreamWriter}
 import scala.servlet.http.HttpRequestHandler
 
-val requestHandler = HttpRequestHandler(optionHandleGet =
+val requestHandler = HttpRequestHandler(handleGet =
   (req: HttpServletRequest, resp: HttpServletResponse) => {
     val stream = resp.asInstanceOf[HttpServletResponse].getOutputStream
     val enc = "utf-8"
     val c = scala.collection.immutable.Map[Any, Any]("req" -> req, "resp" -> resp)
     `#ioc|let`(
-      "xmlWriter" -> (
+      "xmlWriter" -> ((
         XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
         xmlStreamWriter
-      ),
+      )),
       `#web|include`("/WEB-INF/hello.sfs")
       /*
       {

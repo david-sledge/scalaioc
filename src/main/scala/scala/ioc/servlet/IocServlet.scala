@@ -1,8 +1,10 @@
 package scala.ioc.servlet
 
+  import blm._
+import scala.blm._
 import scala.collection.JavaConverters._
-import org.iocframework.staffFactoryFromStream
 import scala.ioc._
+import scala.ioc.blm._
 import javax.servlet.GenericServlet
 import javax.servlet.ServletException
 import javax.servlet.ServletRequest
@@ -15,24 +17,19 @@ class IocServlet extends GenericServlet {
   private val serialVersionUID = 797867274650863128L
 
   // results
-  private var factory: Factory = _
-  private var handlerName: String = _
-  private var initializerName: String = _
-  private var destroyerName: String = _
-  private var reqName: String = _
-  private var respName: String = _
-  private var servletConfigName: String = _
+  private var factory: Option[Factory] = None
+  private var handlerName: String = IocServlet.DefaultHandlerName
+  private var initializerName: Option[String] = None
+  private var destroyerName: Option[String] = None
+  private var reqName: String = IocServlet.DefaultRequestKey
+  private var respName: String = IocServlet.DefaultResponseKey
+  private var servletConfigName: String = IocServlet.DefaultServletConfigKey
 
-  /**
-   * Initialization of the servlet. <br>
-   * 
-   * @throws ServletException if an error occured
-   */
   override def init() = {
     val paramNames: List[String] = getInitParameterNames.asScala.toList
-    val staffing = Staffing()
+    val preprocessor = Preprocessor()
     val ctx = getServletContext
-    staffing.addRecruiter("scala.servlet", "include", includeImpl(ctx))
+    preprocessor.addMacro(Some("scala.servlet"), Some("include"), includeImpl(ctx))
     // get the path to the sfs
     val (factory, _) = staffFactoryFromStream(
         ctx.getResourceAsStream(
@@ -40,16 +37,17 @@ class IocServlet extends GenericServlet {
             getInitParameter(IocServlet.StaffPathParam)
           else IocServlet.DefaultStaffPath
         ),
-        // TODO: address encoding
-        staffing = staffing
+        preprocessor = preprocessor,
+        encoding =
+          if (paramNames contains IocServlet.EncodingParam)
+            getInitParameter(IocServlet.EncodingParam)
+          else IocServlet.DefaultEncoding// */
       )
-    this.factory = factory
+    this.factory = Some(factory)
 
     // get the name of the worker to handle HTTP requests
-    handlerName =
-      if (paramNames.contains(IocServlet.HandlerParam))
-        getInitParameter(IocServlet.HandlerParam)
-      else IocServlet.DefaultHandlerName
+    if (paramNames.contains(IocServlet.HandlerParam))
+      handlerName = getInitParameter(IocServlet.HandlerParam)
 
     // make sure the worker exists
     if (!factory.hasManager(handlerName))
@@ -57,50 +55,46 @@ class IocServlet extends GenericServlet {
           + handlerName + "' to handle HTTP requests")
 
     // optional worker to perform initializing procedures
-    initializerName = getInitParameter(IocServlet.InitializerParam)
+    initializerName = Some(getInitParameter(IocServlet.InitializerParam))
 
-    if (initializerName != null && !factory.hasManager(initializerName))
+    if (initializerName != None && !factory.hasManager(initializerName))
     {
       log("no factory worker by the name of '" + initializerName
           + "' found.")
-      initializerName = null
+      initializerName = None
     }
 
     // optional worker to perform shutdown procedures
-    destroyerName = getInitParameter(IocServlet.DestroyerParam);
+    destroyerName = Some(getInitParameter(IocServlet.DestroyerParam))
 
-    if (destroyerName != null && !factory.hasManager(destroyerName))
+    if (destroyerName != None && !factory.hasManager(destroyerName))
     {
       log("no factory worker by the name of '" + destroyerName + "' found.")
-      destroyerName = null
+      destroyerName = None
     }
 
     // key for local request object
-    reqName =
-      if (paramNames.contains(IocServlet.RequestNameParam))
-        getInitParameter(IocServlet.RequestNameParam)
-      else IocServlet.DefaultRequestKey
-    // key for local response object
-    respName =
-      if (paramNames.contains(IocServlet.ResponseNameParam))
-        getInitParameter(IocServlet.ResponseNameParam)
-      else IocServlet.DefaultResponseKey
-    // key for local servletConfig object
-    servletConfigName =
-      if (paramNames.contains(IocServlet.ServletConfigNameParam))
-        getInitParameter(IocServlet.ServletConfigNameParam)
-      else IocServlet.DefaultServletConfigKey
+    if (paramNames.contains(IocServlet.RequestNameParam))
+      reqName = getInitParameter(IocServlet.RequestNameParam)
 
-    if (initializerName != null)
+    // key for local response object
+    if (paramNames.contains(IocServlet.ResponseNameParam))
+      respName = getInitParameter(IocServlet.ResponseNameParam)
+
+    // key for local servletConfig object
+    if (paramNames.contains(IocServlet.ServletConfigNameParam))
+      servletConfigName = getInitParameter(IocServlet.ServletConfigNameParam)
+
+    if (initializerName != None)
     {
-      factory.putToWork(initializerName,
+      factory.putToWork(initializerName.get,
           Map(servletConfigName -> getServletConfig))
     }
   }
 
   override def destroy() =
-    if (destroyerName != null)
-      factory.putToWork(destroyerName,
+    if (destroyerName != None)
+      factory.get.putToWork(destroyerName.get,
           Map(servletConfigName -> getServletConfig))
 
   /*
@@ -109,12 +103,13 @@ class IocServlet extends GenericServlet {
    * javax.servlet.ServletResponse)
    */
   override def service(req: ServletRequest, resp: ServletResponse) =
-    factory.putToWork(handlerName, Map(reqName -> req, respName -> resp))
+    factory.get.putToWork(handlerName, Map(reqName -> req, respName -> resp))
 }
 
 object IocServlet {
   // Parameters
   val StaffPathParam = "staffPath"
+  val EncodingParam = "enc"
   val HandlerParam = "handlerName"
   val InitializerParam = "initializerName"
   val DestroyerParam = "destroyerName"
@@ -124,6 +119,7 @@ object IocServlet {
 
   // defaults
   val DefaultStaffPath = "/WEB-INF/staff.sfs"
+  val DefaultEncoding = "utf-8"
   val DefaultHandlerName = "requestHandler"
   val DefaultRequestKey = "req"
   val DefaultResponseKey = "resp"
