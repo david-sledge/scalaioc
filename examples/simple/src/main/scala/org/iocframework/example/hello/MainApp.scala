@@ -1,6 +1,6 @@
 package org.iocframework.example.hello
 
-import org.iocframework.staffFactoryFromResource
+import scala.ioc.blm._
 import scala.ioc.Factory
 
 object MainApp extends App {
