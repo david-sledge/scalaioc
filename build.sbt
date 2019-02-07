@@ -21,7 +21,7 @@ scalaVersion := "2.12.8"
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
-    name := "scalaioc",
+    name := "scala-ioc",
     libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
       "provided"
   )
