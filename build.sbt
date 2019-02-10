@@ -2,7 +2,7 @@
 
 lazy val commonSettings = Seq(
     organization := "iocframework.org",
-    version := "0.5.0-SNAPSHOT",
+    version := "v1.0.0-alpha",
     scalaVersion := "2.12.8"
   )
 
@@ -21,7 +21,7 @@ scalaVersion := "2.12.8"
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
-    name := "scala-ioc",
+    name := "scalaioc",
     libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
       "provided"
   )
