@@ -7,7 +7,7 @@ import scala.collection.concurrent.TrieMap
  */
 final class Factory(val id: Any)
 {
-  private abstract class Manager
+  private sealed abstract class Manager
 
   private case class EvaledThunk(value: Any, worker: Map[Any, Any] => Any) extends Manager
 
@@ -26,10 +26,11 @@ final class Factory(val id: Any)
       newValue
     }
 
-    managers(id) match {
-      case EvaledThunk(value, worker) => if (useCachedValue) value else evalThunk(worker)
-      case Thunk(worker) => evalThunk(worker)
-      case Strict(worker) => worker(newC)
+    managers.get(id) match {
+      case Some(EvaledThunk(value, worker)) => if (useCachedValue) value else evalThunk(worker)
+      case Some(Thunk(worker)) => evalThunk(worker)
+      case Some(Strict(worker)) => worker(newC)
+      case None => throw new Exception("manager with ID " + id + " does not exists.")
     }
   }
 
@@ -51,11 +52,12 @@ final class Factory(val id: Any)
   /**
    * Look up someone in the company directory
    */
-  def getManager(id: Any): Map[Any, Any] => Any = {
-    managers(id) match {
-      case EvaledThunk(value, worker) => worker
-      case Thunk(worker) => worker
-      case Strict(worker) => worker
+  def getManager(id: Any): Option[Map[Any, Any] => Any] = {
+    managers.get(id) match {
+      case Some(EvaledThunk(value, worker)) => Some(worker)
+      case Some(Thunk(worker)) => Some(worker)
+      case Some(Strict(worker)) => Some(worker)
+      case _ => None
     }
   }
 

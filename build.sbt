@@ -2,7 +2,8 @@
 
 lazy val commonSettings = Seq(
     organization := "iocframework.org",
-    version := "v1.0.0-alpha",
+    // https://semver.org/
+    version := "v1.0.0-alpha.1",
     scalaVersion := "2.12.8"
   )
 
@@ -21,6 +22,7 @@ scalaVersion := "2.12.8"
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
+    unmanagedClasspath in Runtime += baseDirectory.value / "src/main/resources",
     name := "scalaioc",
     libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" %
       "provided"
@@ -53,6 +55,7 @@ scalacOptions ++= Seq(
 // You can define other libraries as dependencies in your build like this:
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % "2.12.8",
+  "org.scala-lang" % "scala-reflect" % "2.12.8",
   "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 )
 

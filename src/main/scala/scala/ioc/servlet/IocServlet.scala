@@ -29,7 +29,7 @@ class IocServlet extends GenericServlet {
     val paramNames: List[String] = getInitParameterNames.asScala.toList
     val preprocessor = Preprocessor()
     val ctx = getServletContext
-    preprocessor.addMacro(Some("scala.servlet"), Some("include"), includeImpl(ctx))
+    preprocessor.addMacro(Some("scala.servlet"), Some("embed"), embedImpl(ctx))
     // get the path to the sfs
     val (factory, _) = staffFactoryFromStream(
         ctx.getResourceAsStream(
@@ -41,13 +41,17 @@ class IocServlet extends GenericServlet {
         encoding =
           if (paramNames contains IocServlet.EncodingParam)
             getInitParameter(IocServlet.EncodingParam)
-          else IocServlet.DefaultEncoding// */
+          else IocServlet.DefaultEncoding,// */
+        src = Some(IocServlet.DefaultStaffPath)
       )
     this.factory = Some(factory)
 
     // get the name of the worker to handle HTTP requests
     if (paramNames.contains(IocServlet.HandlerParam))
-      handlerName = getInitParameter(IocServlet.HandlerParam)
+      handlerName = Option(getInitParameter(IocServlet.HandlerParam)) match {
+        case Some(name) => name
+        case None => IocServlet.DefaultHandlerName
+      }
 
     // make sure the worker exists
     if (!factory.hasManager(handlerName))
@@ -55,22 +59,25 @@ class IocServlet extends GenericServlet {
           + handlerName + "' to handle HTTP requests")
 
     // optional worker to perform initializing procedures
-    initializerName = Some(getInitParameter(IocServlet.InitializerParam))
-
-    if (initializerName != None && !factory.hasManager(initializerName))
-    {
-      log("no factory worker by the name of '" + initializerName
-          + "' found.")
-      initializerName = None
+    initializerName = Option(getInitParameter(IocServlet.InitializerParam)) match {
+      case n @ Some(name) => if (!factory.hasManager(name))
+        {
+          log("no factory worker by the name of '" + name + "' found.")
+          None
+        }
+        else n
+      case _ => None
     }
 
     // optional worker to perform shutdown procedures
-    destroyerName = Some(getInitParameter(IocServlet.DestroyerParam))
-
-    if (destroyerName != None && !factory.hasManager(destroyerName))
-    {
-      log("no factory worker by the name of '" + destroyerName + "' found.")
-      destroyerName = None
+    destroyerName = Option(getInitParameter(IocServlet.DestroyerParam)) match {
+      case n @ Some(name) => if (!factory.hasManager(name))
+        {
+          log("no factory worker by the name of '" + name + "' found.")
+          None
+        }
+        else n
+      case _ => None
     }
 
     // key for local request object
@@ -102,8 +109,9 @@ class IocServlet extends GenericServlet {
    * @see javax.servlet.GenericServlet#service(javax.servlet.ServletRequest,
    * javax.servlet.ServletResponse)
    */
-  override def service(req: ServletRequest, resp: ServletResponse) =
+  override def service(req: ServletRequest, resp: ServletResponse) = {
     factory.get.putToWork(handlerName, Map(reqName -> req, respName -> resp))
+  }
 }
 
 object IocServlet {

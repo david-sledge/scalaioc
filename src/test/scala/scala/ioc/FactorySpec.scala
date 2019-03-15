@@ -8,7 +8,6 @@ class FactorySpec extends FlatSpec with Matchers {
     val worker = (c: Map[Any, Any]) => "I'm a manager"
     factory.setManager("manager", worker)
     factory.hasManager("manager") should be (true)
-    factory.getManager("manager").getClass should be (worker.getClass())
   }
 
   it should "note who's on roll" in {

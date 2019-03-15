@@ -1,6 +1,7 @@
 package scala.blm
 
 import scala.collection.concurrent.TrieMap
+import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.reflect.NameTransformer._
@@ -12,10 +13,27 @@ final class Preprocessor {
 
   private val transformer = new Transformer() {
 
-    val referrers = scala.collection.mutable.Map[Option[String], Option[String]]()
+    var referrers2 = Seq[Map[Option[String], Option[String]]]()
+
+    def getReferrer(ref: Option[String]) = {
+      referrers2 match {
+        case head +: tail => {
+          head.get(ref)
+        }
+        case _ => None
+      }
+    }
+
+    def setReferrer(ref: Option[String], namespaceName: Option[String]) = {
+      referrers2 = referrers2 match {
+        case head +: tail => {
+          (head + (ref -> namespaceName)) +: tail
+        }
+        case _ => referrers2
+      }
+    }
 
     override def transform(tree: Tree): Tree = {
-      referrers.empty
 
       def handlePrefix(
           name: String,
@@ -32,7 +50,7 @@ final class Preprocessor {
 
               if (referrerEnd == -1) {
                 // default namespace
-                val nsOpt = referrers.get(None)
+                val nsOpt = getReferrer(None)
                 val ns = nsOpt match {
                   case Some(ns) => ns
                   case _ => None
@@ -48,7 +66,7 @@ final class Preprocessor {
               else {
                 // referred namespace
                 val ref = name.substring(Preprocessor.MacroStart.length(), referrerEnd)
-                val nsOpt = referrers.get(Some(ref))
+                val nsOpt = getReferrer(Some(ref))
                 nsOpt match {
                   case Some(ns) => {
                     val localName = name.substring(referrerEnd + Preprocessor.ReferrerTerminator.length())
@@ -94,12 +112,12 @@ final class Preprocessor {
               if (pos == -1) {
                 false
               } else {
-                referrers += Some(name.substring(Preprocessor.NamespaceRef.length(), pos)) -> Some(name.substring(pos + Preprocessor.ReferrerTerminator.length()))
+                setReferrer(Some(name.substring(Preprocessor.NamespaceRef.length(), pos)), Some(name.substring(pos + Preprocessor.ReferrerTerminator.length())))
                 true
               }
             }
             else if (name.startsWith(Preprocessor.DefaultNamespace)) {
-              referrers += None -> Some(name.substring(Preprocessor.DefaultNamespace.length()))
+              setReferrer(None, Some(name.substring(Preprocessor.DefaultNamespace.length())))
               true
             }
             else {
@@ -124,13 +142,13 @@ final class Preprocessor {
             handlePrefix(name, expr, args)
           }
           catch {
-            case e: Exception => throw MacroException(e, pos)
+            case e: Exception => throw MacroException(e, src, pos)
           }
 
         result match {
-          case MacroNotFound(ns, localName) => throw new MacroNotFoundException(ns, localName, pos)
-          case UnboundReferrer(ref) => throw new UnboundReferrerException(ref, pos)
-          case Error(namespaceName, localName, isMissingRequiredObj, missingRequiredArgs) => throw new MissingRequiredObjectOrArguments(namespaceName, localName, isMissingRequiredObj, missingRequiredArgs, pos)
+          case MacroNotFound(ns, localName) => throw new MacroNotFoundException(ns, localName, src, pos)
+          case UnboundReferrer(ref) => throw new UnboundReferrerException(ref, src, pos)
+          case Error(namespaceName, localName, isMissingRequiredObj, missingRequiredArgs) => throw new MissingRequiredObjectOrArguments(namespaceName, localName, isMissingRequiredObj, missingRequiredArgs, src, pos)
           case Ok(expr) => expr
         }
       }
@@ -158,6 +176,18 @@ final class Preprocessor {
               }
             }
             case _ => super.transform(tree)
+          }
+        }
+        case Block(exprs, expr) => {
+          try {
+            referrers2 = referrers2 match {
+              case (head +: tail) => head +: referrers2
+              case _ => Map[Option[String], Option[String]]() +: referrers2
+            }
+            super.transform(tree)
+          }
+          finally {
+            referrers2 = referrers2.tail
           }
         }
         case _ => {

@@ -3,48 +3,28 @@
 `namespace ioc|scala.ioc`
 `namespace web|scala.servlet`
 
-"scala.xml" `#ioc|def` ("xml", scala.ioc.xml.blm.postJobXml _)
-"scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.blm.postJobDtd _)
-"scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.blm.postJobCdata _)
-"scala.xml" `#ioc|def` ("!", scala.ioc.xml.blm.postJobComment _)
-"scala.xml" `#ioc|def` ("?", scala.ioc.xml.blm.postJobProcInstr _)
-"scala.xml.element" `#ioc|def` (None, scala.ioc.xml.blm.postJobElement _)
+`#ioc|embed`("scala/ioc/xml/blm/macroDefs.sfs")
+`#ioc|embed`("scala/ioc/servlet/blm/macroDefs.sfs")
+
+import scala.collection.immutable.Seq
+import scala.servlet.http.RequestHandler
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.xml.stream.XMLOutputFactory
 import scala.xml.stream.{writer => xmlStreamWriter}
-import scala.servlet.http.HttpRequestHandler
 
-val requestHandler = HttpRequestHandler(handleGet =
-  (req: HttpServletRequest, resp: HttpServletResponse) => {
-    val stream = resp.asInstanceOf[HttpServletResponse].getOutputStream
+factory.setManager("requestHandler", scala.servlet.http.ioc.RequestHandler(
+	options = Seq("GET"),
+	getHandler =
+  Some((c: scala.collection.immutable.Map[Any, Any]) => {
+    val stream = c.get("resp").get.asInstanceOf[HttpServletResponse].getOutputStream
     val enc = "utf-8"
-    val c = scala.collection.immutable.Map[Any, Any]("req" -> req, "resp" -> resp)
     `#ioc|let`(
       "xmlWriter" -> ((
         XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
         xmlStreamWriter
       )),
-      `#web|include`("/WEB-INF/hello.sfs")
-      /*
-      {
-        `#x|xml`(encoding = enc, version = "1.0",
-          dtd = "<!DOCTYPE html>",
-          `#html`(xmlns = "http://www.w3.org/1999/xhtml",
-            `#head`(`#title`("IoC Servlet Example")),
-            `#body`(
-              `#h1`("IoC Servlet Example"),
-              `#p`("Hello, World!"),
-              `#p`(style = "display:none", "Hello, Scala World!"),
-            )// body
-          )// html
-        )// xml
-      }
-      // */
+      `#web|embed`("/WEB-INF/hello.sfs")
     )
-  })
-
-"requestHandler" `#ioc|=>` requestHandler(
-  c("req").asInstanceOf[HttpServletRequest],
-  c("resp").asInstanceOf[HttpServletResponse])
+  })))

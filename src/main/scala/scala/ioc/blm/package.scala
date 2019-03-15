@@ -122,34 +122,27 @@ factory.${TermName(name)}(${named(Id)}, c)
             }
           }))))
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("resource"), ((namespaceName, localName) => (expr, args) => {
-              val (named, _, leftovers) = mapArgs(Seq("path"), args)
-              Right(q"""scala.ioc.blm.staffFactoryFromResource(${named("path")},
-factory = factory, preprocessor = preprocessor)""")
-            }))
-
-//    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-//        Some("def"), ((namespaceName, localName) => (expr, args) => {
-//              val (named, _, leftovers) =
-//                mapArgs(Seq("localName", "defn"), args)
-//              val nsExpr = expr match {
-//                case Some(xpr) => q"Some($xpr)"
-//                case _ => q"None"
-//              }
-//              val localNameExpr =
-//                if (named contains "localName")
-//                  q"Some(${named("localName")})"
-//                else
-//                  q"None"
-//
-//              if (named contains "defn")
-//                Right(q"""
-//preprocessor.addMacro($nsExpr, $localNameExpr, ${named("defn")})
-//""")
-//              else
-//                Left((false, Seq("defn")))
-//            }))
+    preprocessor.addMacro(
+        Some(ScalaIocNamespaceName),
+        Some("resource"),
+        ((namespaceName, localName) => {
+          (expr, args) => {
+            val (named, _, leftovers) = mapArgs(Seq("path", "encoding"), args);
+            named.get("path") match {
+              case Some(pathExpr) => {
+                val rsrcExpr = named.get("encoding") match {
+                  case Some(encExpr) => q"""scala.ioc.blm.staffFactoryFromResource($pathExpr,
+$encExpr, factory = factory, preprocessor = preprocessor)"""
+                  case _ => q"""scala.ioc.blm.staffFactoryFromResource($pathExpr,
+factory = factory, preprocessor = preprocessor)"""
+                }
+                Right(rsrcExpr)
+              }
+              case _ => Left((false, Seq("path")))
+            }
+          }
+        })
+    )
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("def"), ((namespaceName, localName) => (expr, args) => {
@@ -183,7 +176,7 @@ factory = factory, preprocessor = preprocessor)""")
             }))
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("include"), ((namespaceName, localName) => (expr, args) => {
+        Some("embed"), ((namespaceName, localName) => (expr, args) => {
               val (named, _, leftovers) = mapArgs(Seq("path", "encoding"), args)
               if (named contains "path")
                 named("path") match {
@@ -198,7 +191,8 @@ factory = factory, preprocessor = preprocessor)""")
                       else "utf-8"
                     // obtain toolbox
                     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
-                    Right(tb.parse(scala.io.Source.fromFile(path, encoding).mkString))
+                    val code = fromInputStream(getClass.getClassLoader.getResourceAsStream(path), encoding).mkString
+                    Right(tb.parse(code))
                   }
                   case _ => throw new IllegalArgumentException(
                       "'path' argument must be a string literal")
@@ -212,28 +206,28 @@ factory = factory, preprocessor = preprocessor)""")
 
   // TODO:  scaladoc
   def staffFactory(conf: String, factory: Factory = Factory(),
-      preprocessor: Preprocessor = Preprocessor()): (Factory, Preprocessor) = {
+      preprocessor: Preprocessor = Preprocessor(), src: Option[String] = None): (Factory, Preprocessor) = {
     populateStaffingMacros(preprocessor)
     val code = s"""
 (factory: scala.ioc.Factory) =>
   (preprocessor: scala.blm.Preprocessor) => {$conf}
 """
-    scala.blm.Reader.execute[Factory => Preprocessor => Any](code, preprocessor)(factory)(preprocessor)
+    scala.blm.Reader.execute[Factory => Preprocessor => Any](code, preprocessor, src)(factory)(preprocessor)
     (factory, preprocessor)
   }
 
   // TODO:  scaladoc
   def staffFactoryFromFile(fileName: String, encoding: String = "utf-8", factory: Factory = Factory()
       , preprocessor: Preprocessor = Preprocessor()) =
-    staffFactory(fromFile(fileName, encoding).mkString, factory, preprocessor)
+    staffFactory(fromFile(fileName, encoding).mkString, factory, preprocessor, Some(fileName))
 
   // TODO:  scaladoc
   def staffFactoryFromResource(path: String, encoding: String = "utf-8", factory: Factory = Factory()
       , preprocessor: Preprocessor = Preprocessor()) =
-    staffFactoryFromStream(getClass.getClassLoader.getResourceAsStream(path), encoding, factory, preprocessor)
+    staffFactoryFromStream(getClass.getClassLoader.getResourceAsStream(path), encoding, factory, preprocessor, Some(path))
 
   // TODO:  scaladoc
   def staffFactoryFromStream(stream: java.io.InputStream, encoding: String = "utf-8", factory: Factory = Factory()
-      , preprocessor: Preprocessor = Preprocessor()) =
-    staffFactory(fromInputStream(stream, encoding).mkString, factory, preprocessor)
+      , preprocessor: Preprocessor = Preprocessor(), src: Option[String] = None) =
+    staffFactory(fromInputStream(stream, encoding).mkString, factory, preprocessor, src)
 }
