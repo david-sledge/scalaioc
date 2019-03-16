@@ -1,0 +1,8 @@
+`namespace ioc|scala.ioc`
+
+"scala.xml" `#ioc|def` ("xml", scala.ioc.xml.ppm.postJobXml _)
+"scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.ppm.postJobDtd _)
+"scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.ppm.postJobCdata _)
+"scala.xml" `#ioc|def` ("!", scala.ioc.xml.ppm.postJobComment _)
+"scala.xml" `#ioc|def` ("?", scala.ioc.xml.ppm.postJobProcInstr _)
+"scala.xml.element" `#ioc|def` (None, scala.ioc.xml.ppm.postJobElement _)

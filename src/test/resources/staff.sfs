@@ -19,4 +19,4 @@
 
 `#resource`("moreWorkers.sfs")
 
-`#embed`("scala/ioc/xml/blm/macroDefs.sfs")
+`#embed`("scala/ioc/xml/ppm/macroDefs.sfs")

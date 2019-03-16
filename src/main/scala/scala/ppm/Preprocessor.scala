@@ -1,4 +1,4 @@
-package scala.blm
+package scala.ppm
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.Map

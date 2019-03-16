@@ -3,8 +3,8 @@
 `namespace ioc|scala.ioc`
 `namespace web|scala.servlet`
 
-`#ioc|embed`("scala/ioc/xml/blm/macroDefs.sfs")
-`#ioc|embed`("scala/ioc/servlet/blm/macroDefs.sfs")
+`#ioc|embed`("scala/ioc/xml/ppm/macroDefs.sfs")
+`#ioc|embed`("scala/ioc/servlet/ppm/macroDefs.sfs")
 
 import scala.collection.immutable.Seq
 import scala.servlet.http.RequestHandler

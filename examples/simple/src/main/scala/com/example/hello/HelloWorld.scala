@@ -1,4 +1,4 @@
-package org.iocframework.example.hello
+package com.example.hello
 
 import java.util.Calendar
 

@@ -1,6 +1,6 @@
-package org.iocframework.example.hello
+package com.example.hello
 
-import scala.ioc.blm._
+import scala.ioc.ppm._
 import scala.ioc.Factory
 
 object MainApp extends App {

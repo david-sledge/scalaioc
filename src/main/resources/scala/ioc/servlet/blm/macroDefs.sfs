@@ -1,1 +1,0 @@
-"scala.servlet" `#scala.ioc#def` ("resource", scala.ioc.servlet.blm.postJobResource _)

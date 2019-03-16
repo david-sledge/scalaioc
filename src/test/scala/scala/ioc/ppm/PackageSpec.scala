@@ -1,4 +1,4 @@
-package scala.ioc.blm
+package scala.ioc.ppm
 
 import scala.ioc._
 import org.scalatest._

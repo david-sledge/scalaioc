@@ -1,9 +1,9 @@
-package scala.ioc.xml.blm
+package scala.ioc.xml.ppm
 
 import org.scalatest._
-import scala.ioc.blm._
+import scala.ioc.ppm._
 import scala.ioc.xml._
-import scala.blm._
+import scala.ppm._
 import scala.xml._
 import scala.reflect.runtime.universe._
 

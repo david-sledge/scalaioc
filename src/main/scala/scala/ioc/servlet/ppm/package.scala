@@ -1,13 +1,13 @@
 package scala.ioc.servlet
 
-import scala.ioc.blm._
+import scala.ioc.ppm._
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
 import javax.servlet.ServletContext
 
-package object blm {
+package object ppm {
   def embedImpl(ctx: ServletContext)(namespaceName: Option[String], localName: String)
   (expr: Option[Tree], args: Seq[Tree]): Either[(Boolean, Seq[String]), Tree] = {
     // obtain toolbox
@@ -40,9 +40,9 @@ package object blm {
       case Some(servletCtxExpr) => {
         if (missingArgs.length == 0) {
           val rsrcExpr = named.get("encoding") match {
-            case Some(encExpr) => q"""scala.ioc.blm.staffFactoryFromStream($servletCtxExpr.getResourceAsStream($named("path")),
+            case Some(encExpr) => q"""scala.ioc.ppm.staffFactoryFromStream($servletCtxExpr.getResourceAsStream($named("path")),
 $encExpr, factory = factory, preprocessor = preprocessor)"""
-            case _ => q"""scala.ioc.blm.staffFactoryFromStream($servletCtxExpr.getResourceAsStream($named("path")),
+            case _ => q"""scala.ioc.ppm.staffFactoryFromStream($servletCtxExpr.getResourceAsStream($named("path")),
 factory = factory, preprocessor = preprocessor)"""
           }
           Right(rsrcExpr)

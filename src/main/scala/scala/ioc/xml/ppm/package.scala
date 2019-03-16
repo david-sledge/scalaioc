@@ -1,17 +1,17 @@
 package scala.ioc.xml
 
-import scala.ioc.blm._
+import scala.ioc.ppm._
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.xml.Writer
 
-package object blm {
+package object ppm {
   def f[T](obj: Any) = obj.asInstanceOf[(Any, Writer[T])]
 
   private def xmlWriter(name: String, args: Seq[Tree]) = {
     val termName = TermName(name)
     List(
-      q"""val pair = scala.ioc.xml.blm.f(c("xmlWriter"))"""
+      q"""val pair = scala.ioc.xml.ppm.f(c("xmlWriter"))"""
     , q"""val writer = pair._1"""
     , q"""val typeclassImpl = pair._2"""
     , if (args.size == 0) q"""typeclassImpl.$termName(typeclassImpl.cast(writer))"""

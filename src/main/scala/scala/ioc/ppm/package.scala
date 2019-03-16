@@ -1,12 +1,12 @@
 package scala.ioc
 
-import scala.blm.Preprocessor
+import scala.ppm.Preprocessor
 import scala.collection.immutable.Seq
 import scala.io.Source._
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
-package object blm {
+package object ppm {
 
   val ScalaIocNamespaceName = "scala.ioc"
 
@@ -131,9 +131,9 @@ factory.${TermName(name)}(${named(Id)}, c)
             named.get("path") match {
               case Some(pathExpr) => {
                 val rsrcExpr = named.get("encoding") match {
-                  case Some(encExpr) => q"""scala.ioc.blm.staffFactoryFromResource($pathExpr,
+                  case Some(encExpr) => q"""scala.ioc.ppm.staffFactoryFromResource($pathExpr,
 $encExpr, factory = factory, preprocessor = preprocessor)"""
-                  case _ => q"""scala.ioc.blm.staffFactoryFromResource($pathExpr,
+                  case _ => q"""scala.ioc.ppm.staffFactoryFromResource($pathExpr,
 factory = factory, preprocessor = preprocessor)"""
                 }
                 Right(rsrcExpr)
@@ -210,9 +210,9 @@ factory = factory, preprocessor = preprocessor)"""
     populateStaffingMacros(preprocessor)
     val code = s"""
 (factory: scala.ioc.Factory) =>
-  (preprocessor: scala.blm.Preprocessor) => {$conf}
+  (preprocessor: scala.ppm.Preprocessor) => {$conf}
 """
-    scala.blm.Reader.execute[Factory => Preprocessor => Any](code, preprocessor, src)(factory)(preprocessor)
+    scala.ppm.Reader.execute[Factory => Preprocessor => Any](code, preprocessor, src)(factory)(preprocessor)
     (factory, preprocessor)
   }
 

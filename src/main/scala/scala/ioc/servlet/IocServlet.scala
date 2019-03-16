@@ -1,10 +1,10 @@
 package scala.ioc.servlet
 
-  import blm._
-import scala.blm._
+  import ppm._
+import scala.ppm._
 import scala.collection.JavaConverters._
 import scala.ioc._
-import scala.ioc.blm._
+import scala.ioc.ppm._
 import javax.servlet.GenericServlet
 import javax.servlet.ServletException
 import javax.servlet.ServletRequest

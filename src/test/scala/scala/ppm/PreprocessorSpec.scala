@@ -1,4 +1,4 @@
-package scala.blm
+package scala.ppm
 
 import org.scalatest._
 import scala.reflect.runtime.universe._
