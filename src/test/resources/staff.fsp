@@ -17,6 +17,6 @@
 
 "scoped hello2" `#=>` `#let`("who" -> `#ref`("scope"), `#ref`("hello to..."))
 
-`#resource`("moreWorkers.sfs")
+`#resource`("moreWorkers.fsp")
 
-`#embed`("scala/ioc/xml/ppm/macroDefs.sfs")
+`#embed`("scala/ioc/xml/ppm/macroDefs.fsp")

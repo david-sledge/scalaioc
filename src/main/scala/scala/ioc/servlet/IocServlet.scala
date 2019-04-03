@@ -126,7 +126,7 @@ object IocServlet {
   val ServletConfigNameParam = "servletConfigName"
 
   // defaults
-  val DefaultStaffPath = "/WEB-INF/staff.sfs"
+  val DefaultStaffPath = "/WEB-INF/staff.fsp"
   val DefaultEncoding = "utf-8"
   val DefaultHandlerName = "requestHandler"
   val DefaultRequestKey = "req"

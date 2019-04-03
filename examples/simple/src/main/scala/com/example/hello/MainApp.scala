@@ -3,37 +3,35 @@ package com.example.hello
 import scala.ioc.ppm._
 import scala.ioc.Factory
 
+import java.time.ZonedDateTime
+
 object MainApp extends App {
-  def printEq(obj1: Any, obj2: Any) =
-    println(if (obj1 == obj2) "Same object" else "Not the same object")
 
-  // instantiate the factory
-  val (factory, _) = staffFactoryFromResource("staff.sfs")
-  // put the manager to work and get the fruits of her labor
-  val obj1 = factory.putToWork("helloWorld1").asInstanceOf[HelloWorld]
-  obj1.getMessage()
+  // build the factory and staff it
+  val (factory, _) = staffFactoryFromResource("staff.fsp")
+  // put the "helloWorld" manager to work and get the fruits of her labor
+  val obj = factory.putToWork("helloWorld").asInstanceOf[HelloWorld]
+  obj.printMessage
 
-  Thread sleep 2000
-  // since this manager is lazy, she won't put any effort to produce a new deliverable.
-  // She'll just give us what she provided the first time
-  val obj1Again = factory.putToWork("helloWorld1").asInstanceOf[HelloWorld]
-  obj1Again.getMessage()
+  // gimme the time, ya lazy bum!
+  val dateTime = factory.putToWork("lazyManager").asInstanceOf[ZonedDateTime]
+  // you, people-pleaser, gimme the time, too.
+  val anotherDateTime = factory.putToWork("eagerManager").asInstanceOf[ZonedDateTime]
 
-  printEq(obj1, obj1Again)
+  // let's wait half a second
+  Thread sleep 500
 
-  // This guy, however, is like an excitable puppy who's eager to please
-  val obj2 = factory.putToWork("helloWorld2").asInstanceOf[HelloWorld]
-  obj2.getMessage()
-  Thread sleep 2000
-  // Task him again, and he'll work to give something new
-  val differentObj2 = factory.putToWork("helloWorld2").asInstanceOf[HelloWorld]
-  differentObj2.getMessage()
+  // who will give the same ol', and who will give something new?
+  println("Will the lazy manager produce the same as before? " +
+    factory.putToWork("lazyManager").equals(dateTime))
+  println("Will the eager manager produce the same as before? " +
+    factory.putToWork("eagerManager").equals(anotherDateTime))
 
-  printEq(obj2, differentObj2)
-
-  // Even though the first manager is lazy, you can still make her work hard
-  val differentObj1 = factory.crackTheWhip("helloWorld1").asInstanceOf[HelloWorld]
-  differentObj1.getMessage()
-
-  printEq(obj1, differentObj1)
+  // The productive senior manager puts the lazy one to work.
+  val dateTimeHelloWorld =
+    factory.putToWork("productiveSeniorManager").asInstanceOf[DateTimeHelloWorld]
+  dateTimeHelloWorld.printMessage
+  // Will the lazy manager give the productive one the same ol'?
+  println("Will the lazy manager give senior manager the same as before? " +
+    dateTimeHelloWorld.dateTime.equals(dateTime))
 }
