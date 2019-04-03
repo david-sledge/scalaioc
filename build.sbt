@@ -2,8 +2,7 @@
 
 lazy val commonSettings = Seq(
     organization := "iocframework.org",
-    // https://semver.org/
-    version := "v1.0.0-alpha.1",
+    version := "v1.0.0-alpha.2",
     scalaVersion := "2.12.8"
   )
 
