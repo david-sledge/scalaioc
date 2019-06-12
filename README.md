@@ -1,6 +1,8 @@
 # scalaioc
 IoC/DI Framework Written in Scala
 
+[![Build Status](https://travis-ci.org/david-sledge/scalaioc.svg?branch=master)](https://travis-ci.org/david-sledge/scalaioc)
+
 ## Simple Tutorial
 
 Let's start with a plain-ol'-scala-object.  (The following examples can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/simple/src/main "simple example").)
