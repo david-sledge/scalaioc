@@ -1,0 +1,3 @@
+`namespace|scala.ioc`
+
+factory.setLazyManager("init", com.example.cli.parseOptions)

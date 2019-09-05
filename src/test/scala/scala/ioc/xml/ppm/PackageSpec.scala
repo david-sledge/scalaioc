@@ -24,7 +24,7 @@ class PackageSpec extends FlatSpec with Matchers {
     def test(conf: String, expected: String) = {
       val (factory, _) = staffFactory(conf, preprocessor = preprocessor)
       val stringWriter = new java.io.StringWriter()
-      factory.putToWork("xml", Map("xmlWriter" -> (javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(stringWriter), stream.writer)))
+      factory.putToWork("xml", Map("xmlWriter" -> (javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(stringWriter), stream.write)))
       stringWriter.toString shouldBe expected
     }
 

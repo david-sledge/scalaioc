@@ -12,7 +12,7 @@ import scala.servlet.http.RequestHandler
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.xml.stream.XMLOutputFactory
-import scala.xml.stream.{writer => xmlStreamWriter}
+import scala.xml.stream.{writer => streamWriteXml}
 
 factory.setManager("requestHandler", scala.servlet.http.ioc.RequestHandler(
 	options = Seq("GET"),
@@ -23,7 +23,7 @@ factory.setManager("requestHandler", scala.servlet.http.ioc.RequestHandler(
     `#ioc|let`(
       "xmlWriter" -> ((
         XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
-        xmlStreamWriter
+        streamWriteXml
       )),
       `#web|embed`("/WEB-INF/hello.fsp")
     )

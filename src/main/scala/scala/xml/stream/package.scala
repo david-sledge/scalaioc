@@ -4,7 +4,7 @@ import javax.xml.stream.XMLStreamWriter
 
 package object stream {
 
-  implicit val writer: Writer[XMLStreamWriter] = new Writer[XMLStreamWriter] {
+  implicit val write: Write[XMLStreamWriter] = new Write[XMLStreamWriter] {
 
     override def writeAttribute(writer: XMLStreamWriter)(localName: String
         , value: String): Unit = writer.writeAttribute(localName, value)
