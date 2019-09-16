@@ -45,5 +45,8 @@ class PackageSpec extends FlatSpec with Matchers {
     factory.putToWork("scoped hello")
     factory.putToWork("scoped hello2")
     factory.putToWork("testVar")
+    factory.putToWork("promotion")
+    factory.hasManager("prop") should be (true)
+    factory.putToWork("propTest") should be (factory.putToWork("promotion"))
   }
 }

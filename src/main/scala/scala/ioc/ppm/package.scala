@@ -116,7 +116,7 @@ factory.${TermName(name)}(${named(Id)}, c)
 
             q"""{
 var worker = ${toWorker(named(Worker))}
-`#$$`("factory", scala.ioc.Factory).setLazyManager($Id, worker)
+`#$$`("factory", scala.ioc.Factory).setLazyManager(${named(Id)}, worker)
 worker(c)
 }"""
 
