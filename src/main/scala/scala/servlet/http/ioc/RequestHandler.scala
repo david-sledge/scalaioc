@@ -3,7 +3,6 @@ package scala.servlet.http.ioc
 import scala.collection.JavaConverters._
 import scala.language.reflectiveCalls
 import scala.collection.immutable.Map
-import scala.collection.immutable.Seq
 import scala.servlet.http.RequestHandler._
 
 import java.io.IOException
@@ -27,7 +26,7 @@ import javax.servlet.http.HttpServletResponseWrapper
 object RequestHandler {
 
   def apply(
-    options: Seq[String] = Seq(),
+    options: List[String] = List(),
     deleteHandler: Option[Map[Any, Any] => Unit] = None,
     getHandler: Option[Map[Any, Any] => Unit] = None,
     postHandler: Option[Map[Any, Any] => Unit] = None,

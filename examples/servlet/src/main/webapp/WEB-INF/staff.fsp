@@ -6,7 +6,6 @@
 `#ioc|embed`("scala/ioc/xml/ppm/macroDefs.fsp")
 `#ioc|embed`("scala/ioc/servlet/ppm/macroDefs.fsp")
 
-import scala.collection.immutable.Seq
 import scala.servlet.http.RequestHandler
 
 import javax.servlet.http.HttpServletRequest
@@ -15,7 +14,7 @@ import javax.xml.stream.XMLOutputFactory
 import scala.xml.stream.{writer => streamWriteXml}
 
 factory.setManager("requestHandler", scala.servlet.http.ioc.RequestHandler(
-	options = Seq("GET"),
+	options = List("GET"),
 	getHandler =
   Some((c: scala.collection.immutable.Map[Any, Any]) => {
     val stream = c.get("resp").get.asInstanceOf[HttpServletResponse].getOutputStream

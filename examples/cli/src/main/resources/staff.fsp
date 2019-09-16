@@ -1,3 +1,6 @@
 `namespace|scala.ioc`
 
-factory.setLazyManager("init", com.example.cli.parseOptions)
+"init" `#=>`
+  com.example.cli.parseOptions(
+	c("args").asInstanceOf[Array[String]],
+  )

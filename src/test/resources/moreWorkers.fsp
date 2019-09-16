@@ -5,3 +5,14 @@
 "scope" `#=>` "Universe"
 
 "requestHandler" `#=` "I'll handle it"
+
+"varTest" `#=>` `#$`("var", String)
+
+"testVar" `#=>` `#let`("var" -> "textText", `#ref`("varTest"))
+
+//"promotion" `#=>` List(`#ref`("testVar"), )
+/*
+var worker = (c: scala.collection.immutable.Map[Any, Any]) => {}
+`#$`("factory", scala.ioc.Factory).setLazyManager(worker)
+worker(c)
+*/

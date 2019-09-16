@@ -6,13 +6,13 @@ import scala.tools.reflect.ToolBox
 
 class PreprocessorSpec extends FlatSpec with Matchers {
   "The preprocessor" should "allow macros to be added" in {
-    val f = (nsOpt: Option[String], localName: String) => (objTreeOpt: Option[Tree], argTrees: Seq[Tree]) => Right(q"List(..$argTrees)")
+    val f = (nsOpt: Option[String], localName: String) => (objTreeOpt: Option[Tree], argTrees: Seq[Tree]) => q"List(..$argTrees)"
     val preprocessor = Preprocessor()
     preprocessor.addMacro(Some("test"), Some("test"), f)
   }
 
   "The preprocessor" should "manipulate the scala AST" in {
-    val f = (nsOpt: Option[String], localName: String) => (objTreeOpt: Option[Tree], argTrees: Seq[Tree]) => Right(q"List(..$argTrees)")
+    val f = (nsOpt: Option[String], localName: String) => (objTreeOpt: Option[Tree], argTrees: Seq[Tree]) => q"List(..$argTrees)"
     val preprocessor = Preprocessor()
     preprocessor.addMacro(Some("test"), Some("test"), f)
     val code = "{`namespace test|test`;`#test#test`(1, 2, 3);`#test|test`()}"

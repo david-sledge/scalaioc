@@ -3,11 +3,19 @@ IoC/DI Framework Written in Scala
 
 [![Build Status](https://travis-ci.org/david-sledge/scalaioc.svg?branch=master)](https://travis-ci.org/david-sledge/scalaioc)
 
+## Setup
+
+Add the following dependency to your `build.sbt` file:
+
+```scala
+libraryDependencies += "io.github.david-sledge" % "scalaioc_2.12" % "v1.0.0-alpha.1"
+```
+
 ## Simple Tutorial
 
-Let's start with a plain-ol'-scala-object.  (The following examples can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/simple/src/main "simple example").)
+Let's start with a plain-ol'-scala-object. (The following examples can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/simple/ "simple example").)
 
-HelloWorld.scala:
+`HelloWorld.scala`:
 
 ```scala
 package com.example.hello
@@ -26,16 +34,16 @@ object HelloWorld {
 
 Configuration file; factory staff plan.
 
-staff.fsp:
+`staff.fsp`:
 
-```scala
+```
 `namespace|scala.ioc`
 
 // this is a factory manager
 "helloWorld" `#=` com.example.hello.HelloWorld("Hello World!")
 ```
 
-Main entry point to the application (MainApp.scala).
+Main entry point to the application (`MainApp.scala`).
 
 ```scala
 package com.example.hello
@@ -53,13 +61,16 @@ object MainApp extends App {
 }
 ```
 
-## Factory managers
+### Factory managers
 
-factory managers are specified using `#=` (lazy) and `#=>` (eager).
+factory managers are specified using `` `#=` `` (lazy) and `` `#=>` `` (productive).
 
-staff.fsp:
+* `` `#=` `` executes the first time and caches the result for later calls.
+* `` `#=>` `` executes without caching every time.
 
-```scala
+`staff.fsp`:
+
+```
 `namespace|scala.ioc`
 
 // this is a factory manager
@@ -77,13 +88,10 @@ staff.fsp:
 "eagerManager" `#=>` java.time.ZonedDateTime.now
 ```
 
-MainApp.scala:
+`MainApp.scala`:
 
 ```scala
-package com.example.hello
-
-import scala.ioc.ppm._
-import scala.ioc.Factory
+...
 
 import java.time.ZonedDateTime
 
@@ -102,19 +110,18 @@ object MainApp extends App {
   Thread sleep 500
 
   // who will give the same ol', and who will give something new?
-  println("Will the lazy manager produce the same as before? " +
-    factory.putToWork("lazyManager").equals(dateTime))
-  println("Will the eager manager produce the same as before? " +
-    factory.putToWork("eagerManager").equals(anotherDateTime))
+  println(s"Will the lazy manager produce the same as before?"
+      + s" ${if (factory.putToWork("lazyManager").equals(dateTime)) "Yes" else "No"}")
+  println(s"Will the eager manager produce the same as before?"
+      + s" ${if (factory.putToWork("eagerManager").equals(anotherDateTime)) "Yes" else "No"}")
 }
 ```
 
-## Managers referencing other managers
+### Managers referencing other managers
 
-Managers can put other managers to work with `#ref` and `#ref!`.  The latter
-will force even the lazy managers to produce something new.
+Managers can task other managers with `` `#ref` `` and `` `#ref!` ``. Both operate the same except that latter will force the lazy (caching) managers to produce something new instead of a cached result. The new product will be cached in place of the old.
 
-DateTimeHelloWorld.scala:
+`DateTimeHelloWorld.scala`:
 
 ```scala
 package com.example.hello
@@ -133,9 +140,9 @@ object DateTimeHelloWorld {
 }
 ```
 
-staff.fsp:
+`staff.fsp`:
 
-```scala
+```
 `namespace|scala.ioc`
 
 // this is a factory manager
@@ -157,13 +164,46 @@ staff.fsp:
 "productiveSeniorManager" `#=>`
   com.example.hello.DateTimeHelloWorld(
   	"Hello World!",
-  	`#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime])
+  	`#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime]
+  )
 ```
 
-MainApp.scala:
+`MainApp.scala`:
 
 ```scala
-package com.example.hello
+...
+
+  // build the factory and staff it
+  val (factory, _) = staffFactoryFromResource("staff.fsp")
+
+  ...
+
+  // The productive senior manager puts the lazy one to work.
+  val dateTimeHelloWorld =
+    factory.putToWork("productiveSeniorManager").asInstanceOf[DateTimeHelloWorld]
+  dateTimeHelloWorld.printMessage
+  // Will the lazy manager give the productive one the same ol'?
+  println("The senior manager will make even the lazy manager perform some work.")
+  println(s"Will the lazy manager give senior manager the same as before?"
+      + s" ${if (dateTimeHelloWorld.dateTime.equals(dateTime)) "Yes" else "No"}")
+
+...
+```
+
+## Context parameters/variables
+
+Objects and values can be passed to managers when they're put to work.
+
+### Command-Line Arguments Example
+
+If the application utilizes command line arguments they can be past to a worker to be processed.  (The following examples can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/cli/ "cli example").)
+
+The method Factory.putToWork has a second (optional) argument of type scala.collection.immutable.Map[Any, Any]. When not specified it defaults to an empty map. In this example, the second argument is used to pass the application's command-line arguments to the worker named "init".
+
+`MainApp.scala`:
+
+```scala
+package com.example.cli
 
 import scala.ioc.ppm._
 import scala.ioc.Factory
@@ -174,26 +214,89 @@ object MainApp extends App {
 
   // build the factory and staff it
   val (factory, _) = staffFactoryFromResource("staff.fsp")
-  ...
+  // put the "helloWorld" manager to work and get the fruits of her labor
+  val obj = factory.putToWork("init", Map("args" -> args))
 
-  // The productive senior manager puts the lazy one to work.
-  val dateTimeHelloWorld =
-    factory.putToWork("productiveSeniorManager").asInstanceOf[DateTimeHelloWorld]
-  dateTimeHelloWorld.printMessage
-  // Will the lazy manager give the productive one the same ol'?
-  println("Will the lazy manager give senior manager the same as before? " +
-    dateTimeHelloWorld.dateTime.equals(dateTime))
 }
 ```
 
-## Context variables
+And the definition of the worker named "init"...
 
-TBD
+`staff.fsp`:
+
+```
+`namespace|scala.ioc`
+
+"init" `#=>`
+  com.example.cli.parseOptions(
+	c("args").asInstanceOf[Array[String]],
+  )
+```
+
+This example uses jopt-simple to parse command line arguments. However, any other arg-parser library could be used.
+
+`com/example/cli/package.scala`:
+
+```scala
+package com.example
+
+import scala.collection.immutable.Map
+
+import joptsimple._
+
+package object cli {
+  val parseOptions = (c: Map[Any, Any]) => {
+
+    val parser = new OptionParser( "s:a:" )
+
+    val options = parser.parse(c("args").asInstanceOf[Array[String]]:_*)
+
+    val salutation = if (options.has("s")) {
+    	options.valueOf("s")
+    }
+    else {
+    	"Hello"
+    }
+
+    val addressee = if (options.has("a")) {
+    	options.valueOf("a")
+    }
+    else {
+    	"World"
+    }
+
+    println(s"$salutation, $addressee!")
+
+  }
+}
+```
+
+### Passing Context Variables between Workers
+
+`` `#let`(<key>, <value>, <worker>)``
+
+## Namespaces
+
+### Namespace Declarations
+
+* `` `namespace|scala.ioc` `` assigns the namespace name "scala.ioc" as the default. (All worker definitions presented thus far have been in the "scala.ioc" namespace.)
+* `` `namespace ioc|scala.ioc` `` assigns the namespace name "scala.ioc" to the prefix "ioc".
+
+### Namespaced Workers
+
+* `` `#ref` `` references the worker named "ref" in the default namespace.
+* `` `#ioc#let` `` references the worker named "let" in the namespace whose name assigned to the prefix "ioc".
+* `` `#scala.ioc|=` `` references the worker named "=" in the namespace whose name is "scala.ioc".
+* `` `#|myWorker` `` references the worker named "myWorker" that's in the nameless namespace.
 
 ## Multiple Factory Configuration Files
 
 TBD
 
 ## Extending the Framework
+
+TBD
+
+## Packaged Extensions
 
 TBD

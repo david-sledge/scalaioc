@@ -2,21 +2,27 @@ package scala.ppm
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.Map
-import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.reflect.NameTransformer._
+import scala.annotation.tailrec
 
 final class Preprocessor {
 
-  private val macros = TrieMap[Option[String], TrieMap[Option[String],
-      (Option[String], String) => (Option[Tree], Seq[Tree]) => Either[(Boolean, Seq[String]), Tree]]]()
+  private val macros = TrieMap[
+    Option[String],
+    TrieMap[
+      Option[String],
+      (Option[String], String) =>
+        (Option[Tree], List[Tree]) => Tree
+    ]
+  ]()
 
   private val transformer = new Transformer() {
 
-    var referrers2 = Seq[Map[Option[String], Option[String]]]()
+    var referrers = List[Map[Option[String], Option[String]]]()
 
     def getReferrer(ref: Option[String]) = {
-      referrers2 match {
+      referrers match {
         case head +: tail => {
           head.get(ref)
         }
@@ -25,82 +31,91 @@ final class Preprocessor {
     }
 
     def setReferrer(ref: Option[String], namespaceName: Option[String]) = {
-      referrers2 = referrers2 match {
+      referrers = referrers match {
         case head +: tail => {
           (head + (ref -> namespaceName)) +: tail
         }
-        case _ => referrers2
+        case _ => referrers
       }
     }
 
     override def transform(tree: Tree): Tree = {
 
+      def parseQname(name: String, pos: Position) = {
+
+        if (name.startsWith(Preprocessor.MacroStart)) {
+
+          val namespaceEnd = name.indexOf(Preprocessor.MacroStart, Preprocessor.MacroStart.length())
+
+          val (ns, localName) = if (namespaceEnd == -1) {
+            val referrerEnd = name.indexOf(Preprocessor.ReferrerTerminator)
+
+            if (referrerEnd == -1) {
+              // default namespace
+              val nsOpt = getReferrer(None)
+              val ns = nsOpt match {
+                case Some(ns) => ns
+                case _ => None
+              }
+              val localName = name.substring(Preprocessor.MacroStart.length())
+              (ns, localName)
+            }
+            else if (referrerEnd == Preprocessor.MacroStart.length()) {
+              // no namespace
+              val localName = name.substring(referrerEnd + Preprocessor.ReferrerTerminator.length())
+              (None, localName)
+            }
+            else {
+              // referred namespace
+              val ref = name.substring(Preprocessor.MacroStart.length(), referrerEnd)
+              val nsOpt = getReferrer(Some(ref))
+              nsOpt match {
+                case Some(ns) => {
+                  val localName = name.substring(referrerEnd + Preprocessor.ReferrerTerminator.length())
+                  (ns, localName)
+                }
+                case _ => throw new UnboundReferrerException(ref, src, pos)
+              }
+            }
+          }
+          else {
+            // explicitly named namespace
+            val ns = Some(name.substring(Preprocessor.MacroStart.length(), namespaceEnd))
+            val localName = name.substring(namespaceEnd + Preprocessor.MacroStart.length())
+            (ns, localName)
+          }
+
+          Some(ns.map(decode), decode(localName))
+        }
+        else
+          None
+      }
+
       def handlePrefix(
           name: String,
           expr: Option[Tree] = None,
-          args: Seq[Tree] = Seq()
-        ): MacroResult[Option[Tree]] =
-      {
-        if (name.startsWith(Preprocessor.MacroStart)) {
-          val qnameEith: Either[String, (Option[String], String)] = {
-            val namespaceEnd = name.indexOf(Preprocessor.MacroStart, Preprocessor.MacroStart.length())
+          args: List[Tree] = List(),
+          pos: Position,
+        ) = {
 
-            if (namespaceEnd == -1) {
-              val referrerEnd = name.indexOf(Preprocessor.ReferrerTerminator)
+        parseQname(name, pos) match {
+          case Some((namespaceName, localName)) => {
 
-              if (referrerEnd == -1) {
-                // default namespace
-                val nsOpt = getReferrer(None)
-                val ns = nsOpt match {
-                  case Some(ns) => ns
-                  case _ => None
+            getMacro(namespaceName, localName) match {
+              case Some(makro) =>
+                try {
+                  Some(makro(expr, args))
                 }
-                val localName = name.substring(Preprocessor.MacroStart.length())
-                Right((ns, localName))
-              }
-              else if (referrerEnd == Preprocessor.MacroStart.length()) {
-                // no namespace
-                val localName = name.substring(referrerEnd + Preprocessor.ReferrerTerminator.length())
-                Right((None, localName))
-              }
-              else {
-                // referred namespace
-                val ref = name.substring(Preprocessor.MacroStart.length(), referrerEnd)
-                val nsOpt = getReferrer(Some(ref))
-                nsOpt match {
-                  case Some(ns) => {
-                    val localName = name.substring(referrerEnd + Preprocessor.ReferrerTerminator.length())
-                    Right((ns, localName))
-                  }
-                  case _ => Left(ref)
+                catch {
+                  case e: Exception => throw MacroException(e, namespaceName, localName, src, pos)
                 }
-              }
-            }
-            else {
-              // explicitly named namespace
-              val ns = Some(name.substring(Preprocessor.MacroStart.length(), namespaceEnd))
-              val localName = name.substring(namespaceEnd + Preprocessor.MacroStart.length())
-              Right((ns, localName))
+              case _ => throw new MacroNotFoundException(namespaceName, localName, src, pos)
             }
           }
 
-          qnameEith match {
-            case Left(ref) => UnboundReferrer(ref)
-            case Right((namespaceName, localName)) => {
-              val decodedNamespaceName = namespaceName.map(decode)
-              val decodedLocalName = decode(localName)
-              val macroOpt = getMacro(decodedNamespaceName, decodedLocalName)
-              macroOpt match {
-                case Some(makro) => makro(expr, args) match {
-                  case Right(tree) => Ok(Some(tree))
-                  case Left((isMissingRequiredObj, missingRequiredArgs)) => Error(decodedNamespaceName, decodedLocalName, isMissingRequiredObj, missingRequiredArgs)
-                }
-                case _ => MacroNotFound(decodedNamespaceName, decodedLocalName)
-              }
-            }
-          }
+          case _ => None
         }
-        else Ok(None)
+
       }
 
       def extractReferrer(stat: Tree) = {
@@ -130,64 +145,82 @@ final class Preprocessor {
         }
       }
 
-      def asyncHandlePrefix(
-          name: String,
-          expr: Option[Tree] = None,
-          args: Seq[Tree],
-          pos: Position
-        ) = {
+      def findPropMacro(behind: List[Tree], front: List[Tree]): Option[(Option[String], String, Tree, List[Tree])] = {
 
-        val result =
-          try {
-            handlePrefix(name, expr, args)
+        @tailrec
+        def zipUp(behind: List[Tree], front: List[Tree]): List[Tree] = {
+          behind match {
+            case arg::args => zipUp(args, arg::front)
+            case _ => front
           }
-          catch {
-            case e: Exception => throw MacroException(e, src, pos)
-          }
+        }
 
-        result match {
-          case MacroNotFound(ns, localName) => throw new MacroNotFoundException(ns, localName, src, pos)
-          case UnboundReferrer(ref) => throw new UnboundReferrerException(ref, src, pos)
-          case Error(namespaceName, localName, isMissingRequiredObj, missingRequiredArgs) => throw new MissingRequiredObjectOrArguments(namespaceName, localName, isMissingRequiredObj, missingRequiredArgs, src, pos)
-          case Ok(expr) => expr
+        front match {
+          case ((arg@AssignOrNamedArg(nameExpr@Ident(TermName(argName)), expr))::args) =>
+            parseQname(argName, nameExpr.pos) match {
+              case Some((nsName, localName)) => Some((nsName, localName, expr, zipUp(behind, args)))
+              case _ => findPropMacro(arg::behind, args)
+            }
+          case (arg::args) => findPropMacro(arg::behind, args)
+          case _ => None
         }
       }
 
       tree match {
         case Ident(TermName(name)) => {
           if (extractReferrer(tree)) q"()"
-          else asyncHandlePrefix(name, None, List(), tree.pos) match {
+          else handlePrefix(name, None, List(), tree.pos) match {
             case Some(expr) => transform(expr)
             case _ => super.transform(tree)
           }
         }
+
         case Apply(expr, args) => {
-          expr match {
-            case Ident(TermName(name)) => {
-              asyncHandlePrefix(name, None, args, expr.pos) match {
-                case Some(expr) => transform(expr)
-                case _ => super.transform(tree)
+
+          // TODO: look for a property macros first
+          findPropMacro(List(), args) match {
+            case Some((nsName, localName, expr_, args_)) => {
+              getMacro(nsName, localName) match {
+              case Some(makro) =>
+                try {
+                  transform(makro(None, List(expr_, Apply(expr, args_))))
+                }
+                catch {
+                  case e: Exception => throw MacroException(e, nsName, localName, src, expr_.pos)
+                }
+              case _ => throw new MacroNotFoundException(nsName, localName, src, expr_.pos)
               }
             }
-            case Select(sexpr, TermName(name)) => {
-              asyncHandlePrefix(name, Some(sexpr), args, expr.pos) match {
-                case Some(expr) => transform(expr)
+
+            case _ =>
+              expr match {
+                case Ident(TermName(name)) => {
+                  handlePrefix(name, None, args, expr.pos) match {
+                    case Some(expr) => transform(expr)
+                    case _ => super.transform(tree)
+                  }
+                }
+                case Select(sexpr, TermName(name)) => {
+                  handlePrefix(name, Some(sexpr), args, expr.pos) match {
+                    case Some(expr) => transform(expr)
+                    case _ => super.transform(tree)
+                  }
+                }
                 case _ => super.transform(tree)
               }
-            }
-            case _ => super.transform(tree)
+
           }
         }
         case Block(exprs, expr) => {
           try {
-            referrers2 = referrers2 match {
-              case (head +: tail) => head +: referrers2
-              case _ => Map[Option[String], Option[String]]() +: referrers2
+            referrers = referrers match {
+              case (head +: tail) => head +: referrers
+              case _ => Map[Option[String], Option[String]]() +: referrers
             }
             super.transform(tree)
           }
           finally {
-            referrers2 = referrers2.tail
+            referrers = referrers.tail
           }
         }
         case _ => {
@@ -213,7 +246,7 @@ final class Preprocessor {
   def addMacro(
       namespaceName: Option[String] = None,
       localName: Option[String] = None,
-      makro: (Option[String], String) => (Option[Tree], Seq[Tree]) => Either[(Boolean, Seq[String]), Tree]
+      makro: (Option[String], String) => (Option[Tree], List[Tree]) => Tree
     ) = {
     val macOpt = macros.get(namespaceName)
     macOpt match {
@@ -232,7 +265,7 @@ final class Preprocessor {
   def getMacro(
       namespaceName: Option[String] = None,
       localName: String
-    ) : Option[(Option[Tree], Seq[Tree]) => Either[(Boolean, Seq[String]), Tree]] =
+    ) : Option[(Option[Tree], List[Tree]) => Tree] =
     macros.get(namespaceName) match {
       case Some(macrosInNamespace) =>
           macrosInNamespace.get(Some(localName)) match {

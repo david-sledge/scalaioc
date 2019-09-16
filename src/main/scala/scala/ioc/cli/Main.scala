@@ -109,7 +109,7 @@ object Main extends App {
   private val (iocArgValues, filtered) = extractIocArgs(args.toList, (IocArgValues(), List[String]()))
 
   // build the factory and staff it
-  val factory = (Factory() /: (
+  val factory = (
 
       if (iocArgValues.filenames == Nil) {
         // default filename
@@ -118,7 +118,7 @@ object Main extends App {
       else {
         iocArgValues.filenames
       }
-    ))(
+    ).foldLeft(Factory())(
       (acc, filename) => {
         val (factory, _) = staffFactoryFromFile(fileName = filename, factory = acc)
         factory

@@ -140,7 +140,7 @@ object RequestHandler {
       val CRLF = "\r\n"
       val response = 
           ("TRACE " :: req.getRequestURI :: " " :: req.getProtocol ::
-            (req.getHeaderNames.asScala.toList /: List(CRLF))((acc, s) => {
+            req.getHeaderNames.asScala.toList.foldLeft(List(CRLF))((acc, s) => {
                 CRLF :: s :: ": " :: req.getHeader(s) :: acc
               })).mkString
       resp.setContentType("message/http")

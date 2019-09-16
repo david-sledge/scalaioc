@@ -13,10 +13,11 @@ libraryDependencies ++= Seq(
   "io.github.david-sledge" % "scalaioc_2.12" % "v1.0.0-alpha.1",
 )
 
+unmanagedClasspath in Runtime += baseDirectory.value / "src/main/resources"
+
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
-    unmanagedClasspath in Runtime += baseDirectory.value / "src/main/resources",
     name := "scalaioc-simple-example",
     description := "An simple example of the scalaioc framework",
   )

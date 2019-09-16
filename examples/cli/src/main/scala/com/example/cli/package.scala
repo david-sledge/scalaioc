@@ -5,11 +5,11 @@ import scala.collection.immutable.Map
 import joptsimple._
 
 package object cli {
-  val parseOptions = (c: Map[Any, Any]) => {
+  val parseOptions = (args: Array[String]) => {
 
     val parser = new OptionParser( "s:a:" )
 
-    val options = parser.parse(c("args").asInstanceOf[Array[String]]:_*)
+    val options = parser.parse(args:_*)
 
     val salutation = if (options.has("s")) {
     	options.valueOf("s")

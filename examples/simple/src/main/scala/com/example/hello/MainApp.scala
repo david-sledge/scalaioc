@@ -22,8 +22,10 @@ object MainApp extends App {
   Thread sleep 500
 
   // who will give the same ol', and who will give something new?
-  println(s"Will the lazy manager produce the same as before? ${factory.putToWork("lazyManager").equals(dateTime)}")
-  println(s"Will the eager manager produce the same as before? ${factory.putToWork("eagerManager").equals(anotherDateTime)}")
+  println(s"Will the lazy manager produce the same as before?"
+      + s" ${if (factory.putToWork("lazyManager").equals(dateTime)) "Yes" else "No"}")
+  println(s"Will the eager manager produce the same as before?"
+      + s" ${if (factory.putToWork("eagerManager").equals(anotherDateTime)) "Yes" else "No"}")
 
   // The productive senior manager puts the lazy one to work.
   val dateTimeHelloWorld =
@@ -31,5 +33,6 @@ object MainApp extends App {
   dateTimeHelloWorld.printMessage
   // Will the lazy manager give the productive one the same ol'?
   println("The senior manager will make even the lazy manager perform some work.")
-  println(s"Will the lazy manager give senior manager the same as before? ${if (dateTimeHelloWorld.dateTime.equals(dateTime)) "Yes" else "No"}")
+  println(s"Will the lazy manager give senior manager the same as before?"
+      + s" ${if (dateTimeHelloWorld.dateTime.equals(dateTime)) "Yes" else "No"}")
 }
