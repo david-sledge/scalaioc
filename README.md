@@ -300,8 +300,8 @@ package object cli {
 ### Namespaced Workers
 
 * `` `#ref` `` references the worker named "ref" in the default namespace.
-* `` `#ioc#let` `` references the worker named "let" in the namespace whose name assigned to the prefix "ioc".
-* `` `#scala.ioc|=` `` references the worker named "=" in the namespace whose name is "scala.ioc".
+* `` `#ioc|let` `` references the worker named "let" in the namespace whose name assigned to the prefix "ioc".
+* `` `#scala.ioc#=` `` references the worker named "=" in the namespace whose name is "scala.ioc".
 * `` `#|myWorker` `` references the worker named "myWorker" that's in the nameless namespace.
 
 ## Multiple Factory Configuration Files
