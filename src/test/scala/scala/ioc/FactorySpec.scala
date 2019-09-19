@@ -1,26 +1,28 @@
 package scala.ioc
 
+  import Factory._
+
 import org.scalatest._
 
 class FactorySpec extends FlatSpec with Matchers {
   "A factory" should "have managers" in {
     val factory = Factory()
     val worker = (c: Map[Any, Any]) => "I'm a manager"
-    factory.setManager("manager", worker)
+    setManager(factory, "manager", worker)
     factory.hasManager("manager") should be (true)
   }
 
   it should "note who's on roll" in {
     val factory = Factory()
     val worker = (c: Map[Any, Any]) => "I'm a manager"
-    factory.setManager("manager", worker)
+    setManager(factory, "manager", worker)
     factory.getManagerIds should be (Set("manager"))
   }
 
   it should "have a method to clear out any cached singletons so that they'll get reloaded with the next call" in {
     val factory = Factory()
     val id = "lazy bastard"
-    factory.setLazyManager(id, c => System.currentTimeMillis)
+    setLazyManager(factory, id, c => System.currentTimeMillis)
     val result = factory.putToWork(id, Map())
     Thread sleep 2000
     val result2 = factory.putToWork(id, Map())
@@ -33,7 +35,7 @@ class FactorySpec extends FlatSpec with Matchers {
 
   "Lazy manager" should "produce the same thing until forced otherwise" in {
     val factory = Factory()
-    factory.setLazyManager("lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance.getTime}")
+    setLazyManager(factory, "lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance.getTime}")
     val result = factory.putToWork("lazyManager", Map())
     Thread sleep 2000
     result should be (factory.putToWork("lazyManager", Map()))
@@ -47,8 +49,8 @@ class FactorySpec extends FlatSpec with Matchers {
 
   "In a factory it" should "be possible to fire workers" in {
     val factory = Factory()
-    factory.setLazyManager("Mr. Sloth", c => {})
-    factory.setManager("Mr. Eager", c => {})
+    setLazyManager(factory, "Mr. Sloth", c => {})
+    setManager(factory, "Mr. Eager", c => {})
     factory.hasManager("Mr. Sloth") shouldBe true
     factory.hasManager("Mr. Eager") shouldBe true
     factory.fireManager("Mr. Sloth")

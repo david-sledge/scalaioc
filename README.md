@@ -3,6 +3,21 @@ IoC/DI Framework Written in Scala
 
 [![Build Status](https://travis-ci.org/david-sledge/scalaioc.svg?branch=master)](https://travis-ci.org/david-sledge/scalaioc)
 
+## Motivation
+
+TBD
+
+## Goals
+
+* First and foremost support IoC and DI for Scala applications.
+  - Facilitate unit testing by allowing components to be instantiated with mock dependencies or inject test implementations.
+  - Eliminate the need for global static state.
+* Non-invasive: Do not require imports from the framework's library in application code in order to configure the application.
+  - Allow configuration to be fully external to application code.
+  - Eliminate the need for annotation-based configuration.
+  - Eliminate the need to extend framework classes and interfaces in application code.
+* Allow the framework to be extended using the framework. Developers can create their own worker definitions.
+
 ## Setup
 
 Add the following dependency to your `build.sbt` file:

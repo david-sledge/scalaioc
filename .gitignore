@@ -25,6 +25,8 @@ project/plugins/project/
 .metadata
 bin/
 tmp/
+lib/
+build/
 *.tmp
 *.bak
 *.swp

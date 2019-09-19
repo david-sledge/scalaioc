@@ -4,7 +4,18 @@ package object ppm {
 
   import scala.collection.immutable.Map
   import scala.collection.immutable.ListSet
-  import scala.reflect.runtime.universe._
+  import scala.reflect.runtime.universe
+    import universe._
+  import scala.tools.reflect.ToolBox
+
+  type Macro = (
+      Option[Tree],
+      List[Tree],
+      ToolBox[universe.type],
+      Option[String],
+    ) => Tree
+
+  type NamespacedMacro = (Option[String], String) => Macro
 
   final case class ProcessedArgs(
     named: Map[String, Tree],
@@ -160,7 +171,7 @@ package object ppm {
     else errorMsgs1
 
     if (errorMsgs2.size > 0)
-      s"""macro call${errorMsgs2.mkString("; ")}"""
+      s"""macro call ${errorMsgs2.mkString("; ")}"""
     else
       ""
 

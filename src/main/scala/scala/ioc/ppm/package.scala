@@ -3,7 +3,8 @@ package scala.ioc
 import scala.ppm._
 import scala.collection.immutable.ListSet
 import scala.io.Source._
-import scala.reflect.runtime.universe._
+import scala.reflect.runtime.universe
+  import universe._
 import scala.tools.reflect.ToolBox
 
 package object ppm {
@@ -26,7 +27,7 @@ package object ppm {
 
     def postManagerJob(name: String)
         (namespaceName: Option[String], localName: String)
-        (exprOpt: Option[Tree], args: List[Tree]): Tree = {
+        (exprOpt: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
@@ -36,14 +37,14 @@ package object ppm {
         )
 
       q"""
-factory.${TermName(name)}(${exprOpt.get}, ${toWorker(named(Worker))})
+scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(Worker))})
 """
 
     }
 
     def postRefJob(name: String)
         (namespaceName: Option[String] = None, localName: String)
-        (exprOpt: Option[Tree] = None, args: List[Tree]): Tree = {
+        (exprOpt: Option[Tree] = None, args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
           args,
@@ -69,7 +70,7 @@ factory.${TermName(name)}(${named(Id)}, c)
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("let"),
-        ((namespaceName, localName) => (expr, args) =>
+        ((namespaceName, localName) => (expr, args, tb, src) =>
           args.foldRight(EmptyTree)((block, acc) => {
             acc match {
               case EmptyTree => block
@@ -81,22 +82,15 @@ factory.${TermName(name)}(${named(Id)}, c)
       Some(ScalaIocNamespaceName),
       Some("$"),
       (namespaceName, localName) =>
-        (expr, args) => {
+        (expr, args, tb, src) => {
           val ProcessedArgs(named, _, extraNames, leftovers) =
             validateThisExprAndArgs(
               expr,
               args,
-              ListSet(Id, Type),
+              ListSet(Id),
             )
 
-          named(Type) match {
-            case Ident(TermName(name)) => q"c(${named(Id)}).asInstanceOf[${Ident(TypeName(name))}]"
-
-            case Select(tree, TermName(name)) => q"c(${named(Id)}).asInstanceOf[${Select(tree, TypeName(name))}]"
-
-            case _ => throw new IllegalArgumentException(s"Type argument must be a type")
-
-          }
+          q"scala.ioc.cast(c(${named(Id)}))"
 
         }
     )
@@ -106,7 +100,7 @@ factory.${TermName(name)}(${named(Id)}, c)
         Some(ScalaIocNamespaceName),
         Some("id"),
         (namespaceName, localName) =>
-          (expr, args) => {
+          (expr, args, tb, src) => {
             val ProcessedArgs(named, _, extraNames, leftovers) =
               validateThisExprAndArgs(
                   expr,
@@ -116,7 +110,7 @@ factory.${TermName(name)}(${named(Id)}, c)
 
             q"""{
 var worker = ${toWorker(named(Worker))}
-`#$$`("factory", scala.ioc.Factory).setLazyManager(${named(Id)}, worker)
+scala.ioc.Factory.setLazyManager(`#$$`("factory"), ${named(Id)}, worker)
 worker(c)
 }"""
 
@@ -127,7 +121,7 @@ worker(c)
         Some(ScalaIocNamespaceName),
         Some("resource"),
         (namespaceName, localName) =>
-          (expr, args) => {
+          (expr, args, tb, src) => {
             val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
                 expr,
                 args,
@@ -151,7 +145,7 @@ factory = factory, preprocessor = preprocessor)"""
         Some(ScalaIocNamespaceName),
         Some("def"),
         (namespaceName, localName) =>
-          (expr, args) => {
+          (expr, args, tb, src) => {
             val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
                 expr,
                 args,
@@ -178,15 +172,15 @@ factory = factory, preprocessor = preprocessor)"""
             else None
 
             val defn = if (named contains "defn") {
-                val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
+
                 tb.compile(named("defn"))().asInstanceOf[
                   (Option[String], String) =>
-                    (Option[Tree], List[Tree]) =>
+                    (Option[Tree], List[Tree], ToolBox[universe.type], Option[String]) =>
                       Tree]
               }
               else
                 (namespaceName: Option[String], localName: String) =>
-                  (expr: Option[Tree], args: List[Tree]) =>
+                  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]) =>
                     // no-op macro
                     q"()"
 
@@ -199,7 +193,7 @@ factory = factory, preprocessor = preprocessor)"""
         Some(ScalaIocNamespaceName),
         Some("embed"),
         (namespaceName, localName) =>
-          (expr, args) => {
+          (expr, args, tb, src) => {
             val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
                 expr,
                 args,
@@ -217,8 +211,7 @@ factory = factory, preprocessor = preprocessor)"""
                         "The optional 'encoding' argument if supplied must be a string literal")
                     }
                   else "utf-8"
-                // obtain toolbox
-                val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
+
                 val code = fromInputStream(getClass.getClassLoader.getResourceAsStream(path), encoding).mkString
                 tb.parse(code)
               }

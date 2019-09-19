@@ -3,14 +3,15 @@ package scala.ioc.servlet
 import scala.collection.immutable.ListSet
 import scala.ioc.ppm._
 import scala.ppm._
-import scala.reflect.runtime.universe._
+import scala.reflect.runtime.universe
+  import universe._
 import scala.tools.reflect.ToolBox
 
 import javax.servlet.ServletContext
 
 package object ppm {
   def embedImpl(ctx: ServletContext)(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
     val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
         expr,
         args,
@@ -29,9 +30,7 @@ package object ppm {
             }
           else "utf-8"
 
-        runtimeMirror(this.getClass.getClassLoader)
-            .mkToolBox(options = "")
-            .parse(scala.io.Source.fromInputStream(ctx.getResourceAsStream(path), encoding).mkString)
+        tb.parse(scala.io.Source.fromInputStream(ctx.getResourceAsStream(path), encoding).mkString)
       }
       case _ => throw new IllegalArgumentException(
           "'path' argument must be a string literal")
@@ -40,7 +39,7 @@ package object ppm {
   }
 
   def postJobResource(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
     val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
         expr,
         args,

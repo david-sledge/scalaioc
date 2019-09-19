@@ -1,18 +1,23 @@
 package scala.ppm
 
-import scala.reflect.runtime.universe._
+import scala.reflect.runtime.universe
+  import universe._
 import scala.io.Source._
 import scala.tools.reflect.ToolBox
 
 object Reader {
-  def execute[T](code: String, preprocessor: Preprocessor, src: Option[String] = None): T = {
+  def execute[T](
+      code: String,
+      preprocessor: Preprocessor,
+      src: Option[String] = None,
+    ): T = {
     // obtain toolbox
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
     // generate the AST
     val tree = tb.parse(code)
     //println("Position is:  " + tree.pos)
     // manipulate tree
-    val transformedTree = preprocessor.transformMacros(tree, src)
+    val transformedTree = preprocessor.transformTree(tree, tb, src)
     //println(transformedTree)
     // compile
     val f = tb.compile(transformedTree)

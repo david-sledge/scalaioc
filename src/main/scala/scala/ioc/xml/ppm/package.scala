@@ -3,7 +3,9 @@ package scala.ioc.xml
 import scala.ioc.ppm._
 import scala.collection.immutable.ListSet
 import scala.ppm._
-import scala.reflect.runtime.universe._
+import scala.reflect.runtime.universe
+  import universe._
+import scala.tools.reflect.ToolBox
 import scala.xml.Write
 
 package object ppm {
@@ -34,7 +36,7 @@ package object ppm {
       namespaceName: Option[String],
       localName: String
     )(expr: Option[Tree],
-      args: List[Tree]
+      args: List[Tree], tb: ToolBox[universe.type], src: Option[String]
     ): Tree = {
 
     val ProcessedArgs(named, _, _, leftovers) =
@@ -77,7 +79,7 @@ package object ppm {
   }
 
   def postJobDtd(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
@@ -90,7 +92,7 @@ package object ppm {
   }
 
   def postJobCdata(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
@@ -103,7 +105,7 @@ package object ppm {
   }
 
   def postJobComment(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
@@ -116,7 +118,7 @@ package object ppm {
   }
 
   def postJobProcInstr(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
@@ -136,7 +138,7 @@ package object ppm {
   }
 
   def postJobElement(namespaceName: Option[String] = None, localName: String)
-  (expr: Option[Tree], args: List[Tree]): Tree = {
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
     val exprIsPresent = expr != None
     val ProcessedArgs(named, _, _, leftovers) =
       validateThisExprAndArgs(

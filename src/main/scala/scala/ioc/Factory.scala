@@ -5,20 +5,16 @@ import scala.collection.concurrent.TrieMap
 /**
  * A factory, the kind with workers including managers.
  */
-final class Factory(val id: Any)
+final class Factory()
 {
-  private sealed abstract class Manager
+  import Factory._
 
-  private case class EvaledThunk(value: Any, worker: Map[Any, Any] => Any) extends Manager
-
-  private case class Thunk(worker: Map[Any, Any] => Any) extends Manager
-
-  private case class Strict(worker: Map[Any, Any] => Any) extends Manager
+  val FactoryId = "factory"
 
   private val managers = TrieMap[Any, Manager]()
 
   private def getResult(useCachedValue: Boolean, id: Any, c: Map[Any, Any]) = {
-    lazy val newC = c + (this.id -> this)
+    lazy val newC = c + (FactoryId -> this)
 
     def evalThunk(worker: Map[Any, Any] => Any) = {
       val newValue = worker(newC)
@@ -62,25 +58,6 @@ final class Factory(val id: Any)
   }
 
   /**
-   * This guy?  Way too eager.  He'll work hard just to produce something you've
-   * he's already given you.
-   */
-  def setManager(id: Any, worker: Map[Any, Any] => Any) = {
-    managers += id -> Strict(worker)
-    ()
-  }
-
-  /**
-   * This guy?  Really lazy.  Does the minimal amount of work.  He'll work the
-   * first time you ask him to, but after that he just hands you stuff he's
-   * already produced unless you force him to do otherwise.
-   */
-  def setLazyManager(id: Any, worker: Map[Any, Any] => Any) = {
-    managers += id -> Thunk(worker)
-    ()
-  }
-
-  /**
    * Get the managers on roll.
    */
   def getManagerIds = managers.keys
@@ -102,5 +79,33 @@ final class Factory(val id: Any)
 }
 
 object Factory {
-  def apply(id: Any = "factory") = new Factory(id)
+
+  private sealed abstract class Manager
+
+  private case class EvaledThunk(value: Any, worker: Map[Any, Any] => Any) extends Manager
+
+  private case class Thunk(worker: Map[Any, Any] => Any) extends Manager
+
+  private case class Strict(worker: Map[Any, Any] => Any) extends Manager
+
+  def apply() = new Factory()
+
+  /**
+   * This guy?  Way too eager.  He'll work hard just to produce something you've
+   * he's already given you.
+   */
+  def setManager(factory: Factory, id: Any, worker: Map[Any, Any] => Any) = {
+    factory.managers += id -> Strict(worker)
+    ()
+  }
+
+  /**
+   * This guy?  Really lazy.  Does the minimal amount of work.  He'll work the
+   * first time you ask him to, but after that he just hands you stuff he's
+   * already produced unless you force him to do otherwise.
+   */
+  def setLazyManager(factory: Factory, id: Any, worker: Map[Any, Any] => Any) = {
+    factory.managers += id -> Thunk(worker)
+    ()
+  }
 }

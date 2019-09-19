@@ -25,4 +25,9 @@ final case class MacroException(
     src: Option[String],
     pos: Position,
     )
-  extends Exception(s"$e ($src:$pos)")
+  extends Exception(s""""$localName"${
+    ns match {
+            case Some(name) => s""" in namespace "$name""""
+            case _ => ""
+          }
+  } ($src:$pos)""", e)

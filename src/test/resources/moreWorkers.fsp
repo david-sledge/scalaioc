@@ -6,16 +6,10 @@
 
 "requestHandler" `#=` "I'll handle it"
 
-"varTest" `#=>` `#$`("var", String)
+"varTest" `#=>` c("var")
 
 "testVar" `#=>` `#let`("var" -> "textText", `#ref`("varTest"))
 
 "promotion" `#=>` List(`#ref`("testVar"), `#id` = "prop")
 
 "propTest" `#=>` `#ref`("prop")
-
-/*
-var worker = (c: scala.collection.immutable.Map[Any, Any]) => {}
-`#$`("factory", scala.ioc.Factory).setLazyManager(worker)
-worker(c)
-*/
