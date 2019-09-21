@@ -10,9 +10,10 @@ import scala.tools.reflect.ToolBox
 import javax.servlet.ServletContext
 
 package object ppm {
+
   def embedImpl(ctx: ServletContext)(namespaceName: Option[String], localName: String)
   (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
-    val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
+    val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
         args,
         ListSet("path"),
@@ -40,7 +41,7 @@ package object ppm {
 
   def postJobResource(namespaceName: Option[String], localName: String)
   (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
-    val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
+    val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
         args,
         ListSet("path"),
@@ -61,4 +62,5 @@ preprocessor = preprocessor)"""
     }
 
   }
+
 }

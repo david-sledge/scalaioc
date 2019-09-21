@@ -42,11 +42,6 @@ class FactorySpec extends FlatSpec with Matchers {
     result should not be (factory.crackTheWhip("lazyManager", Map()))
   }
 
-  "The companion Factory object" should "allow construction without the \"new\" keyword" in {
-    val factory = Factory()
-    factory shouldBe (a [Factory])
-  }
-
   "In a factory it" should "be possible to fire workers" in {
     val factory = Factory()
     setLazyManager(factory, "Mr. Sloth", c => {})

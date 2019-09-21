@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.xml.stream.XMLOutputFactory
 import scala.xml.stream.{writer => streamWriteXml}
 
-setManager(factory, "requestHandler", scala.servlet.http.ioc.RequestHandler(
+setManager(factory, "requestHandler", scala.ioc.servlet.http.RequestHandler(
 	options = List("GET"),
 	getHandler =
   Some((c: scala.collection.immutable.Map[Any, Any]) => {

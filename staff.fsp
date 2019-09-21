@@ -1,0 +1,4 @@
+`namespace|scala.ioc`
+`namespace x|scala.xml`
+
+"letsGetStarted" `#=` scala.ioc.cli.MainSpec.processArgs(`#$`("args"))

@@ -3,14 +3,18 @@ package scala.ioc.cli
 import scala.annotation.tailrec
 import scala.ioc.ppm._
 import scala.ioc.Factory
+import scala.ppm.Preprocessor
 
 object Main extends App {
 
-  private case class IocArgValues(val filenames: List[String] = List(), val workername: Option[String] = None)
+  private case class IocArgValues(
+    filenames: List[String] = List(),
+    workername: Option[String] = None,
+  )
 
   val prefix = "--I"
 
-  private val IocArgFlags = Map(
+  private val IocParamFlags = Map(
 
       // function to extract staffing filenames
       ("f", (args: List[String], arg: String, iocArgValues: IocArgValues) => {
@@ -42,7 +46,7 @@ object Main extends App {
 
               // workername has already been specified
               case Some(name) =>
-                throw new Exception(s"no more than one initialization worker may be specifed for '$prefix$arg'. Already specified as '$name'")
+                throw new Exception(s"At most one initialization worker may be specifed for '$prefix$arg'. Already specified as '$name'")
 
               case _ =>
                 (tail, IocArgValues(iocArgValues.filenames, Some(aarg)))
@@ -57,7 +61,7 @@ object Main extends App {
       }),
   )
 
-  def getIocArgs = IocArgFlags.keySet
+  val IocParamNames = IocParamFlags.keySet
 
   /*
    * separate the IoC arguments from the rest of the arguments
@@ -79,7 +83,7 @@ object Main extends App {
 
           val a = arg.substring(prefix.length)
 
-          val (ttail, iocArgValues) = IocArgFlags.get(a) match {
+          val (ttail, iocArgValues) = IocParamFlags.get(a) match {
 
             case Some(f) => f(tail, a, extracted)
 
@@ -109,31 +113,34 @@ object Main extends App {
   private val (iocArgValues, filtered) = extractIocArgs(args.toList, (IocArgValues(), List[String]()))
 
   // build the factory and staff it
-  val factory = (
+  private val (factory, _) = (
 
-      if (iocArgValues.filenames == Nil) {
-        // default filename
-        List("sfaff.fsp")
-      }
-      else {
-        iocArgValues.filenames
-      }
-    ).foldLeft(Factory())(
+    iocArgValues.filenames match {
+      // default config filename
+      case Nil => List("staff.fsp")
+      case filenames => filenames
+    }
+
+  ).foldLeft((Factory(), Preprocessor()))(
       (acc, filename) => {
-        val (factory, _) = staffFactoryFromFile(fileName = filename, factory = acc)
-        factory
+        val (factory, preprocessor) = acc
+        staffFactoryFromFile(
+          filename,
+          factory = factory,
+          preprocessor = preprocessor
+        )
       }
     )
 
-  val obj = factory.putToWork(
-      iocArgValues.workername match {
+  factory.putToWork(
+    iocArgValues.workername match {
 
-        case Some(name) => name
+      case Some(name) => name
 
-        // default initialization workername
-        case _ => "init"
-      },
-      Map("args" -> filtered.reverse.toArray),
+      // default initialization workername
+      case _ => "init"
+    },
+    Map("args" -> filtered.reverse.toArray),
   )
 
 }

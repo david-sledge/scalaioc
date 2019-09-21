@@ -30,19 +30,22 @@ class IocServlet extends GenericServlet {
     val preprocessor = Preprocessor()
     val ctx = getServletContext
     preprocessor.addMacro(Some("scala.servlet"), Some("embed"), embedImpl(ctx))
+    val staffPath = if (paramNames contains IocServlet.StaffPathParam)
+        getInitParameter(IocServlet.StaffPathParam)
+      else IocServlet.DefaultStaffPath
+    val stream = Option(ctx.getResourceAsStream(staffPath)) match {
+      case Some(stream) => stream
+      case _ => throw new ServletException(s"No resource found at the path '$staffPath'")
+    }
     // get the path to the sfs
     val (factory, _) = staffFactoryFromStream(
-        ctx.getResourceAsStream(
-          if (paramNames contains IocServlet.StaffPathParam)
-            getInitParameter(IocServlet.StaffPathParam)
-          else IocServlet.DefaultStaffPath
-        ),
+        stream,
         preprocessor = preprocessor,
         encoding =
           if (paramNames contains IocServlet.EncodingParam)
             getInitParameter(IocServlet.EncodingParam)
           else IocServlet.DefaultEncoding,// */
-        src = Some(IocServlet.DefaultStaffPath)
+        src = Some(IocServlet.DefaultStaffPath),
       )
     this.factory = Some(factory)
 

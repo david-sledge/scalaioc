@@ -42,6 +42,12 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(Wo
 
     }
 
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+        Some("="), postManagerJob("setLazyManager"))
+
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+        Some("=>"), postManagerJob("setManager"))
+
     def postRefJob(name: String)
         (namespaceName: Option[String] = None, localName: String)
         (exprOpt: Option[Tree] = None, args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
@@ -55,12 +61,6 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(Wo
 factory.${TermName(name)}(${named(Id)}, c)
 """
     }
-
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("="), postManagerJob("setLazyManager"))
-
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("=>"), postManagerJob("setManager"))
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("ref"), postRefJob("putToWork"))
@@ -83,7 +83,7 @@ factory.${TermName(name)}(${named(Id)}, c)
       Some("$"),
       (namespaceName, localName) =>
         (expr, args, tb, src) => {
-          val ProcessedArgs(named, _, extraNames, leftovers) =
+          val ProcessedArgs(named, _, _, _) =
             validateThisExprAndArgs(
               expr,
               args,
@@ -95,34 +95,36 @@ factory.${TermName(name)}(${named(Id)}, c)
         }
     )
 
-//*
-    preprocessor.addMacro(
-        Some(ScalaIocNamespaceName),
-        Some("id"),
-        (namespaceName, localName) =>
-          (expr, args, tb, src) => {
-            val ProcessedArgs(named, _, extraNames, leftovers) =
-              validateThisExprAndArgs(
-                  expr,
-                  args,
-                  ListSet(Id, Worker),
-                )
+    def postManagementPromotion(name: String)
+        (namespaceName: Option[String], localName: String)
+        (exprOpt: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
-            q"""{
+      val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
+          exprOpt,
+          args,
+          ListSet(Id, Worker),
+        )
+
+      q"""{
 var worker = ${toWorker(named(Worker))}
-scala.ioc.Factory.setLazyManager(`#$$`("factory"), ${named(Id)}, worker)
+scala.ioc.Factory.${TermName(name)}(factory, ${named(Id)}, worker)
 worker(c)
 }"""
 
-          })
-// */
+    }
+
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+        Some("id"), postManagementPromotion("setLazyManager"))
+
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+        Some("id>"), postManagementPromotion("setManager"))
 
     preprocessor.addMacro(
         Some(ScalaIocNamespaceName),
         Some("resource"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
-            val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
+            val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 expr,
                 args,
                 ListSet("path"),
@@ -146,7 +148,7 @@ factory = factory, preprocessor = preprocessor)"""
         Some("def"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
-            val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
+            val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 expr,
                 args,
                 ListSet(),
@@ -194,7 +196,7 @@ factory = factory, preprocessor = preprocessor)"""
         Some("embed"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
-            val ProcessedArgs(named, _, extraNames, leftovers) = validateThisExprAndArgs(
+            val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 expr,
                 args,
                 ListSet("path"),
@@ -232,7 +234,7 @@ factory = factory, preprocessor = preprocessor)"""
 (factory: scala.ioc.Factory) =>
   (preprocessor: scala.ppm.Preprocessor) => {$conf}
 """
-    scala.ppm.Reader.execute[Factory => Preprocessor => Any](code, preprocessor, src)(factory)(preprocessor)
+    execute[Factory => Preprocessor => Any](code, preprocessor, src)(factory)(preprocessor)
     (factory, preprocessor)
   }
 

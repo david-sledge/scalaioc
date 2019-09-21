@@ -1,27 +1,11 @@
-package scala.servlet.http.ioc
+package scala.ioc.servlet.http
 
 import scala.collection.JavaConverters._
 import scala.language.reflectiveCalls
 import scala.collection.immutable.Map
 import scala.servlet.http.RequestHandler._
-
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.OutputStreamWriter
-import java.io.UnsupportedEncodingException
-import java.lang.reflect.Method
-import java.text.MessageFormat
-import java.util.Enumeration
-import java.util.Locale
-import java.util.ResourceBundle
-
-import javax.servlet.ServletException
-import javax.servlet.ServletOutputStream
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpServletResponseWrapper
 
 object RequestHandler {
 

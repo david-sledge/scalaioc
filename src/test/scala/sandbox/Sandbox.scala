@@ -16,14 +16,16 @@ class Sandbox extends FlatSpec with Matchers {
 //    println(showRaw(q"a.asInstanceOf[(Option[String], List[Int])]"))
 //    println(showRaw(q"A[B, E](c, d)"))
 //    println(showRaw(q"(B, E)"))
-    val tb = scala.reflect.runtime.universe.runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
-    val code = s"A[${q"(B, E)".toString}]"
-    println(code)
+//    val tb = scala.reflect.runtime.universe.runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
+//    val code = s"A[${q"(B, E)".toString}]"
+//    println(code)
 //    println(showRaw(tb.parse(code)))
-    val list = List[Any](0)
-    val intList = Array[Int](1)
-    println(intList(scala.ioc.cast(list.head)))
-    ((s: String) => 0).asInstanceOf[String => Int]
+//    val list = List[Any](0)
+//    val intList = Array[Int](1)
+//    println(intList(scala.ioc.cast(list.head)))
+//    ((s: String) => 0).asInstanceOf[String => Int]
+    val argList = List(q"()", AssignOrNamedArg(Ident(TermName("x")), q"5"))
+    println(showRaw(q"test($argList)"))
   }
 }
 
