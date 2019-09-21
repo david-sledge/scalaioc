@@ -9,13 +9,7 @@ import scala.tools.reflect.ToolBox
 
 package object ppm {
 
-  val ScalaIocNamespaceName = "scala.ioc"
-
-  val Worker = "worker"
-
-  val Id = "id"
-
-  val Type = "type"
+  val DefaultEnc = "utf-8"
 
   def toWorker(stat: Tree) = {
     q"""
@@ -25,6 +19,14 @@ package object ppm {
 
   def populateStaffingMacros(preprocessor: Preprocessor = Preprocessor()) = {
 
+    val scalaIocNamespaceName = "scala.ioc"
+    val worker = "worker"
+    val id = "id"
+    val lazyMgrMethod = "setLazyManager"
+    val mgrMethod = "setManager"
+    val path = "path"
+    val enc = "encoding"
+
     def postManagerJob(name: String)
         (namespaceName: Option[String], localName: String)
         (exprOpt: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
@@ -32,21 +34,21 @@ package object ppm {
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
           args,
-          ListSet(Worker),
+          ListSet(worker),
           thisExprPresence = Required,
         )
 
       q"""
-scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(Worker))})
+scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(worker))})
 """
 
     }
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("="), postManagerJob("setLazyManager"))
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
+        Some("="), postManagerJob(lazyMgrMethod))
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("=>"), postManagerJob("setManager"))
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
+        Some("=>"), postManagerJob(mgrMethod))
 
     def postRefJob(name: String)
         (namespaceName: Option[String] = None, localName: String)
@@ -54,21 +56,21 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(Wo
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
           args,
-          ListSet(Id),
+          ListSet(id),
         )
 
       q"""
-factory.${TermName(name)}(${named(Id)}, c)
+factory.${TermName(name)}(${named(id)}, c)
 """
     }
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
         Some("ref"), postRefJob("putToWork"))
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
         Some("ref!"), postRefJob("crackTheWhip"))
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
         Some("let"),
         ((namespaceName, localName) => (expr, args, tb, src) =>
           args.foldRight(EmptyTree)((block, acc) => {
@@ -79,7 +81,7 @@ factory.${TermName(name)}(${named(Id)}, c)
           })))
 
     preprocessor.addMacro(
-      Some(ScalaIocNamespaceName),
+      Some(scalaIocNamespaceName),
       Some("$"),
       (namespaceName, localName) =>
         (expr, args, tb, src) => {
@@ -87,10 +89,10 @@ factory.${TermName(name)}(${named(Id)}, c)
             validateThisExprAndArgs(
               expr,
               args,
-              ListSet(Id),
+              ListSet(id),
             )
 
-          q"scala.ioc.cast(c(${named(Id)}))"
+          q"scala.ioc.cast(c(${named(id)}))"
 
         }
     )
@@ -102,38 +104,38 @@ factory.${TermName(name)}(${named(Id)}, c)
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
           args,
-          ListSet(Id, Worker),
+          ListSet(id, worker),
         )
 
       q"""{
-var worker = ${toWorker(named(Worker))}
-scala.ioc.Factory.${TermName(name)}(factory, ${named(Id)}, worker)
+var worker = ${toWorker(named(worker))}
+scala.ioc.Factory.${TermName(name)}(factory, ${named(id)}, worker)
 worker(c)
 }"""
 
     }
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("id"), postManagementPromotion("setLazyManager"))
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
+        Some("id"), postManagementPromotion(lazyMgrMethod))
 
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("id>"), postManagementPromotion("setManager"))
+    preprocessor.addMacro(Some(scalaIocNamespaceName),
+        Some("id>"), postManagementPromotion(mgrMethod))
 
     preprocessor.addMacro(
-        Some(ScalaIocNamespaceName),
+        Some(scalaIocNamespaceName),
         Some("resource"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 expr,
                 args,
-                ListSet("path"),
-                ListSet("encoding"),
+                ListSet(path),
+                ListSet(enc),
               )
 
-            val pathExpr = named("path")
+            val pathExpr = named(path)
 
-            named.get("encoding") match {
+            named.get(enc) match {
               case Some(encExpr) => q"""scala.ioc.ppm.staffFactoryFromResource($pathExpr,
 $encExpr, factory = factory, preprocessor = preprocessor)"""
               case _ => q"""scala.ioc.ppm.staffFactoryFromResource($pathExpr,
@@ -144,15 +146,17 @@ factory = factory, preprocessor = preprocessor)"""
     )
 
     preprocessor.addMacro(
-        Some(ScalaIocNamespaceName),
+        Some(scalaIocNamespaceName),
         Some("def"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
+            val localName = "localName"
+            val defnArg = "defn"
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 expr,
                 args,
                 ListSet(),
-                ListSet("localName", "defn"),
+                ListSet(localName, defnArg),
                 thisExprPresence = Optional,
               )
 
@@ -163,19 +167,19 @@ factory = factory, preprocessor = preprocessor)"""
                   "LHS of #" + namespaceName + "#" + localName + " if supplied must be a string literal")
             }
 
-            val localNameOpt = if (named contains "localName")
-              named("localName") match {
+            val localNameOpt = if (named contains localName)
+              named(localName) match {
                 case Ident(TermName("None")) => None
                 case Literal(Constant(localName: String)) => Some(localName)
                 case Apply(TermName("Some"), Literal(Constant(localName: String))) => Some(localName)
                 case _ => throw new IllegalArgumentException(
-                    "'localName' argument must be a string literal or None.  Found:  " + named("localName").getClass)
+                    "'localName' argument must be a string literal or None.  Found:  " + named(localName).getClass)
               }
             else None
 
-            val defn = if (named contains "defn") {
+            val defn = if (named contains defnArg) {
 
-                tb.compile(named("defn"))().asInstanceOf[
+                tb.compile(named(defnArg))().asInstanceOf[
                   (Option[String], String) =>
                     (Option[Tree], List[Tree], ToolBox[universe.type], Option[String]) =>
                       Tree]
@@ -192,27 +196,27 @@ factory = factory, preprocessor = preprocessor)"""
           })
 
     preprocessor.addMacro(
-        Some(ScalaIocNamespaceName),
+        Some(scalaIocNamespaceName),
         Some("embed"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 expr,
                 args,
-                ListSet("path"),
-                ListSet("encoding"),
+                ListSet(path),
+                ListSet(enc),
               )
   
-            named("path") match {
+            named(path) match {
               case Literal(Constant(path: String)) => {
                 val encoding =
-                  if (named contains "encoding")
-                    named("encoding") match {
+                  if (named contains enc)
+                    named(enc) match {
                       case Literal(Constant(encoding: String)) => encoding
                       case _ => throw new IllegalArgumentException(
                         "The optional 'encoding' argument if supplied must be a string literal")
                     }
-                  else "utf-8"
+                  else DefaultEnc
 
                 val code = fromInputStream(getClass.getClassLoader.getResourceAsStream(path), encoding).mkString
                 tb.parse(code)
@@ -239,17 +243,17 @@ factory = factory, preprocessor = preprocessor)"""
   }
 
   // TODO:  scaladoc
-  def staffFactoryFromFile(fileName: String, encoding: String = "utf-8", factory: Factory = Factory()
+  def staffFactoryFromFile(fileName: String, encoding: String = DefaultEnc, factory: Factory = Factory()
       , preprocessor: Preprocessor = Preprocessor()) =
     staffFactory(fromFile(fileName, encoding).mkString, factory, preprocessor, Some(fileName))
 
   // TODO:  scaladoc
-  def staffFactoryFromResource(path: String, encoding: String = "utf-8", factory: Factory = Factory()
+  def staffFactoryFromResource(path: String, encoding: String = DefaultEnc, factory: Factory = Factory()
       , preprocessor: Preprocessor = Preprocessor()) =
     staffFactoryFromStream(getClass.getClassLoader.getResourceAsStream(path), encoding, factory, preprocessor, Some(path))
 
   // TODO:  scaladoc
-  def staffFactoryFromStream(stream: java.io.InputStream, encoding: String = "utf-8", factory: Factory = Factory()
+  def staffFactoryFromStream(stream: java.io.InputStream, encoding: String = DefaultEnc, factory: Factory = Factory()
       , preprocessor: Preprocessor = Preprocessor(), src: Option[String] = None) =
     staffFactory(fromInputStream(stream, encoding).mkString, factory, preprocessor, src)
 }

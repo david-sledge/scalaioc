@@ -4,7 +4,6 @@
 `namespace web|scala.servlet`
 
 "scala.xml" `#ioc|def` ("xml", scala.ioc.xml.ppm.postJobXml)
-"scala.xml" `#ioc|def` ("dtd", scala.ioc.xml.ppm.postJobDtd)
 "scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.ppm.postJobCdata)
 "scala.xml" `#ioc|def` ("!", scala.ioc.xml.ppm.postJobComment)
 "scala.xml" `#ioc|def` ("?", scala.ioc.xml.ppm.postJobProcInstr)

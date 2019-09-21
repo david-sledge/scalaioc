@@ -6,30 +6,30 @@ import scala.ppm._
 import scala.reflect.runtime.universe
   import universe._
 import scala.tools.reflect.ToolBox
-import scala.xml.Write
 
 package object ppm {
-  def f[T](obj: Any) = obj.asInstanceOf[(Any, Write[T])]
 
-  private def metaWriteXml(name: String, args: List[Tree]) = {
-    val termName = TermName(name)
-    List(
-      q"""val pair = scala.ioc.xml.ppm.f(c("xmlWriter"))"""
-    , q"""val writer = pair._1"""
-    , q"""val write = pair._2"""
-    , if (args.size == 0) q"""write.$termName(write.cast(writer))"""
-      else q"""write.$termName(write.cast(writer))(..$args)"""
-    )
-  }
+  private def metaWriteXml(name: String, args: List[Tree]) =
+    q"""
+((writer: javax.xml.stream.XMLStreamWriter) => {
+  writer.${TermName(name)}(..$args)
+})(`#scala.ioc#$$`("xmlWriter"))"""
 
   private def postJobContent(args: List[Tree]): Tree = {
-    val cdataWrite = q"""..${metaWriteXml("writeCharacters", List[Tree](q"""c("cdata").toString"""))}"""
-    q"""..${args.foldLeft(List[Tree]())((acc, arg) => q"""
-`#scala.ioc#let`("cdata" -> ${arg},
-  if (c("cdata") == ()) ()
-  else $cdataWrite
-)
-""" :: acc)}"""
+
+    q"""..${
+
+      args.foldLeft(List[Tree]())(
+
+        (acc, arg) => q"""
+((cdata: Any) =>
+  if (() == cdata) ()
+  else ${metaWriteXml("writeCharacters", List(q"""cdata.toString"""))}
+)($arg)
+""" :: acc
+      )
+
+    }"""
   }
 
   def postJobXml(
@@ -39,59 +39,53 @@ package object ppm {
       args: List[Tree], tb: ToolBox[universe.type], src: Option[String]
     ): Tree = {
 
+    val enc = "enc"
+    val ver = "ver"
+    val dtd = "dtd"
     val ProcessedArgs(named, _, _, leftovers) =
       validateThisExprAndArgs(
-          expr,
-          args,
-          allowExtraNamedArgs = true,
-          allowExcessOrdinalArgs = true,
-        )
-
-    q"""..${
-        (
-          if (named.contains("version"))
-            if (named.contains("encoding"))
-              metaWriteXml("writeStartDocumentVerEnc",
-                  List[Tree](named("encoding"), named("version")))
-            else
-              metaWriteXml("writeStartDocumentVer",
-                  List[Tree](named("version")))
-          else if (named contains "encoding")
-            metaWriteXml("writeStartDocumentVerEnc",
-                List[Tree](named("encoding"), Literal(Constant("1.0"))))
-          else
-            metaWriteXml("writeStartDocument",
-                List[Tree]())
-        ) ++
-        (
-          (
-            if (named contains "dtd")
-              List[Tree](q"""write.writeDtd(write.cast(writer))(${named("dtd")})""")
-            else List()
-          ) ++
-          List(
-              q"""${toWorker(postJobContent(leftovers.right.get))}(c)"""
-            , q"""write.writeEndDocument(write.cast(writer))"""
-          )
-        )
-    }"""
-
-  }
-
-  def postJobDtd(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
-
-    val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         expr,
         args,
-        ListSet("dtd"),
+        allowExtraNamedArgs = true,
+        allowExcessOrdinalArgs = true,
       )
 
-    q"""..${metaWriteXml("writeDtd", List(named("dtd")))}"""
+    val unknownArgs = named.keySet diff ListSet(enc, ver, dtd)
+
+    if (unknownArgs.size > 0)
+      throw new Exception(s"unknown arguments: $unknownArgs")
+
+    val contentsAndEndDocument = List(
+      q"""..${postJobContent(leftovers.right.get)}""",
+      metaWriteXml("writeEndDocument", List()),
+    )
+
+    q"""
+..${
+  metaWriteXml(
+    "writeStartDocument",
+    if (named.contains(ver))
+      if (named.contains(enc))
+            List(named(enc), named(ver))
+      else
+            List(named(ver))
+    else if (named contains enc)
+          List(named(enc), Literal(Constant("1.0")))
+    else
+      List()
+  )::(
+    if (named contains dtd)
+      metaWriteXml("writeDTD", List(named(dtd)))::contentsAndEndDocument
+    else
+      contentsAndEndDocument
+  )
+}
+"""
 
   }
 
-  def postJobCdata(namespaceName: Option[String], localName: String)
+  private def postJobCharacterData(methodName: String)
+  (namespaceName: Option[String], localName: String)
   (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
@@ -100,22 +94,13 @@ package object ppm {
         ListSet("cdata"),
       )
 
-    q"""..${metaWriteXml("writeCdata", List(named("cdata")))}"""
+    metaWriteXml(methodName, List(named("cdata")))
 
   }
 
-  def postJobComment(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+  def postJobCdata = postJobCharacterData("writeCData")_
 
-    val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-        expr,
-        args,
-        ListSet("cdata"),
-      )
-
-    q"""..${metaWriteXml("writeComment", List(named("cdata")))}"""
-
-  }
+  def postJobComment = postJobCharacterData("writeComment")_
 
   def postJobProcInstr(namespaceName: Option[String], localName: String)
   (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
@@ -127,13 +112,12 @@ package object ppm {
         ListSet("data"),
       )
 
-    q"""..${
+    metaWriteXml("writeProcessingInstruction",
       if (named contains "data")
-        metaWriteXml("writeProcessingInstructionData",
-            List(named("target"), named("data")))
+        List(named("target"), named("data"))
       else
-        metaWriteXml("writeProcessingInstruction",
-            List(named("target")))}"""
+        List(named("target"))
+    )
 
   }
 
@@ -149,14 +133,14 @@ package object ppm {
         )
 
     q"""..${
-        metaWriteXml("writeStartElement", List[Tree](Literal(Constant(localName)))) ++
-        named.foldLeft(List(
-            q"""${toWorker(postJobContent(leftovers.right.get))}(c)"""
-          , q"""write.writeEndElement(write.cast(writer))"""
-        )){
-          case (a, (k, v)) =>
-            q"""write.writeAttribute(write.cast(writer))($k, $v)""" :: a
-        }
+      metaWriteXml("writeStartElement", List(Literal(Constant(localName))))::
+      named.foldLeft(List(
+          q"""..${postJobContent(leftovers.right.get)}""",
+          metaWriteXml("writeEndElement", List()),
+      )){
+        case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(name)), value))::acc
+      }
     }"""
   }
+
 }
