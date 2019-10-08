@@ -115,10 +115,9 @@ package object ppm {
       named0,
       duplicates,
       // arguments that were passed by name, but were not among the list of required or optional names
-      named0.foldRight(Set[String]())((entry, acc) => {
-        val key = entry._1
-        if (argNames contains key) acc else acc + key
-      }),
+      (duplicates.keySet ++ named0.keySet).foldRight(Set[String]())(
+        (key, acc) => if (argNames contains key) acc else acc + key
+      ),
       {
         // don't care about the optional argument names because they're... optional
         val unusedRequiredArgNames = ordNames0 diff optionalArgNames
@@ -152,23 +151,23 @@ package object ppm {
     ) => {
     val errorMsgs = if (hasDuplicateArgNames)
         List(s"has duplicate named arguments: ${
-          duplicates.map{case (key, value) => s"$key (${value.size})"}.mkString(", ")
+          duplicates.map{case (key, value) => s"'$key' (${value.size})"}.mkString(", ")
         }")
       else
         List()
     val errorMsgs1 = requiredOrExcessArgError match {
-        case MissingRequiredArgs => s"is missing arguments: ${
-            leftovers.left.get
-          }"::errorMsgs
+        case MissingRequiredArgs => s"is missing arguments: '${
+            leftovers.left.get.mkString("', '")
+          }'"::errorMsgs
         case ExcessiveOrdinalArgs => s"has ${
           leftovers.right.get.size
         } too many arguments"::errorMsgs
         case _ => errorMsgs
       }
     val errorMsgs2 = if (hasUnsupportedArgNames)
-        s" has unsupported named arguments: ${
-          extraNames
-        }"::errorMsgs1
+        s" has unsupported named arguments: '${
+          extraNames.mkString("', '")
+        }'"::errorMsgs1
     else errorMsgs1
 
     if (errorMsgs2.size > 0)
@@ -178,14 +177,15 @@ package object ppm {
 
   }
 
-  def validateArgs(
+  def validateArgs[T](
       args: List[Tree],
       requiredArgNames: ListSet[String] = ListSet(),
       optionalArgNames: ListSet[String] = ListSet(),
       allowExtraNamedArgs: Boolean = false,
       allowDuplicateArgs: Boolean = false,
       allowExcessOrdinalArgs: Boolean = false,
-      processArgErrors: (
+      onValid: ProcessedArgs => T = (a: ProcessedArgs) => a,
+      onInvalid: (
           Map[String, Tree],
           Map[String, List[Tree]],
           Set[String],
@@ -193,11 +193,18 @@ package object ppm {
           Boolean,
           Boolean,
           RequiredOrExcessArgError,
-        ) =>
-        ProcessedArgs = (a, b, c, d, e, f, g) => {
-          throw new Exception(buildErrorMessage(a, b, c, d, e, f, g))
-        },
+        ) => T =
+          (
+            a: Map[String, Tree],
+            b: Map[String, List[Tree]],
+            c: Set[String],
+            d: Either[ListSet[String], List[Tree]],
+            e: Boolean,
+            f: Boolean,
+            g: RequiredOrExcessArgError,
+          ) => throw new Exception(buildErrorMessage(a, b, c, d, e, f, g)),
     ) = {
+
     val processedArgs@ProcessedArgs(named, duplicates, extraNames, leftovers) =
       processArgs(
         args,
@@ -219,7 +226,7 @@ package object ppm {
     if (requiredOrExcessArgError != NoError ||
         extraNamedArgError ||
         duplicateArgError) {
-      processArgErrors(
+      onInvalid(
           named,
           duplicates,
           extraNames,
@@ -242,7 +249,7 @@ package object ppm {
   val unsupportedExprErrorMessage = "macro does not use a method-containing object;"
   val missingExprErrorMessage = "macro requires a method-containing object;"
 
-  def validateThisExprAndArgs(
+  def validateThisExprAndArgs[T](
       thisExpr: Option[Tree],
       args: List[Tree],
       requiredArgNames: ListSet[String] = ListSet(),
@@ -251,7 +258,8 @@ package object ppm {
       allowExtraNamedArgs: Boolean = false,
       allowDuplicateArgs: Boolean = false,
       allowExcessOrdinalArgs: Boolean = false,
-      processErrors: (
+      onValid: ProcessedArgs => T = (a: ProcessedArgs) => a,
+      onInvalid: (
           Option[Tree],
           Map[String, Tree],
           Map[String, List[Tree]],
@@ -262,7 +270,18 @@ package object ppm {
           Boolean,
           RequiredOrExcessArgError,
         ) =>
-        ProcessedArgs = (thisExpr, a, b, c, d, hasThisExprError, e, f, g) => {
+        T =
+          (
+            thisExpr: Option[Tree],
+            a: Map[String, Tree],
+            b: Map[String, List[Tree]],
+            c: Set[String],
+            d: Either[ListSet[String], List[Tree]],
+            hasThisExprError: Boolean,
+            e: Boolean,
+            f: Boolean,
+            g: RequiredOrExcessArgError,
+          ) => {
 
           throw new Exception(s"${
             if (hasThisExprError) s"${
@@ -292,12 +311,21 @@ package object ppm {
         allowExtraNamedArgs,
         allowDuplicateArgs,
         allowExcessOrdinalArgs,
-        (a, b, c, d, e, f, g) => {
-          processErrors(thisExpr, a, b, c, d, hasThisExprError, e, f, g)
+        onValid,
+        (
+          a: Map[String, Tree],
+          b: Map[String, List[Tree]],
+          c: Set[String],
+          d: Either[ListSet[String], List[Tree]],
+          e: Boolean,
+          f: Boolean,
+          g: RequiredOrExcessArgError,
+        ) => {
+          onInvalid(thisExpr, a, b, c, d, hasThisExprError, e, f, g)
         },
       )
 
-    if (hasThisExprError) processErrors(
+    if (hasThisExprError) onInvalid(
         thisExpr,
         named,
         duplicates,
@@ -322,7 +350,7 @@ package object ppm {
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
     // generate the AST
     val tree = tb.parse(code)
-    //println("Position is:  " + tree.pos)
+    //println(s"Position is: ${tree.pos}")
     // manipulate tree
     val transformedTree = preprocessor.transformTree(tree, tb, src)
     //println(transformedTree)

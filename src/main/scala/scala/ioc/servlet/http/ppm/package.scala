@@ -18,25 +18,43 @@ package object ppm {
       expr,
       args,
       optionalArgNames = ListSet(
-        "options",
-        "deleteHandler",
-        "getHandler",
-        "postHandler",
-        "putHandler",
-        "headHandler",
-        "traceHandler",
-        "getLastModified",
-        "reqKey",
-        "respKey",
+        "handleGet",
+        "handlePost",
+        "handleOptions",
+        "handleDelete",
+        "handlePut",
+        "handleHead",
+        "handleTrace",
+        "handleLastModified",
       ),
     )
 
-q"""
-setManager(factory, "requestHandler", scala.ioc.servlet.http.RequestHandler(${
-  named.foldLeft(List[Tree]())((acc, entry) =>
-    AssignOrNamedArg(Ident(TermName(entry._1)), entry._2)::acc
-  )
-}))
+    /*
+     * handleDelete: (HttpServletRequest, HttpServletResponse) =>
+      Unit = DefaultDeleteHandler,
+    handleGet: (HttpServletRequest, HttpServletResponse) =>
+      Unit = DefaultGetHandler,
+    optionHandleHead:
+      Option[(HttpServletRequest, HttpServletResponse) => Unit] = None,
+    optionHandleOptions:
+      Option[(HttpServletRequest, HttpServletResponse) => Unit] = None,
+    handlePost: (HttpServletRequest, HttpServletResponse) =>
+      Unit = DefaultPostHandler,
+    handlePut: (HttpServletRequest, HttpServletResponse) =>
+      Unit = DefaultPutHandler,
+    handleTrace: (HttpServletRequest, HttpServletResponse) => Unit = DefaultTraceHandler,
+    getLastModified
+     */
+    q"""
+scala.ioc.Factory.setManager(factory, "requestHandler", scala.servlet.http.createRequestHandler(${
+      named.foldLeft(List[Tree]()) {
+        case (acc, (name, arg)) =>
+          AssignOrNamedArg(
+            Ident(TermName(name)),
+            q"Some(${toWorker(arg)})"
+          )::acc
+      }
+    }))
 """
   }
 

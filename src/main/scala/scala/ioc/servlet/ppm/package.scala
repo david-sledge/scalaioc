@@ -51,16 +51,22 @@ package object ppm {
     val pathExpr = named("path")
     named.get("encoding") match {
       case Some(encExpr) => q"""scala.ioc.ppm.staffFactoryFromStream(
-${expr.get}.getResourceAsStream($named("path")),
+${expr.get}.getResourceAsStream(${named("path")}),
 $encExpr,
 factory = factory,
 preprocessor = preprocessor)"""
-          case _ => q"""scala.ioc.ppm.staffFactoryFromStream(
-${expr.get}.getResourceAsStream($named("path")),
+      case _ => q"""scala.ioc.ppm.staffFactoryFromStream(
+${expr.get}.getResourceAsStream(${named("path")}),
 factory = factory,
 preprocessor = preprocessor)"""
     }
 
   }
 
+  def postRequestHandlerJob(namespaceName: Option[String], localName: String)
+  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]) = {
+
+    
+
+  }
 }

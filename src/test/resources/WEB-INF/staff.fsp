@@ -1,22 +1,32 @@
 `namespace|scala.ioc`
 `namespace x|scala.xml`
+`namespace web|scala.servlet`
+`namespace http|scala.servlet.http`
 
-"say hello" `#=>` println("Hello, World!")
+`#embed`("scala/ioc/xml/macroDefs.fsp")
+`#embed`("scala/ioc/servlet/http/macroDefs.fsp")
 
-"say hello once" `#=` println("Hello, World!  You'll have to force me to say it again.")
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.xml.stream.XMLOutputFactory
 
-"hello to..." `#=>` println(s"Hello, ${c("who")}!")
+/*
+`#http|http`(
+  handleGet =
+    (req: HttpServletRequest, resp: HttpServletResponse) => {
+      `#let`(
+        "enc" -> "utf-8",
+        "xmlWriter" -> XMLOutputFactory.newInstance.createXMLStreamWriter(resp.getOutputStream, `#$`("enc")),
+        (() => {
+          setStatus(HttpServletResponse.SC_OK)
+          resp.setContentType(s"application/xhtml+xml; charset=${`#$`("enc")}")
+          resp.setLocale(java.util.Locale.getDefault)
+          `#web|embed`("/WEB-INF/hello.fsp")
+          flushBuffer
+        })()
+      )
+    },
 
-"say hello once again" `#=>` `#ref`("say hello once")
-
-"say hello once again, NOW!" `#=>` `#ref!`("say hello once")
-
-"scope" `#=>` "World"
-
-"scoped hello" `#=>` println(s"Hello, ${`#ref`("scope")}!")
-
-"scoped hello2" `#=>` `#let`("who" -> `#ref`("scope"), `#ref`("hello to..."))
-
-`#resource`("moreWorkers.fsp")
-
-`#embed`("scala/ioc/xml/ppm/macroDefs.fsp")
+  handlePost = scala.ioc.servlet.http.testPost _,
+)
+// */

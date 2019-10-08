@@ -17,11 +17,15 @@ class PackageSpec extends FlatSpec with Matchers {
       ListSet("c", "d"),
     )
 
-    println(named)
-    named.size should be (2)
-    duplicates.size should be (1)
-    extraNames should be (Set("e"))
-    leftovers should be (Left(ListSet("b")))
+    named.map(entry => (entry._1, entry._2.toString)) shouldBe Map(
+        "e" -> q"0".toString,
+        "a" -> q"()".toString,
+        )
+    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map(
+        "c" -> List(q"true".toString, q"false".toString),
+        )
+    extraNames shouldBe Set("e")
+    leftovers shouldBe Left(ListSet("b"))
 
     val Apply(expr2, args2) = q"a((), c = true, e = 0, None, Left(false), string)"
 
@@ -31,11 +35,17 @@ class PackageSpec extends FlatSpec with Matchers {
       ListSet("c", "d"),
     )
 
-    named2.size should be (5)
-    duplicates2.size should be (0)
-    extraNames2 should be (Set("e"))
-    leftovers2.isRight should be (true)
-    leftovers2.right.get.size should be (1)
+    named2.map(entry => (entry._1, entry._2.toString)) shouldBe Map(
+        "c" -> q"true".toString,
+        "e" -> q"0".toString,
+        "a" -> q"()".toString,
+        "b" -> q"None".toString,
+        "d" -> q"Left(false)".toString,
+        )
+    duplicates2.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    extraNames2 shouldBe Set("e")
+    leftovers2.isRight shouldBe true
+    leftovers2.map(_.map(_.toString)) shouldBe Right(List(q"string".toString))
 
   }
 
@@ -53,15 +63,24 @@ class PackageSpec extends FlatSpec with Matchers {
 
     val Apply(expr2, args2) = q"a((), c = true, string)"
 
-    validateArgs(
+    val ProcessedArgs(named2, duplicates2, extraNames2, leftovers2) = validateArgs(
       args2,
       ListSet("a", "b"),
       ListSet("c", "d"),
     )
 
+    named2.map(entry => (entry._1, entry._2.toString)) shouldBe Map(
+      "c" -> q"true".toString,
+      "a" -> q"()".toString,
+      "b" -> q"string".toString,
+    )
+    duplicates2.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    extraNames2 shouldBe Set()
+    leftovers2.map(_.map(_.toString)) shouldBe Right(List())
+
   }
 
-  "validateArgs" should "not allow extraneous arguments by default" in {
+  it should "not allow extraneous arguments by default" in {
 
     val Apply(expr, args) = q"a(true, e = None, false, 0, 1, string)"
 
@@ -75,33 +94,54 @@ class PackageSpec extends FlatSpec with Matchers {
 
   }
 
-  "validateArgs" should "allow extraneous named arguments when specified" in {
+  it should "allow extraneous named arguments when specified" in {
 
     val Apply(expr, args) = q"a(true, e = None, false, 0, 1)"
 
-    validateArgs(
+    val ProcessedArgs(named, duplicates, extraNames, leftovers) = validateArgs(
       args,
       ListSet("a", "b"),
       ListSet("c", "d"),
       true,
     )
 
+    named.map(entry => (entry._1, entry._2.toString)) shouldBe Map(
+      "e" -> q"None".toString,
+      "a" -> q"true".toString,
+      "b" -> q"false".toString,
+      "c" -> q"0".toString,
+      "d" -> q"1".toString,
+    )
+    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    extraNames shouldBe Set("e")
+    leftovers shouldBe Right(List())
+
   }
 
-  "validateArgs" should "allow extraneous ordinal arguments when specified" in {
+  it should "allow extraneous ordinal arguments when specified" in {
 
     val Apply(expr, args) = q"a(true, None, false, 0, 1)"
 
-    validateArgs(
+    val ProcessedArgs(named, duplicates, extraNames, leftovers) = validateArgs(
       args,
       ListSet("a", "b"),
       ListSet("c", "d"),
       allowExcessOrdinalArgs = true,
     )
 
+    named.map(entry => (entry._1, entry._2.toString)) shouldBe Map(
+      "a" -> q"true".toString,
+      "b" -> q"None".toString,
+      "c" -> q"false".toString,
+      "d" -> q"0".toString,
+    )
+    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    extraNames shouldBe Set()
+    leftovers.map(_.map(_.toString)) shouldBe Right(List(q"1".toString))
+
   }
 
-  "validateArgs" should "not allow duplicate arguments by default" in {
+  it should "not allow duplicate arguments by default" in {
 
     val Apply(expr, args) = q"a(e = true, e = None, false, 0, 1, string)"
 
@@ -115,16 +155,25 @@ class PackageSpec extends FlatSpec with Matchers {
 
   }
 
-  "validateArgs" should "allow duplicate arguments when specified" in {
+  it should "allow duplicate arguments when specified" in {
 
-    val Apply(expr, args) = q"a(e = true, e = None, false, 0, 1, string)"
+    val Apply(expr, args) = q"a(c = true, c = None, false, 0, 1)"
 
-    validateArgs(
+    val ProcessedArgs(named, duplicates, extraNames, leftovers) = validateArgs(
       args,
       ListSet("a", "b"),
       ListSet("c", "d"),
       allowDuplicateArgs = true,
     )
+
+    named.map(entry => (entry._1, entry._2.toString)) shouldBe Map(
+      "a" -> q"false".toString,
+      "b" -> q"0".toString,
+      "d" -> q"1".toString,
+    )
+    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map("c" -> List(q"true".toString, q"None".toString))
+    extraNames shouldBe Set()
+    leftovers.map(_.map(_.toString)) shouldBe Right(List())
 
   }
 

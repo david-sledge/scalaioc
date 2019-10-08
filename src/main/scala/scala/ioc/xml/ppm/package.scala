@@ -13,7 +13,8 @@ package object ppm {
     q"""
 ((writer: javax.xml.stream.XMLStreamWriter) => {
   writer.${TermName(name)}(..$args)
-})(`#scala.ioc#$$`("xmlWriter"))"""
+})(`#scala.ioc#$$`("xmlWriter"))
+"""
 
   private def postJobContent(args: List[Tree]): Tree = {
 
@@ -53,33 +54,47 @@ package object ppm {
     val unknownArgs = named.keySet diff ListSet(enc, ver, dtd)
 
     if (unknownArgs.size > 0)
-      throw new Exception(s"unknown arguments: $unknownArgs")
+      throw new Exception(s"unknown arguments: '${unknownArgs.mkString("', '")}'")
 
     val contentsAndEndDocument = List(
       q"""..${postJobContent(leftovers.right.get)}""",
       metaWriteXml("writeEndDocument", List()),
     )
 
+    lazy val containsVersion = named contains ver
+    lazy val version =
+      if (containsVersion)
+        named(ver)
+      else
+        Literal(Constant("1.0"))
+
     q"""
 ..${
-  metaWriteXml(
-    "writeStartDocument",
-    if (named.contains(ver))
-      if (named.contains(enc))
-            List(named(enc), named(ver))
-      else
-            List(named(ver))
-    else if (named contains enc)
-          List(named(enc), Literal(Constant("1.0")))
-    else
-      List()
-  )::(
-    if (named contains dtd)
-      metaWriteXml("writeDTD", List(named(dtd)))::contentsAndEndDocument
-    else
-      contentsAndEndDocument
-  )
-}
+      (
+        if (named contains enc)
+          metaWriteXml("writeStartDocument", List(named(enc), version))
+        else
+          q"""
+((writer: javax.xml.stream.XMLStreamWriter) => {
+  if (c contains "enc")
+    writer.writeStartDocument(`#scala.ioc#$$`("enc"), ${version})
+  else
+    writer.writeStartDocument(..${
+            if (containsVersion)
+              List(named(ver))
+            else
+              List()
+          })
+})(`#scala.ioc#$$`("xmlWriter"))
+"""
+      )::
+      (
+        if (named contains dtd)
+          metaWriteXml("writeDTD", List(named(dtd)))::contentsAndEndDocument
+        else
+          contentsAndEndDocument
+      )
+    }
 """
 
   }

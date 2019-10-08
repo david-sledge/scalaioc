@@ -1,4 +1,4 @@
-package scala.servlet.http
+package scala.servlet
 
 import scala.collection.JavaConverters._
 import scala.language.reflectiveCalls
@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
 
-object RequestHandler {
+package object http {
   val MethodDelete = "DELETE"
   val MethodGet = "GET"
   val MethodHead = "HEAD"
@@ -38,12 +38,12 @@ object RequestHandler {
 
   val NotAllowedHandler = (lStringName: String) =>
     (req: HttpServletRequest, resp: HttpServletResponse) => {
-    	val msg = LocalStrings.getString(lStringName);
+      val msg = LocalStrings.getString(lStringName);
 
-    	if (req.getProtocol.endsWith("1.1"))
-    	    resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
-    	else
-    	    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+      if (req.getProtocol.endsWith("1.1"))
+          resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
+      else
+          resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
     }
 
   val DefaultDeleteHandler = (req: HttpServletRequest, resp: HttpServletResponse) =>
@@ -64,23 +64,23 @@ object RequestHandler {
 
       val noBody = new ServletOutputStream {
 
-  	    private var contentLength = 0
+        private var contentLength = 0
 
-  	    def getContentLength: Int = contentLength
+        def getContentLength: Int = contentLength
 
-  	    def write(b: Int) =
-  	      contentLength += 1
+        def write(b: Int) =
+          contentLength += 1
 
-	      override def write(buf: Array[Byte], offset: Int, len: Int) =
-	      {
-  	      if (len >= 0)
-  	        contentLength += len
-  	      else
-  	        throw new IllegalArgumentException(
-  	            LocalStrings.getString(
-  	                "err.io.negativelength"))
-	      }
-	    }
+        override def write(buf: Array[Byte], offset: Int, len: Int) =
+        {
+          if (len >= 0)
+            contentLength += len
+          else
+            throw new IllegalArgumentException(
+                LocalStrings.getString(
+                    "err.io.negativelength"))
+        }
+      }
 
       val writer = new PrintWriter(
           new OutputStreamWriter(noBody, getCharacterEncoding))
@@ -103,7 +103,7 @@ object RequestHandler {
       override def getWriter = writer
     }
 
-  	handleGet(req, response)
+    handleGet(req, response)
     response.setContentLength
   }
 
@@ -148,14 +148,16 @@ object RequestHandler {
       resp.getOutputStream.print(response)
   }
 
-  val DefaultHandler = (handleDelete: (HttpServletRequest, HttpServletResponse) => Unit
-      , handleGet: (HttpServletRequest, HttpServletResponse) => Unit
-      , handleHead: (HttpServletRequest, HttpServletResponse) => Unit
-      , handleOptions: (HttpServletRequest, HttpServletResponse) => Unit
-      , handlePost: (HttpServletRequest, HttpServletResponse) => Unit
-      , handlePut: (HttpServletRequest, HttpServletResponse) => Unit
-      , handleTrace: (HttpServletRequest, HttpServletResponse) => Unit
-      , getLastModified: (HttpServletRequest) => Long) => (req: HttpServletRequest, resp: HttpServletResponse) => {
+  val DefaultHandler = (
+    handleDelete: (HttpServletRequest, HttpServletResponse) => Unit,
+    handleGet: (HttpServletRequest, HttpServletResponse) => Unit,
+    handleHead: (HttpServletRequest, HttpServletResponse) => Unit,
+    handleOptions: (HttpServletRequest, HttpServletResponse) => Unit,
+    handlePost: (HttpServletRequest, HttpServletResponse) => Unit,
+    handlePut: (HttpServletRequest, HttpServletResponse) => Unit,
+    handleTrace: (HttpServletRequest, HttpServletResponse) => Unit,
+    getLastModified: (HttpServletRequest) => Long
+  ) => (req: HttpServletRequest, resp: HttpServletResponse) => {
 
     def maybeSetLastModified(resp: HttpServletResponse, lastModified: Long) = {
       if (!resp.containsHeader(HeaderLastMod) && lastModified >= 0)
@@ -175,14 +177,14 @@ object RequestHandler {
             val ifModifiedSince = req.getDateHeader(HeaderIfModSince);
 
             if (ifModifiedSince < lastModified) {
-        	    // If the servlet mod time is later, call doGet()
+              // If the servlet mod time is later, call doGet()
                           // Round down to the nearest second for a proper compare
                           // A ifModifiedSince of -1 will always be less
-        	    maybeSetLastModified(resp, lastModified)
-        	    handleGet(req, resp)
-      	    }
+              maybeSetLastModified(resp, lastModified)
+              handleGet(req, resp)
+            }
             else
-        	    resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED)
+              resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED)
           }
         }),
         MethodHead -> ((req, resp) => {
@@ -209,7 +211,7 @@ object RequestHandler {
               "http.method_not_implemented"), Array[String](method)))
   }
 
-  def apply(
+  def createRequestHandler(
     handleDelete: (HttpServletRequest, HttpServletResponse) =>
       Unit = DefaultDeleteHandler,
     handleGet: (HttpServletRequest, HttpServletResponse) =>
@@ -235,9 +237,23 @@ object RequestHandler {
     val handleOptions =
       optionHandleOptions match {
         case Some(handleOptions) => handleOptions
-        case _ => DefaultOptionsHandler(handleDelete, handleGet, handlePost, handlePut)
+        case _ => DefaultOptionsHandler(
+            handleDelete,
+            handleGet,
+            handlePost,
+            handlePut,
+          )
       }
 
-    DefaultHandler(handleDelete, handleGet, handleHead, handleOptions, handlePost, handlePut, handleTrace, getLastModified)
+    DefaultHandler(
+      handleDelete,
+      handleGet,
+      handleHead,
+      handleOptions,
+      handlePost,
+      handlePut,
+      handleTrace,
+      getLastModified,
+    )
   }
 }

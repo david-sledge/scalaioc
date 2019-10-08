@@ -26,7 +26,7 @@ final class Factory()
       case Some(EvaledThunk(value, worker)) => if (useCachedValue) value else evalThunk(worker)
       case Some(Thunk(worker)) => evalThunk(worker)
       case Some(Strict(worker)) => worker(newC)
-      case None => throw new Exception("manager with ID " + id + " does not exists.")
+      case None => throw new Exception(s"manager with ID $id does not exists.")
     }
   }
 

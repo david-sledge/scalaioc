@@ -1,11 +1,13 @@
 `namespace|scala.ioc`
 `namespace x|scala.xml`
 
-"say hello" `#=>` println("Hello, World!")
+"say hello" `#=>` ((out: java.io.StringWriter) =>
+    out.write("Hello, World!"))(`#$`("out"))
 
-"say hello once" `#=` println("Hello, World!  You'll have to force me to say it again.")
+"say hello once" `#=` ((out: java.io.StringWriter) =>
+    out.write("Hello, World!  You'll have to force me to say it again."))(`#$`("out"))
 
-"hello to..." `#=>` println(s"Hello, ${c("who")}!")
+"hello to..." `#=>` s"Hello, ${c("who")}!"
 
 "say hello once again" `#=>` `#ref`("say hello once")
 
@@ -13,10 +15,11 @@
 
 "scope" `#=>` "World"
 
-"scoped hello" `#=>` println(s"Hello, ${`#ref`("scope")}!")
+"scoped hello" `#=>` ((out: java.io.StringWriter) =>
+    out.write(s"Hello, ${`#ref`("scope")}!"))(`#$`("out"))
 
 "scoped hello2" `#=>` `#let`("who" -> `#ref`("scope"), `#ref`("hello to..."))
 
 `#resource`("moreWorkers.fsp")
 
-`#embed`("scala/ioc/xml/ppm/macroDefs.fsp")
+`#embed`("scala/ioc/xml/macroDefs.fsp")

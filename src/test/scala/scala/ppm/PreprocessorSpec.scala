@@ -23,5 +23,6 @@ class PreprocessorSpec extends FlatSpec with Matchers {
     val tree = tb.parse(code)
     // manipulate tree
     val transformedTree = preprocessor.transformTree(tree, tb, Some("PreprocessorSpec"))
+    transformedTree.toString shouldBe q"""{();List(1, 2, 3);List()}""".toString
   }
 }

@@ -106,7 +106,12 @@ class PackageSpec extends FlatSpec with Matchers {
 `namespace|scala.xml.element`
 `namespace ioc|scala.ioc`
 
-"xml" `#ioc|=>` `#x|xml`(`#html`(xmlns = "http://www.w3.org/1999/xhtml"), ver = "1.0", dtd="<!DOCTYPE html>", `#x|!`("end of document"))
+"xml" `#ioc|=>` `#x|xml`(
+  `#html`(xmlns = "http://www.w3.org/1999/xhtml"),
+  ver = "1.0",
+  dtd="<!DOCTYPE html>",
+  `#x|!`("end of document"),
+)
 """, """<?xml version="1.0"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"></html><!--end of document-->""")
 
     test("""

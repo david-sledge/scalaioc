@@ -14,6 +14,7 @@ import javax.servlet.ServletResponse
  * @author David M. Sledge
  */
 class IocServlet extends GenericServlet {
+
   private val serialVersionUID = 797867274650863128L
 
   // results
@@ -58,14 +59,13 @@ class IocServlet extends GenericServlet {
 
     // make sure the worker exists
     if (!factory.hasManager(handlerName))
-      throw new ServletException("Cannot find the worker named '"
-          + handlerName + "' to handle HTTP requests")
+      throw new ServletException(s"Cannot find the worker named '$handlerName' to handle HTTP requests")
 
     // optional worker to perform initializing procedures
     initializerName = Option(getInitParameter(IocServlet.InitializerParam)) match {
       case n @ Some(name) => if (!factory.hasManager(name))
         {
-          log("no factory worker by the name of '" + name + "' found.")
+          log(s"no factory worker by the name of '$name' found.")
           None
         }
         else n
@@ -76,7 +76,7 @@ class IocServlet extends GenericServlet {
     destroyerName = Option(getInitParameter(IocServlet.DestroyerParam)) match {
       case n @ Some(name) => if (!factory.hasManager(name))
         {
-          log("no factory worker by the name of '" + name + "' found.")
+          log(s"no factory worker by the name of '$name' found.")
           None
         }
         else n

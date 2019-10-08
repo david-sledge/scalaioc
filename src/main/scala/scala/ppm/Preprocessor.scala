@@ -349,6 +349,19 @@ final class Preprocessor {
     }
   }
 
+  def listMacros = {
+    macros.foldLeft(Map[Option[String], Set[Option[String]]]()){
+      case (acc, (nsName, macrosInNs)) =>
+        acc + (
+          nsName -> (
+            macrosInNs.keySet.foldLeft(Set[Option[String]]()){
+              case (acc1, localName) => acc1 + localName
+            }
+          )
+        )
+    }
+  }
+
   def hasOwnMacro(
     namespaceName: Option[String] = None,
     localName: String

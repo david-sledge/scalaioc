@@ -164,7 +164,7 @@ factory = factory, preprocessor = preprocessor)"""
               case None => None
               case Some(Literal(Constant(ns: String))) => Some(ns)
               case _ => throw new IllegalArgumentException(
-                  "LHS of #" + namespaceName + "#" + localName + " if supplied must be a string literal")
+                  s"LHS of #$namespaceName#$localName if supplied must be a string literal")
             }
 
             val localNameOpt = if (named contains localName)
@@ -173,7 +173,7 @@ factory = factory, preprocessor = preprocessor)"""
                 case Literal(Constant(localName: String)) => Some(localName)
                 case Apply(TermName("Some"), Literal(Constant(localName: String))) => Some(localName)
                 case _ => throw new IllegalArgumentException(
-                    "'localName' argument must be a string literal or None.  Found:  " + named(localName).getClass)
+                    s"'localName' argument must be a string literal or None. Found: ${named(localName).getClass}")
               }
             else None
 

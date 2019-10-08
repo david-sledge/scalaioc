@@ -1,15 +1,15 @@
-package scala.ioc.servlet.http
+package scala.ioc.servlet
 
 import scala.collection.JavaConverters._
 import scala.language.reflectiveCalls
 import scala.collection.immutable.Map
-import scala.servlet.http.RequestHandler._
+import scala.servlet.http._
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-object RequestHandler {
+package object http {
 
-  def apply(
+  def createRequestHandler(
     options: List[String] = List(),
     deleteHandler: Option[Map[Any, Any] => Unit] = None,
     getHandler: Option[Map[Any, Any] => Unit] = None,
