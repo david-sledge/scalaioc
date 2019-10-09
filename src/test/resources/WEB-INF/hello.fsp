@@ -1,3 +1,6 @@
+`namespace|scala.xml.element`
+`namespace x|scala.xml`
+
 `#x|xml`(
   dtd = "<!DOCTYPE html>",
   `#html`(xmlns = "http://www.w3.org/1999/xhtml",
