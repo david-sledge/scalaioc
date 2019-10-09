@@ -8,7 +8,7 @@ import scala.xml._
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
-class PackageSpec extends FlatSpec with Matchers {
+class packageSpec extends FlatSpec with Matchers {
 
   val preprocessor = {
     val preprocessor = populateStaffingMacros()

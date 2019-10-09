@@ -1,0 +1,9 @@
+`namespace|scala.ioc`
+
+scala.ioc.Factory.setManager(
+  factory,
+  "requestHandler",
+  c => {
+    ((req: javax.servlet.ServletRequest, resp: javax.servlet.ServletResponse) => {})(`#$`("req"), `#$`("resp"))
+  },
+)

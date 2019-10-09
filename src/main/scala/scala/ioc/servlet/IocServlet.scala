@@ -4,6 +4,7 @@ package scala.ioc.servlet
 import scala.ppm._
 import scala.collection.JavaConverters._
 import scala.ioc._
+  import Factory._
 import scala.ioc.ppm._
 import javax.servlet.GenericServlet
 import javax.servlet.ServletException
@@ -14,26 +15,21 @@ import javax.servlet.ServletResponse
  * @author David M. Sledge
  */
 class IocServlet extends GenericServlet {
+  import IocServlet._
 
   private val serialVersionUID = 797867274650863128L
 
   // results
   private var factory: Option[Factory] = None
-  private var handlerName: String = IocServlet.DefaultHandlerName
-  private var initializerName: Option[String] = None
-  private var destroyerName: Option[String] = None
-  private var reqName: String = IocServlet.DefaultRequestKey
-  private var respName: String = IocServlet.DefaultResponseKey
-  private var servletConfigName: String = IocServlet.DefaultServletConfigKey
 
   override def init() = {
     val paramNames: List[String] = getInitParameterNames.asScala.toList
     val preprocessor = Preprocessor()
     val ctx = getServletContext
     preprocessor.addMacro(Some("scala.servlet"), Some("embed"), embedImpl(ctx))
-    val staffPath = if (paramNames contains IocServlet.StaffPathParam)
-        getInitParameter(IocServlet.StaffPathParam)
-      else IocServlet.DefaultStaffPath
+    val staffPath = if (paramNames contains StaffPathParam)
+        getInitParameter(StaffPathParam)
+      else DefaultStaffPath
     val stream = Option(ctx.getResourceAsStream(staffPath)) match {
       case Some(stream) => stream
       case _ => throw new ServletException(s"No resource found at the path '$staffPath'")
@@ -43,69 +39,29 @@ class IocServlet extends GenericServlet {
         stream,
         preprocessor = preprocessor,
         encoding =
-          if (paramNames contains IocServlet.EncodingParam)
-            getInitParameter(IocServlet.EncodingParam)
-          else IocServlet.DefaultEncoding,// */
-        src = Some(IocServlet.DefaultStaffPath),
+          if (paramNames contains StaffEncodingParam)
+            getInitParameter(StaffEncodingParam)
+          else DefaultStaffEncoding,// */
+        src = Some(DefaultStaffPath),
       )
     this.factory = Some(factory)
 
-    // get the name of the worker to handle HTTP requests
-    if (paramNames.contains(IocServlet.HandlerParam))
-      handlerName = Option(getInitParameter(IocServlet.HandlerParam)) match {
-        case Some(name) => name
-        case None => IocServlet.DefaultHandlerName
-      }
-
     // make sure the worker exists
-    if (!factory.hasManager(handlerName))
-      throw new ServletException(s"Cannot find the worker named '$handlerName' to handle HTTP requests")
+    if (!factory.hasManager(HandlerName))
+      throw new ServletException(s"Cannot find the worker named '$HandlerName' to handle HTTP requests")
 
-    // optional worker to perform initializing procedures
-    initializerName = Option(getInitParameter(IocServlet.InitializerParam)) match {
-      case n @ Some(name) => if (!factory.hasManager(name))
-        {
-          log(s"no factory worker by the name of '$name' found.")
-          None
-        }
-        else n
-      case _ => None
+    if (factory.hasManager(InitializerKey)) {
+      factory.putToWork(InitializerKey,
+          Map(ServletConfigKey -> getServletConfig))
     }
 
-    // optional worker to perform shutdown procedures
-    destroyerName = Option(getInitParameter(IocServlet.DestroyerParam)) match {
-      case n @ Some(name) => if (!factory.hasManager(name))
-        {
-          log(s"no factory worker by the name of '$name' found.")
-          None
-        }
-        else n
-      case _ => None
-    }
-
-    // key for local request object
-    if (paramNames.contains(IocServlet.RequestNameParam))
-      reqName = getInitParameter(IocServlet.RequestNameParam)
-
-    // key for local response object
-    if (paramNames.contains(IocServlet.ResponseNameParam))
-      respName = getInitParameter(IocServlet.ResponseNameParam)
-
-    // key for local servletConfig object
-    if (paramNames.contains(IocServlet.ServletConfigNameParam))
-      servletConfigName = getInitParameter(IocServlet.ServletConfigNameParam)
-
-    if (initializerName != None)
-    {
-      factory.putToWork(initializerName.get,
-          Map(servletConfigName -> getServletConfig))
-    }
   }
 
   override def destroy() =
-    if (destroyerName != None)
-      factory.get.putToWork(destroyerName.get,
-          Map(servletConfigName -> getServletConfig))
+    if (factory.get.hasManager(DestroyerKey)) {
+      factory.get.putToWork(DestroyerKey,
+          Map(ServletConfigKey -> getServletConfig))
+    }
 
   /*
    * (non-Javadoc)
@@ -113,26 +69,30 @@ class IocServlet extends GenericServlet {
    * javax.servlet.ServletResponse)
    */
   override def service(req: ServletRequest, resp: ServletResponse) = {
-    factory.get.putToWork(handlerName, Map(reqName -> req, respName -> resp))
+    factory.get.putToWork(
+      HandlerName,
+      Map(
+        RequestKey -> req,
+        RequestKey -> resp,
+      )
+    )
   }
 }
 
 object IocServlet {
-  // Parameters
+  // Parameter names
   val StaffPathParam = "staffPath"
-  val EncodingParam = "enc"
-  val HandlerParam = "handlerName"
-  val InitializerParam = "initializerName"
-  val DestroyerParam = "destroyerName"
-  val RequestNameParam = "reqName"
-  val ResponseNameParam = "respName"
-  val ServletConfigNameParam = "servletConfigName"
+  val StaffEncodingParam = "enc"
 
   // defaults
   val DefaultStaffPath = "/WEB-INF/staff.fsp"
-  val DefaultEncoding = "utf-8"
-  val DefaultHandlerName = "requestHandler"
-  val DefaultRequestKey = "req"
-  val DefaultResponseKey = "resp"
-  val DefaultServletConfigKey = "servletConfig"
+  val DefaultStaffEncoding = "utf-8"
+
+  // manager keys and IoC context keys
+  val HandlerName = "requestHandler"
+  val RequestKey = "req"
+  val ResponseKey = "resp"
+  val ServletConfigKey = "servletConfig"
+  val InitializerKey = "init"
+  val DestroyerKey = "destroy"
 }

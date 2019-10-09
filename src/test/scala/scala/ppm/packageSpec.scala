@@ -5,7 +5,7 @@ import scala.reflect.runtime.universe._
 
 import org.scalatest._
 
-class PackageSpec extends FlatSpec with Matchers {
+class packageSpec extends FlatSpec with Matchers {
 
   "processArgs" should "divvy up the arguments and assign them to the supplied parameters" in {
 

@@ -1,0 +1,10 @@
+`namespace|scala.ioc`
+
+scala.ioc.Factory.setManager(
+  factory,
+  "requestHandler",
+  c => {},
+)
+
+"init" `#=>`
+  scala.ioc.servlet.IocServletSpec.writer.write("I have been initialized!")

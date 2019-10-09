@@ -1,0 +1,11 @@
+`namespace|scala.ioc`
+
+scala.ioc.Factory.setManager(
+  factory,
+  "requestHandler",
+  c => {},
+)
+
+"init" `#=>` c("servletConfig")
+
+"destroy" `#=>` c("servletConfig")

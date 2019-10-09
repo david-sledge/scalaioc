@@ -1,4 +1,4 @@
-package scala.servlet.http.ioc.ppm
+package scala.servlet.http.ioc
 
 import scala.collection.immutable.ListSet
 import scala.collection.immutable.ListMap
@@ -26,18 +26,19 @@ package object ppm {
       "getLastModified" -> ("getLastModified", false),
     )
 
-    val optionalArgNames = argMap.foldLeft(ListSet[String]()){
-      case (acc, (name, _)) => acc + name
-    }
-
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
       expr,
       args,
-      optionalArgNames = optionalArgNames,
+      optionalArgNames = argMap.foldRight(ListSet[String]()){
+        case ((name, _), acc) => acc + name
+      },
     )
 
     q"""
-scala.ioc.Factory.setManager(factory, "requestHandler", scala.servlet.http.createRequestHandler(${
+scala.ioc.Factory.setManager(
+  factory,
+  "requestHandler",
+  c => scala.servlet.http.createRequestHandler(..${
       named.foldLeft(List[Tree]()) {
         case (acc, (name, arg)) => {
           val (argName, isOption) = argMap(name)
@@ -47,7 +48,7 @@ scala.ioc.Factory.setManager(factory, "requestHandler", scala.servlet.http.creat
           )::acc
         }
       }
-    }))
+    })(`#$$`("req"), `#$$`("resp")))
 """
   }
 

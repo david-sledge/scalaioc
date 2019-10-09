@@ -11,13 +11,137 @@ import java.util.Hashtable
 import javax.servlet._
 
 class IocServletSpec extends FlatSpec with Matchers {
-//  "An IocServlet" should "load the staff.fsp by default" in {
-//
-//    val iocServlet = new IocServlet
-//    println(s"System resource: ${getClass.getClassLoader.getResource(".")}")
-//    iocServlet.init(new InjectableServletConfig(new InjectableServletContext(
-//      getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1))
-//    ), "test"))
-//
-//  }
+  "An IocServlet" should "load the staff.fsp by default" in {
+
+    val iocServlet = new IocServlet
+    iocServlet.init(new InjectableServletConfig(new InjectableServletContext(
+      getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1))
+    ), "test"))
+
+    iocServlet.destroy()
+
+  }
+
+  it should "load a different .fsp when specified" in {
+
+    val parameters = new Hashtable[String, String]()
+    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/staffTest.fsp")
+    val iocServlet = new IocServlet
+    iocServlet.init(
+        new InjectableServletConfig(new InjectableServletContext(
+          getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1)),
+        ),
+        "test",
+        parameters,
+      )
+    )
+
+    iocServlet.destroy()
+
+  }
+
+  it should "put the manager named 'init' to work on initialization" in {
+
+    val parameters = new Hashtable[String, String]()
+    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/initTest.fsp")
+    val iocServlet = new IocServlet
+    iocServlet.init(
+        new InjectableServletConfig(new InjectableServletContext(
+          getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1)),
+        ),
+        "test",
+        parameters,
+      )
+    )
+
+    IocServletSpec.writer.toString shouldBe "I have been initialized!"
+    IocServletSpec.writer.getBuffer.setLength(0)
+
+    iocServlet.destroy()
+
+  }
+
+  it should "put the manager named 'destroy' to work on finalization" in {
+
+    val parameters = new Hashtable[String, String]()
+    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/destroyTest.fsp")
+    val iocServlet = new IocServlet
+    iocServlet.init(
+        new InjectableServletConfig(new InjectableServletContext(
+          getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1)),
+        ),
+        "test",
+        parameters,
+      )
+    )
+    iocServlet.destroy()
+
+    IocServletSpec.writer.toString shouldBe "I have been destroyed!"
+    IocServletSpec.writer.getBuffer.setLength(0)
+
+  }
+
+  it should "make the ServletConfig object available to the init and destroy managers" in {
+
+    val parameters = new Hashtable[String, String]()
+    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/configTest.fsp")
+    val iocServlet = new IocServlet
+    iocServlet.init(
+        new InjectableServletConfig(new InjectableServletContext(
+          getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1)),
+        ),
+        "test",
+        parameters,
+      )
+    )
+
+    iocServlet.destroy()
+
+  }
+
+  it should "complain if a manager named 'requestHandler' is not available" in {
+
+    val parameters = new Hashtable[String, String]()
+    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/noHandlerTest.fsp")
+    val iocServlet = new IocServlet
+    an [ServletException] should be thrownBy iocServlet.init(
+        new InjectableServletConfig(new InjectableServletContext(
+          getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1)),
+        ),
+        "test",
+        parameters,
+      )
+    )
+
+    iocServlet.destroy()
+
+  }
+
+  it should "pass a request on to the manager named 'requestHandler'" in {
+
+    val parameters = new Hashtable[String, String]()
+    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/handlerTest.fsp")
+    val iocServlet = new IocServlet
+    iocServlet.init(
+        new InjectableServletConfig(new InjectableServletContext(
+          getResource = path => new URL(getClass.getClassLoader.getResource("."), path.substring(1)),
+        ),
+        "test",
+        parameters,
+      )
+    )
+
+//    iocServlet.service(req, resp)
+
+    iocServlet.destroy()
+
+  }
+
+}
+
+object IocServletSpec {
+  import java.io.StringWriter
+
+  val writer = new StringWriter
+
 }

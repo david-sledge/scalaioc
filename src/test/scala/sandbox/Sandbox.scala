@@ -4,7 +4,7 @@ import org.scalatest._
 import scala.tools.reflect.ToolBox
 
 class Sandbox extends FlatSpec with Matchers {
-  "This" should "just be an area for me to play around" in {
+  "The sandbox" should "just be an area for me to play around" in {
     import scala.reflect.runtime.universe._
 
 //    println(showRaw(q"new A(b, c = c)"))
@@ -24,8 +24,8 @@ class Sandbox extends FlatSpec with Matchers {
 //    val intList = Array[Int](1)
 //    println(intList(scala.ioc.cast(list.head)))
 //    ((s: String) => 0).asInstanceOf[String => Int]
-    val argList = List(q"()", AssignOrNamedArg(Ident(TermName("x")), q"5"))
-    println(showRaw(q"test($argList)"))
+//    val argList = List(q"()", AssignOrNamedArg(Ident(TermName("x")), q"5"))
+//    println(showRaw(q"test($argList)"))
   }
 }
 

@@ -3,7 +3,7 @@ package scala.ioc.ppm
 import scala.ioc._
 import org.scalatest._
 
-class PackageSpec extends FlatSpec with Matchers {
+class packageSpec extends FlatSpec with Matchers {
 
   "populateStaffingMacros()" should "add the core IoC macros to a preprocessor" in {
     val preprocessor = populateStaffingMacros()

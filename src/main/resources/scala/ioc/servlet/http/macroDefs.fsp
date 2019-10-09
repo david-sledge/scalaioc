@@ -1,1 +1,1 @@
-"scala.servlet.http" `#scala.ioc#def` ("http", scala.ioc.servlet.http.ppm.postMethodHandlersJob _)
+"scala.servlet.http" `#scala.ioc#def` ("http", scala.servlet.http.ioc.ppm.postMethodHandlersJob _)

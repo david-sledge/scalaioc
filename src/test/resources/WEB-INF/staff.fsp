@@ -1,32 +1,6 @@
-`namespace|scala.ioc`
-`namespace x|scala.xml`
-`namespace web|scala.servlet`
-`namespace http|scala.servlet.http`
 
-`#embed`("scala/ioc/xml/macroDefs.fsp")
-`#embed`("scala/ioc/servlet/http/macroDefs.fsp")
-
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.xml.stream.XMLOutputFactory
-
-/*
-`#http|http`(
-  handleGet =
-    (req: HttpServletRequest, resp: HttpServletResponse) => {
-      `#let`(
-        "enc" -> "utf-8",
-        "xmlWriter" -> XMLOutputFactory.newInstance.createXMLStreamWriter(resp.getOutputStream, `#$`("enc")),
-        (() => {
-          setStatus(HttpServletResponse.SC_OK)
-          resp.setContentType(s"application/xhtml+xml; charset=${`#$`("enc")}")
-          resp.setLocale(java.util.Locale.getDefault)
-          `#web|embed`("/WEB-INF/hello.fsp")
-          flushBuffer
-        })()
-      )
-    },
-
-  handlePost = scala.ioc.servlet.http.testPost _,
+scala.ioc.Factory.setManager(
+  factory,
+  "requestHandler",
+  c => {},
 )
-// */
