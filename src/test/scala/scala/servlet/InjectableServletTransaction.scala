@@ -44,7 +44,7 @@ class InjectableServletRequest(protocol: => String = ???) extends ServletRequest
 
 class InjectableServletResponse(
   characterEncoding: => String = ???,
-  setContentLength: Int => Unit = ???,
+  setContentLength: Int => Unit = _ => ???,
 ) extends ServletResponse {
   def flushBuffer(): Unit = ???
   def getBufferSize(): Int = ???
