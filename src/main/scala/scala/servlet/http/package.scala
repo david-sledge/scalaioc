@@ -58,53 +58,67 @@ package object http {
   val DefaultPutHandler = (req: HttpServletRequest, resp: HttpServletResponse) =>
     NotAllowedHandler("http.method_put_not_supported")(req, resp)
 
-  val DefaultHeadHandler = (handleGet: (HttpServletRequest, HttpServletResponse) => Unit) => (req: HttpServletRequest, resp: HttpServletResponse) => {
+  val DefaultHeadHandler =
+    (handleGet: (HttpServletRequest, HttpServletResponse) => Unit) =>
+      (req: HttpServletRequest, resp: HttpServletResponse) => {
 
-    val response = new HttpServletResponseWrapper(resp) {
+        if (handleGet == DefaultGetHandler) {
 
-      val noBody = new ServletOutputStream {
+          val msg = "HTTP method HEAD is not supported by this URL because GET is also not supported"
 
-        private var contentLength = 0
-
-        def getContentLength: Int = contentLength
-
-        def write(b: Int) =
-          contentLength += 1
-
-        override def write(buf: Array[Byte], offset: Int, len: Int) =
-        {
-          if (len >= 0)
-            contentLength += len
+          if (req.getProtocol.endsWith("1.1"))
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
           else
-            throw new IllegalArgumentException(
-                LocalStrings.getString(
-                    "err.io.negativelength"))
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+
         }
-      }
+        else {
+          val response = new HttpServletResponseWrapper(resp) {
 
-      val writer = new PrintWriter(
-          new OutputStreamWriter(noBody, getCharacterEncoding))
-      var didSetContentLength = false
+            val noBody = new ServletOutputStream {
 
-      def setContentLength: Unit =
-        if (!didSetContentLength) {
-          writer.flush
+              private var contentLength = 0
 
-          setContentLength(noBody.getContentLength)
+              def getContentLength: Int = contentLength
+
+              def write(b: Int) =
+                contentLength += 1
+
+              override def write(buf: Array[Byte], offset: Int, len: Int) =
+              {
+                if (len >= 0)
+                  contentLength += len
+                else
+                  throw new IllegalArgumentException(
+                      LocalStrings.getString(
+                          "err.io.negativelength"))
+              }
+            }
+
+            val writer = new PrintWriter(
+                new OutputStreamWriter(noBody, getCharacterEncoding))
+            var didSetContentLength = false
+
+            def setContentLength: Unit =
+              if (!didSetContentLength) {
+                writer.flush
+
+                setContentLength(noBody.getContentLength)
+              }
+
+            override def setContentLength(len: Int) = {
+              super.setContentLength(len)
+              didSetContentLength = true
+            }
+
+            override def getOutputStream = noBody
+
+            override def getWriter = writer
+          }
+
+          handleGet(req, response)
+          response.setContentLength
         }
-
-      override def setContentLength(len: Int) = {
-        super.setContentLength(len)
-        didSetContentLength = true
-      }
-
-      override def getOutputStream = noBody
-
-      override def getWriter = writer
-    }
-
-    handleGet(req, response)
-    response.setContentLength
   }
 
   val DefaultOptionsHandler = (handleDelete: (HttpServletRequest, HttpServletResponse) => Unit
@@ -119,20 +133,39 @@ package object http {
       (allow: List[String]) =>
         if (handler == defaultHandler) allow else method :: allow
 
-    resp.setHeader("Allow", template(handleDelete, DefaultDeleteHandler,
-        MethodDelete)(
-    ((allow: List[String]) =>
-      if (handleGet == DefaultGetHandler)
-        allow
-      else
-        MethodGet :: MethodHead :: allow)(
-    template(handlePost, DefaultPostHandler,
-        MethodPost)(
-    template(handlePut, DefaultPutHandler,
-        MethodPut)(
-            List[String](
+    resp.setHeader(
+      "Allow",
+      template(
+        handleDelete,
+        DefaultDeleteHandler,
+        MethodDelete
+      )(
+        (
+          (allow: List[String]) =>
+            if (handleGet == DefaultGetHandler)
+              allow
+            else
+              MethodGet :: MethodHead :: allow
+        )(
+          template(
+            handlePost,
+            DefaultPostHandler,
+            MethodPost,
+          )(
+            template(
+              handlePut,
+              DefaultPutHandler,
+              MethodPut,
+            )(
+              List[String](
                 MethodOptions,
-                MethodTrace))))).mkString(", "))
+                MethodTrace,
+              )
+            )
+          )
+        )
+      ).mkString(", ")
+    )
   }
 
   val DefaultTraceHandler = (req: HttpServletRequest, resp: HttpServletResponse) => {
