@@ -1,5 +1,5 @@
-`namespace|scala.xml.element`
-`namespace x|scala.xml`
+`namespace|scalaioc.xml.element`
+`namespace x|scalaioc.xml`
 
 `#x|xml`(
   dtd = "<!DOCTYPE html>",

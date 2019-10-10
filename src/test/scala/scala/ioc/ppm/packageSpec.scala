@@ -10,7 +10,7 @@ class packageSpec extends FlatSpec with Matchers {
 //    println(preprocessor.listMacros)
     preprocessor.listMacros should be (
       Map(
-        Some("scala.ioc") -> Set(
+        Some("scalaioc") -> Set(
           Some("="),
           Some("=>"),
           Some("ref"),
@@ -29,7 +29,7 @@ class packageSpec extends FlatSpec with Matchers {
 
   "Staffing a factory" should "populate it with workers" in {
     val conf = """
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
 "id" `#=` "worker"
 "id".`#=`("worker")

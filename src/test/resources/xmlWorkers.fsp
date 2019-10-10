@@ -1,10 +1,10 @@
-`namespace|scala.xml.element`
-`namespace x|scala.xml`
-`namespace ioc|scala.ioc`
-`namespace web|scala.servlet`
+`namespace|scalaioc.xml.element`
+`namespace x|scalaioc.xml`
+`namespace i|scalaioc`
+`namespace web|scalaioc.servlet`
 
-"scala.xml" `#ioc|def` ("xml", scala.ioc.xml.ppm.postJobXml)
-"scala.xml" `#ioc|def` ("cdata", scala.ioc.xml.ppm.postJobCdata)
-"scala.xml" `#ioc|def` ("!", scala.ioc.xml.ppm.postJobComment)
-"scala.xml" `#ioc|def` ("?", scala.ioc.xml.ppm.postJobProcInstr)
-"scala.xml.element" `#ioc|def` (None, scala.ioc.xml.ppm.postJobElement)
+"ioc.xml" `#i|def` ("xml", scala.ioc.xml.ppm.postJobXml)
+"ioc.xml" `#i|def` ("cdata", scala.ioc.xml.ppm.postJobCdata)
+"ioc.xml" `#i|def` ("!", scala.ioc.xml.ppm.postJobComment)
+"ioc.xml" `#i|def` ("?", scala.ioc.xml.ppm.postJobProcInstr)
+"ioc.xml.element" `#i|def` (None, scala.ioc.xml.ppm.postJobElement)

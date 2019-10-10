@@ -9,6 +9,10 @@ import java.util.Dictionary
 import java.util.Enumeration
 import java.util.Hashtable
 import javax.servlet._
+import scala.servlet.InjectableServletConfig
+import scala.servlet.InjectableServletContext
+import scala.servlet.InjectableServletResponse
+import scala.servlet.InjectableServletRequest
 
 class IocServletSpec extends FlatSpec with Matchers {
   "An IocServlet" should "load the staff.fsp by default" in {
@@ -131,7 +135,7 @@ class IocServletSpec extends FlatSpec with Matchers {
       )
     )
 
-//    iocServlet.service(req, resp)
+    iocServlet.service(new InjectableServletRequest, new InjectableServletResponse)
 
     iocServlet.destroy()
 

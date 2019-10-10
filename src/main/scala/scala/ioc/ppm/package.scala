@@ -11,15 +11,16 @@ package object ppm {
 
   val DefaultEnc = "utf-8"
 
+  val ScalaIocNamespaceName = "scalaioc"
+
   def toWorker(stat: Tree) = {
     q"""
-(c: scala.collection.immutable.Map[Any, Any]) => $stat
+(c: scala.collection.immutable.Map[Any, Any]) => $stat.asInstanceOf[Any]
 """
   }
 
   def populateStaffingMacros(preprocessor: Preprocessor = Preprocessor()) = {
 
-    val scalaIocNamespaceName = "scala.ioc"
     val worker = "worker"
     val id = "id"
     val lazyMgrMethod = "setLazyManager"
@@ -44,10 +45,10 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(wo
 
     }
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("="), postManagerJob(lazyMgrMethod))
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("=>"), postManagerJob(mgrMethod))
 
     def postRefJob(name: String)
@@ -64,13 +65,13 @@ factory.${TermName(name)}(${named(id)}, c)
 """
     }
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("ref"), postRefJob("putToWork"))
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("ref!"), postRefJob("crackTheWhip"))
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("let"),
         ((namespaceName, localName) => (expr, args, tb, src) =>
           args.foldRight(EmptyTree)((block, acc) => {
@@ -81,7 +82,7 @@ factory.${TermName(name)}(${named(id)}, c)
           })))
 
     preprocessor.addMacro(
-      Some(scalaIocNamespaceName),
+      Some(ScalaIocNamespaceName),
       Some("$"),
       (namespaceName, localName) =>
         (expr, args, tb, src) => {
@@ -115,14 +116,14 @@ worker(c)
 
     }
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("id"), postManagementPromotion(lazyMgrMethod))
 
-    preprocessor.addMacro(Some(scalaIocNamespaceName),
+    preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("id>"), postManagementPromotion(mgrMethod))
 
     preprocessor.addMacro(
-        Some(scalaIocNamespaceName),
+        Some(ScalaIocNamespaceName),
         Some("resource"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
@@ -146,7 +147,7 @@ factory = factory, preprocessor = preprocessor)"""
     )
 
     preprocessor.addMacro(
-        Some(scalaIocNamespaceName),
+        Some(ScalaIocNamespaceName),
         Some("def"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {
@@ -196,7 +197,7 @@ factory = factory, preprocessor = preprocessor)"""
           })
 
     preprocessor.addMacro(
-        Some(scalaIocNamespaceName),
+        Some(ScalaIocNamespaceName),
         Some("embed"),
         (namespaceName, localName) =>
           (expr, args, tb, src) => {

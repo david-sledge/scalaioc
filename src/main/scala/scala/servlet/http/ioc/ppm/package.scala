@@ -35,10 +35,7 @@ package object ppm {
     )
 
     q"""
-scala.ioc.Factory.setManager(
-  factory,
-  "requestHandler",
-  c => scala.servlet.http.createRequestHandler(..${
+scala.servlet.http.createRequestHandler(..${
       named.foldLeft(List[Tree]()) {
         case (acc, (name, arg)) => {
           val (argName, isOption) = argMap(name)
@@ -48,7 +45,7 @@ scala.ioc.Factory.setManager(
           )::acc
         }
       }
-    })(`#$$`("req"), `#$$`("resp")))
+    })(`#$$`(scala.ioc.servlet.IocServlet.RequestKey), `#$$`(scala.ioc.servlet.IocServlet.ResponseKey))
 """
   }
 

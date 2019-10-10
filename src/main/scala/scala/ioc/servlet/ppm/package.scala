@@ -63,10 +63,4 @@ preprocessor = preprocessor)"""
 
   }
 
-  def postRequestHandlerJob(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]) = {
-
-    
-
-  }
 }

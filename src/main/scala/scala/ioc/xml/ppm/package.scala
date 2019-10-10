@@ -13,7 +13,7 @@ package object ppm {
     q"""
 ((writer: javax.xml.stream.XMLStreamWriter) => {
   writer.${TermName(name)}(..$args)
-})(`#scala.ioc#$$`("xmlWriter"))
+})(`#scalaioc#$$`("xmlWriter"))
 """
 
   private def postJobContent(args: List[Tree]): Tree = {
@@ -77,7 +77,7 @@ package object ppm {
           q"""
 ((writer: javax.xml.stream.XMLStreamWriter) => {
   if (c contains "enc")
-    writer.writeStartDocument(`#scala.ioc#$$`("enc"), ${version})
+    writer.writeStartDocument(`#scalaioc#$$`("enc"), ${version})
   else
     writer.writeStartDocument(..${
             if (containsVersion)
@@ -85,7 +85,7 @@ package object ppm {
             else
               List()
           })
-})(`#scala.ioc#$$`("xmlWriter"))
+})(`#scalaioc#$$`("xmlWriter"))
 """
       )::
       (

@@ -1,4 +1,4 @@
-package scala.ioc.servlet
+package scala.servlet
 
 import java.util.Dictionary
 import java.util.Hashtable

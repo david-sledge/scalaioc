@@ -1,11 +1,7 @@
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
-scala.ioc.Factory.setManager(
-  factory,
-  "requestHandler",
-  c => {},
-)
+"requestHandler" `#=>` {}
 
-"init" `#=>` c("servletConfig")
+"init" `#=>` `#$`("servletConfig")
 
-"destroy" `#=>` c("servletConfig")
+"destroy" `#=>` `#$`("servletConfig")

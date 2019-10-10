@@ -1,4 +1,4 @@
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
 "say hello" `#=>` ((out: java.io.StringWriter) => out.write("No."))(`#$`("out"))
 
@@ -6,7 +6,7 @@
 
 "requestHandler" `#=` "I'll handle it"
 
-"varTest" `#=>` c("var")
+"varTest" `#=>` `#$`("var")
 
 "testVar" `#=>` `#let`("var" -> "textText", `#ref`("varTest"))
 

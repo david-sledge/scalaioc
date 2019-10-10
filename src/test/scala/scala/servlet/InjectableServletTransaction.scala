@@ -1,9 +1,9 @@
-package scala.ioc.servlet
+package scala.servlet
 
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 
-final class InjectableServletRequest extends ServletRequest {
+class InjectableServletRequest(protocol: => String = ???) extends ServletRequest {
   def getAsyncContext(): javax.servlet.AsyncContext = ???
   def getAttribute(x$1: String): Object = ???
   def getAttributeNames(): java.util.Enumeration[String] = ???
@@ -21,7 +21,7 @@ final class InjectableServletRequest extends ServletRequest {
   def getParameterMap(): java.util.Map[String,Array[String]] = ???
   def getParameterNames(): java.util.Enumeration[String] = ???
   def getParameterValues(x$1: String): Array[String] = ???
-  def getProtocol(): String = ???
+  def getProtocol(): String = protocol
   def getReader(): java.io.BufferedReader = ???
   def getRealPath(x$1: String): String = ???
   def getRemoteAddr(): String = ???
@@ -42,7 +42,7 @@ final class InjectableServletRequest extends ServletRequest {
   def startAsync(): javax.servlet.AsyncContext = ???
 }
 
-final class InjectableServletResponse extends ServletResponse {
+class InjectableServletResponse extends ServletResponse {
   def flushBuffer(): Unit = ???
   def getBufferSize(): Int = ???
   def getCharacterEncoding(): String = ???

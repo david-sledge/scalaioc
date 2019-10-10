@@ -1,4 +1,4 @@
-package scala.ioc.servlet
+package scala.servlet
 
 import java.io.InputStream
 import java.net.URL
@@ -8,8 +8,10 @@ import java.util.EventListener
 import java.util.Hashtable
 import java.util.Map
 import java.util.Set
-
 import javax.servlet._
+import java.util.EventListener
+import javax.servlet.Filter
+import javax.servlet.Servlet
 
 final class InjectableServletContext(
   initParamterDict: Dictionary[String, String] = new Hashtable(),

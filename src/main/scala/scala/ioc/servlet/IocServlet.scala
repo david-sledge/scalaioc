@@ -26,7 +26,7 @@ class IocServlet extends GenericServlet {
     val paramNames: List[String] = getInitParameterNames.asScala.toList
     val preprocessor = Preprocessor()
     val ctx = getServletContext
-    preprocessor.addMacro(Some("scala.servlet"), Some("embed"), embedImpl(ctx))
+    preprocessor.addMacro(Some("scalaioc.servlet"), Some("embed"), embedImpl(ctx))
     val staffPath = if (paramNames contains StaffPathParam)
         getInitParameter(StaffPathParam)
       else DefaultStaffPath
@@ -73,7 +73,7 @@ class IocServlet extends GenericServlet {
       HandlerName,
       Map(
         RequestKey -> req,
-        RequestKey -> resp,
+        ResponseKey -> resp,
       )
     )
   }

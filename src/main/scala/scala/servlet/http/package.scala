@@ -41,9 +41,9 @@ package object http {
       val msg = LocalStrings.getString(lStringName);
 
       if (req.getProtocol.endsWith("1.1"))
-          resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
+        resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
       else
-          resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+        resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
     }
 
   val DefaultDeleteHandler = (req: HttpServletRequest, resp: HttpServletResponse) =>
@@ -208,7 +208,7 @@ package object http {
       //
       resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
           MessageFormat.format(LocalStrings.getString(
-              "http.method_not_implemented"), Array[String](method)))
+              "http.method_not_implemented"), method))
   }
 
   def createRequestHandler(
