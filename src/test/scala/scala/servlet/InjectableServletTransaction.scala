@@ -45,13 +45,15 @@ class InjectableServletRequest(protocol: => String = ???) extends ServletRequest
 class InjectableServletResponse(
   characterEncoding: => String = ???,
   setContentLength: Int => Unit = _ => ???,
+  setContentType: String => Unit = _ => ???,
+  outputStream: => javax.servlet.ServletOutputStream = ???,
 ) extends ServletResponse {
   def flushBuffer(): Unit = ???
   def getBufferSize(): Int = ???
   def getCharacterEncoding(): String = characterEncoding
   def getContentType(): String = ???
   def getLocale(): java.util.Locale = ???
-  def getOutputStream(): javax.servlet.ServletOutputStream = ???
+  def getOutputStream(): javax.servlet.ServletOutputStream = outputStream
   def getWriter(): java.io.PrintWriter = ???
   def isCommitted(): Boolean = ???
   def reset(): Unit = ???
@@ -59,6 +61,6 @@ class InjectableServletResponse(
   def setBufferSize(x$1: Int): Unit = ???
   def setCharacterEncoding(x$1: String): Unit = ???
   def setContentLength(len: Int): Unit = setContentLength.apply(len)
-  def setContentType(x$1: String): Unit = ???
+  def setContentType(typ: String): Unit = setContentType.apply(typ)
   def setLocale(x$1: java.util.Locale): Unit = ???
 }

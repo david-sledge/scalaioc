@@ -1,18 +1,20 @@
 package scala.servlet
 
-import java.util.Dictionary
-import java.util.Hashtable
+import scala.util.IteratorEnumeration
 import javax.servlet._
 
 final class InjectableServletConfig(
   servletContext: ServletContext,
   servletName: String,
-  initParamterDict: Dictionary[String, String] = new Hashtable(),
+  initParamterMap: Map[String, String] = Map.empty,
 ) extends ServletConfig {
 
-  def getInitParameter(name: String) = initParamterDict.get(name)
+  def getInitParameter(name: String) = initParamterMap.get(name) match {
+    case Some(param) => param
+    case _ => null
+  }
 
-  def getInitParameterNames = initParamterDict.keys
+  def getInitParameterNames = new IteratorEnumeration(initParamterMap.keys.iterator)
 
   def getServletContext = servletContext
 

@@ -23,12 +23,12 @@ class FactorySpec extends FlatSpec with Matchers {
     val factory = Factory()
     val id = "lazy bastard"
     setLazyManager(factory, id, c => System.currentTimeMillis)
-    val result = factory.putToWork(id, Map())
+    val result = factory.putToWork(id, Map.empty)
     Thread sleep 2000
-    val result2 = factory.putToWork(id, Map())
+    val result2 = factory.putToWork(id, Map.empty)
     result shouldBe result2
     factory.clearCache
-    val result3 = factory.putToWork(id, Map())
+    val result3 = factory.putToWork(id, Map.empty)
     result should not be result3
     
   }
@@ -36,10 +36,10 @@ class FactorySpec extends FlatSpec with Matchers {
   "Lazy manager" should "produce the same thing until forced otherwise" in {
     val factory = Factory()
     setLazyManager(factory, "lazyManager", (c: Map[Any, Any]) => s"I haven't worked since ${java.util.Calendar.getInstance.getTime}")
-    val result = factory.putToWork("lazyManager", Map())
+    val result = factory.putToWork("lazyManager", Map.empty)
     Thread sleep 2000
-    result should be (factory.putToWork("lazyManager", Map()))
-    result should not be (factory.crackTheWhip("lazyManager", Map()))
+    result should be (factory.putToWork("lazyManager", Map.empty))
+    result should not be (factory.crackTheWhip("lazyManager", Map.empty))
   }
 
   "In a factory it" should "be possible to fire workers" in {

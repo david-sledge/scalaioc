@@ -42,13 +42,13 @@ package object ppm {
    */
   def processArgs(
       args: List[Tree],
-      requiredArgNames: ListSet[String] = ListSet(),
-      optionalArgNames: ListSet[String] = ListSet(),
+      requiredArgNames: ListSet[String] = ListSet.empty,
+      optionalArgNames: ListSet[String] = ListSet.empty,
     ) = {
     val argNames = requiredArgNames ++ optionalArgNames
     // address the named arguments first, then handle the ordinal arguments
     val (named, duplicates, ordinal, ordNames) = args.foldRight(
-        (Map[String, Tree](), Map[String, List[Tree]](), List[Tree](), argNames)
+        (Map.empty[String, Tree], Map.empty[String, List[Tree]], List.empty[Tree], argNames)
       )(
         (t, acc) => {
           val (map, dups, list, ordArgNames) = acc
@@ -98,7 +98,7 @@ package object ppm {
       )
 
     // fill the gaps with the ordinal arguments
-    val (named0, ordinal0, ordNames0) = ordinal.foldLeft((named, List[Tree](), ordNames))(
+    val (named0, ordinal0, ordNames0) = ordinal.foldLeft((named, List.empty[Tree], ordNames))(
         (acc, t) => {
           val (map, ord, ordArgNames) = acc
           ordArgNames.headOption match {
@@ -115,7 +115,7 @@ package object ppm {
       named0,
       duplicates,
       // arguments that were passed by name, but were not among the list of required or optional names
-      (duplicates.keySet ++ named0.keySet).foldRight(Set[String]())(
+      (duplicates.keySet ++ named0.keySet).foldRight(Set.empty[String])(
         (key, acc) => if (argNames contains key) acc else acc + key
       ),
       {
@@ -154,7 +154,7 @@ package object ppm {
           duplicates.map{case (key, value) => s"'$key' (${value.size})"}.mkString(", ")
         }")
       else
-        List()
+        Nil
     val errorMsgs1 = requiredOrExcessArgError match {
         case MissingRequiredArgs => s"is missing arguments: '${
             leftovers.left.get.mkString("', '")

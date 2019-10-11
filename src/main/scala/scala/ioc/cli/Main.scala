@@ -8,7 +8,7 @@ import scala.ppm.Preprocessor
 object Main extends App {
 
   private case class IocArgValues(
-    filenames: List[String] = List(),
+    filenames: List[String] = Nil,
     workername: Option[String] = None,
   )
 
@@ -110,7 +110,7 @@ object Main extends App {
 
   }
 
-  private val (iocArgValues, filtered) = extractIocArgs(args.toList, (IocArgValues(), List[String]()))
+  private val (iocArgValues, filtered) = extractIocArgs(args.toList, (IocArgValues(), List.empty[String]))
 
   // build the factory and staff it
   private val (factory, _) = (

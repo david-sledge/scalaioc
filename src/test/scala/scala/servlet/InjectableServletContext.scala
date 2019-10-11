@@ -1,32 +1,36 @@
 package scala.servlet
 
+import scala.util.IteratorEnumeration
+
 import java.io.InputStream
 import java.net.URL
-import java.util.Dictionary
 import java.util.Enumeration
 import java.util.EventListener
-import java.util.Hashtable
-import java.util.Map
 import java.util.Set
 import javax.servlet._
-import java.util.EventListener
 import javax.servlet.Filter
 import javax.servlet.Servlet
 
 final class InjectableServletContext(
-  initParamterDict: Dictionary[String, String] = new Hashtable(),
-  attributeDict: Dictionary[String, Object] = new Hashtable(),
+  initParamterMap: Map[String, String] = Map.empty,
+  attributeMap: Map[String, Object] = Map.empty,
   getContext: String => ServletContext = _ => null,
   getResource: String => URL = _ => null,
 ) extends ServletContext {
 
-  def getInitParameter(name: String) = initParamterDict.get(name)
+  def getInitParameter(name: String) = initParamterMap.get(name) match {
+    case Some(param) => param
+    case _ => null
+  }
 
-  def getInitParameterNames = initParamterDict.keys
+  def getInitParameterNames = new IteratorEnumeration(initParamterMap.keys.iterator)
 
-  def getAttribute(name: String) = attributeDict.get(name)
+  def getAttribute(name: String) = attributeMap.get(name) match {
+    case Some(attr) => attr
+    case _ => null
+  }
 
-  def getAttributeNames = attributeDict.keys
+  def getAttributeNames = new IteratorEnumeration(attributeMap.keys.iterator)
 
   def getContext(uripath: String) = getContext.apply(uripath)
 
@@ -50,7 +54,7 @@ final class InjectableServletContext(
   def getEffectiveMinorVersion(): Int = 0
   def getEffectiveSessionTrackingModes(): Set[SessionTrackingMode] = null
   def getFilterRegistration(x$1: String): FilterRegistration = null
-  def getFilterRegistrations(): Map[String, _ <: FilterRegistration] = null
+  def getFilterRegistrations(): java.util.Map[String, _ <: FilterRegistration] = null
   def getJspConfigDescriptor(): descriptor.JspConfigDescriptor = null
   def getMajorVersion(): Int = 0
   def getMimeType(x$1: String): String = null
@@ -66,7 +70,7 @@ final class InjectableServletContext(
   def getServletContextName(): String = null
   def getServletNames(): Enumeration[String] = null
   def getServletRegistration(x$1: String): ServletRegistration = null
-  def getServletRegistrations(): Map[String, _ <: ServletRegistration] = null
+  def getServletRegistrations(): java.util.Map[String, _ <: ServletRegistration] = null
   def getServlets(): Enumeration[Servlet] = null
   def getSessionCookieConfig(): SessionCookieConfig = null
   def log(x$1: String, x$2: Throwable): Unit = ()

@@ -28,8 +28,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
   it should "load a different .fsp when specified" in {
 
-    val parameters = new Hashtable[String, String]()
-    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/staffTest.fsp")
+    val parameters = Map(IocServlet.StaffPathParam -> "/WEB-INF/staffTest.fsp")
     val iocServlet = new IocServlet
     iocServlet.init(
         new InjectableServletConfig(new InjectableServletContext(
@@ -46,8 +45,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
   it should "put the manager named 'init' to work on initialization" in {
 
-    val parameters = new Hashtable[String, String]()
-    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/initTest.fsp")
+    val parameters = Map(IocServlet.StaffPathParam -> "/WEB-INF/initTest.fsp")
     val iocServlet = new IocServlet
     iocServlet.init(
         new InjectableServletConfig(new InjectableServletContext(
@@ -67,8 +65,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
   it should "put the manager named 'destroy' to work on finalization" in {
 
-    val parameters = new Hashtable[String, String]()
-    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/destroyTest.fsp")
+    val parameters = Map(IocServlet.StaffPathParam -> "/WEB-INF/destroyTest.fsp")
     val iocServlet = new IocServlet
     iocServlet.init(
         new InjectableServletConfig(new InjectableServletContext(
@@ -87,8 +84,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
   it should "make the ServletConfig object available to the init and destroy managers" in {
 
-    val parameters = new Hashtable[String, String]()
-    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/configTest.fsp")
+    val parameters = Map(IocServlet.StaffPathParam -> "/WEB-INF/configTest.fsp")
     val iocServlet = new IocServlet
     iocServlet.init(
         new InjectableServletConfig(new InjectableServletContext(
@@ -105,8 +101,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
   it should "complain if a manager named 'requestHandler' is not available" in {
 
-    val parameters = new Hashtable[String, String]()
-    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/noHandlerTest.fsp")
+    val parameters = Map(IocServlet.StaffPathParam -> "/WEB-INF/noHandlerTest.fsp")
     val iocServlet = new IocServlet
     an [ServletException] should be thrownBy iocServlet.init(
         new InjectableServletConfig(new InjectableServletContext(
@@ -123,8 +118,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
   it should "pass a request on to the manager named 'requestHandler'" in {
 
-    val parameters = new Hashtable[String, String]()
-    parameters.put(IocServlet.StaffPathParam, "/WEB-INF/handlerTest.fsp")
+    val parameters = Map(IocServlet.StaffPathParam -> "/WEB-INF/handlerTest.fsp")
     val iocServlet = new IocServlet
     iocServlet.init(
         new InjectableServletConfig(new InjectableServletContext(

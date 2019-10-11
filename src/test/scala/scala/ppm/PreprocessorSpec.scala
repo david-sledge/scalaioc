@@ -12,7 +12,7 @@ class PreprocessorSpec extends FlatSpec with Matchers {
     preprocessor.addMacro(Some("test"), Some("test"), f)
   }
 
-  "The preprocessor" should "manipulate the scala AST" in {
+  it should "manipulate the scala AST" in {
     val f = (nsOpt: Option[String], localName: String) => (objTreeOpt: Option[Tree], argTrees: Seq[Tree], tb: ToolBox[universe.type], src: Option[String]) => q"List(..$argTrees)"
     val preprocessor = Preprocessor()
     preprocessor.addMacro(Some("test"), Some("test"), f)

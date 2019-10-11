@@ -33,12 +33,12 @@ final class Factory()
   /**
    * The lazy ones just give you the same-old same-old.
    */
-  def putToWork(id: Any, c: Map[Any, Any] = Map()) = getResult(true, id, c)
+  def putToWork(id: Any, c: Map[Any, Any] = Map.empty) = getResult(true, id, c)
 
   /**
    * Makes even the lazy ones work hard.
    */
-  def crackTheWhip(id: Any, c: Map[Any, Any] = Map()) = getResult(false, id, c)
+  def crackTheWhip(id: Any, c: Map[Any, Any] = Map.empty) = getResult(false, id, c)
 
   /**
    * Didn't we already hire this gal?

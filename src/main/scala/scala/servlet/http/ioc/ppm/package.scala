@@ -15,34 +15,29 @@ package object ppm {
   def postMethodHandlersJob(namespaceName: Option[String], localName: String)
   (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
 
-    val argMap = ListMap(
-      "handleGet" -> ("handleGet", false),
-      "handlePost" -> ("handlePost", false),
-      "handleDelete" -> ("handleDelete", false),
-      "handlePut" -> ("handlePut", false),
-      "handleTrace" -> ("handleTrace", false),
-      "handleOptions" -> ("optionHandleOptions", true),
-      "handleHead" -> ("optionHandleHead", true),
-      "getLastModified" -> ("getLastModified", false),
-    )
-
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
       expr,
       args,
-      optionalArgNames = argMap.foldRight(ListSet[String]()){
-        case ((name, _), acc) => acc + name
-      },
+      optionalArgNames = ListSet(
+        "handleGet",
+        "handlePost",
+        "handleDelete",
+        "handlePut",
+        "methodMap",
+        "getLastModified",
+      ),
     )
 
     q"""
 scala.servlet.http.createRequestHandler(..${
-      named.foldLeft(List[Tree]()) {
+      named.foldLeft(List.empty[Tree]) {
         case (acc, (name, arg)) => {
-          val (argName, isOption) = argMap(name)
+
           AssignOrNamedArg(
-            Ident(TermName(argName)),
-            if (isOption) q"Some($arg)" else q"$arg"
+            Ident(TermName(name)),
+            arg,
           )::acc
+
         }
       }
     })(`#$$`(scala.ioc.servlet.IocServlet.RequestKey), `#$$`(scala.ioc.servlet.IocServlet.ResponseKey))

@@ -42,7 +42,7 @@ class packageSpec extends FlatSpec with Matchers {
         "b" -> q"None".toString,
         "d" -> q"Left(false)".toString,
         )
-    duplicates2.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    duplicates2.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map.empty
     extraNames2 shouldBe Set("e")
     leftovers2.isRight shouldBe true
     leftovers2.map(_.map(_.toString)) shouldBe Right(List(q"string".toString))
@@ -74,9 +74,9 @@ class packageSpec extends FlatSpec with Matchers {
       "a" -> q"()".toString,
       "b" -> q"string".toString,
     )
-    duplicates2.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    duplicates2.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map.empty
     extraNames2 shouldBe Set()
-    leftovers2.map(_.map(_.toString)) shouldBe Right(List())
+    leftovers2.map(_.map(_.toString)) shouldBe Right(Nil)
 
   }
 
@@ -112,9 +112,9 @@ class packageSpec extends FlatSpec with Matchers {
       "c" -> q"0".toString,
       "d" -> q"1".toString,
     )
-    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map.empty
     extraNames shouldBe Set("e")
-    leftovers shouldBe Right(List())
+    leftovers shouldBe Right(Nil)
 
   }
 
@@ -135,7 +135,7 @@ class packageSpec extends FlatSpec with Matchers {
       "c" -> q"false".toString,
       "d" -> q"0".toString,
     )
-    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map()
+    duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map.empty
     extraNames shouldBe Set()
     leftovers.map(_.map(_.toString)) shouldBe Right(List(q"1".toString))
 
@@ -173,7 +173,7 @@ class packageSpec extends FlatSpec with Matchers {
     )
     duplicates.map(entry => (entry._1, entry._2.map(_.toString))) shouldBe Map("c" -> List(q"true".toString, q"None".toString))
     extraNames shouldBe Set()
-    leftovers.map(_.map(_.toString)) shouldBe Right(List())
+    leftovers.map(_.map(_.toString)) shouldBe Right(Nil)
 
   }
 

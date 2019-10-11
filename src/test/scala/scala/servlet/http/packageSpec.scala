@@ -2,6 +2,7 @@ package scala.servlet.http
 
 import org.scalatest._
 
+import scala.servlet.InjectableServletOutputStream
 import javax.servlet.http._
 
 class packageSpec extends FlatSpec with Matchers {
@@ -144,7 +145,7 @@ class packageSpec extends FlatSpec with Matchers {
 
   }
 
-  it should "process HEAD request if it can process GET requests" in {
+  it should "not process HEAD request if it can't process GET requests" in {
 
     var status = 0
     var statusMsg = ""
@@ -160,13 +161,52 @@ class packageSpec extends FlatSpec with Matchers {
           statusMsg = msg
         },
         containsHeader = name => false,
-        characterEncoding = "utf-8",
         setContentLength = _ => {},
       )
     )
 
     status shouldBe 405
     statusMsg shouldBe "HTTP method HEAD is not supported by this URL because GET is also not supported"
+
+  }
+
+  it should "process HEAD request if it can process GET requests" in {
+
+    var status = 0
+    var statusMsg = ""
+
+    val httpHandler = createRequestHandler(
+      handleGet = (req, resp) => {}
+    )
+    httpHandler.apply(
+      new InjectableHttpServletRequest(
+        method = "HEAD"
+      ),
+      new InjectableHttpServletResponse(
+        containsHeader = name => false,
+        setContentLength = _ => {},
+      )
+    )
+
+  }
+
+  it should "always process TRACE requests" in {
+
+    var status = 0
+    var statusMsg = ""
+
+    val httpHandler = createRequestHandler()
+    httpHandler.apply(
+      new InjectableHttpServletRequest(
+        method = "TRACE",
+        requestUri = "test",
+      ),
+      new InjectableHttpServletResponse(
+        setContentType = _ => {},
+        setContentLength = _ => {},
+        outputStream = new InjectableServletOutputStream(),
+      )
+    )
 
   }
 

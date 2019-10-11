@@ -51,7 +51,7 @@ class packageSpec extends FlatSpec with Matchers {
     preprocessor.hasOwnMacro(None, "") shouldBe false
     val (fFactory, _) = staffFactoryFromFile("src/test/resources/staff.fsp")
     factoryCalls(fFactory)
-    fFactory.putToWork("requestHandler", Map()) shouldBe "I'll handle it"
+    fFactory.putToWork("requestHandler", Map.empty) shouldBe "I'll handle it"
     val (ffFactory, _) = staffFactoryFromResource("staff.fsp")
     factoryCalls(ffFactory)
     /*

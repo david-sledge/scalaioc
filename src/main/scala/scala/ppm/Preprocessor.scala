@@ -29,7 +29,7 @@ final class Preprocessor {
 
     (new Transformer() {
 
-      var referrers = List[Map[Option[String], Option[String]]]()
+      var referrers = List.empty[Map[Option[String], Option[String]]]
 
       def resolveReferrer[T](
         ref: Option[String],
@@ -159,7 +159,7 @@ final class Preprocessor {
           name: String,
           srcTree: Tree,
           expr: Option[Tree] = None,
-          args: List[Tree] = List(),
+          args: List[Tree] = Nil,
           pos: Position,
         ) = {
 
@@ -244,13 +244,13 @@ final class Preprocessor {
         tree match {
           case Ident(TermName(name)) => {
             if (extractReferrer(tree)) q"()"
-            else handlePrefix(name, tree, None, List(), tree.pos)
+            else handlePrefix(name, tree, None, Nil, tree.pos)
           }
 
           case Apply(expr, args) => {
 
             findPropMacro(
-              List(),
+              Nil,
               args,
               onFound = (nsName, localName, expr_, args_) => {
 
@@ -280,7 +280,7 @@ final class Preprocessor {
             try {
               referrers = referrers match {
                 case (head +: tail) => head +: referrers
-                case _ => Map[Option[String], Option[String]]() +: referrers
+                case _ => Map.empty[Option[String], Option[String]] +: referrers
               }
               super.transform(tree)
             }
@@ -350,11 +350,11 @@ final class Preprocessor {
   }
 
   def listMacros = {
-    macros.foldLeft(Map[Option[String], Set[Option[String]]]()){
+    macros.foldLeft(Map.empty[Option[String], Set[Option[String]]]){
       case (acc, (nsName, macrosInNs)) =>
         acc + (
           nsName -> (
-            macrosInNs.keySet.foldLeft(Set[Option[String]]()){
+            macrosInNs.keySet.foldLeft(Set.empty[Option[String]]){
               case (acc1, localName) => acc1 + localName
             }
           )

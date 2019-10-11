@@ -20,7 +20,7 @@ package object ppm {
 
     q"""..${
 
-      args.foldLeft(List[Tree]())(
+      args.foldLeft(List.empty[Tree])(
 
         (acc, arg) => q"""
 ((cdata: Any) =>
@@ -58,7 +58,7 @@ package object ppm {
 
     val contentsAndEndDocument = List(
       q"""..${postJobContent(leftovers.right.get)}""",
-      metaWriteXml("writeEndDocument", List()),
+      metaWriteXml("writeEndDocument", Nil),
     )
 
     lazy val containsVersion = named contains ver
@@ -83,7 +83,7 @@ package object ppm {
             if (containsVersion)
               List(named(ver))
             else
-              List()
+              Nil
           })
 })(`#scalaioc#$$`("xmlWriter"))
 """
@@ -151,7 +151,7 @@ package object ppm {
       metaWriteXml("writeStartElement", List(Literal(Constant(localName))))::
       named.foldLeft(List(
           q"""..${postJobContent(leftovers.right.get)}""",
-          metaWriteXml("writeEndElement", List()),
+          metaWriteXml("writeEndElement", Nil),
       )){
         case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(name)), value))::acc
       }
