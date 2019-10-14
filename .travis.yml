@@ -1,6 +1,6 @@
 language: scala
 
-jdk: openjdk12
+jdk: openjdk11
 
 jobs:
   include:

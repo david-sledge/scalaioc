@@ -61,7 +61,7 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(wo
         )
 
       q"""
-factory.${TermName(name)}(${named(id)}, c)
+scala.ioc.cast(factory.${TermName(name)}(${named(id)}, c))
 """
     }
 

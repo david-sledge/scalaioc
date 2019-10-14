@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="IoC Framework" basedir="." default="usage"
+    xmlns:ivy="antlib:org.apache.ivy.ant">
+  <description>
+    Java scalaioc example
+  </description>
+
+  <target name="usage" description="Description of available targets">
+    <echo message="" />
+    <echo message="${ant.project.name} build file" />
+    <echo message="-----------------------------------" />
+    <echo message="" />
+    <echo message="Available targets are:" />
+    <echo message="" />
+    <echo message="compile      --> Compile Java source files" />
+    <echo message="build        --> Jar the class files and resources" />
+    <echo message="compile-test --> Compile the test tree source" />
+    <echo message="test         --> Run tests" />
+    <echo message="clean        --> Delete all build objects" />
+    <echo message="" />
+  </target>
+
+  <!-- expected properties in build.properties:
+       project-name
+       natural-name
+       version
+       ivy.url
+       ivy.version
+       depend.libs (optional)
+       test.libs (optional)
+   -->
+  <property file="build.properties" />
+
+  <!-- top-level source code directory -->
+  <property name="src.dir" value="${basedir}/src" />
+  <!-- top-level directory for jar dependencies files -->
+  <property name="lib.dir" value="${basedir}/lib" />
+  <!-- directory for jar dependencies files downloaded from a maven
+       or ivy repository -->
+  <property name="lib.ivy.dir" value="${lib.dir}/ivy" />
+  <!-- directory for jar dependencies files *not* downloaded
+       from a maven or ivy repository (i.e. manually aquired) -->
+  <property name="lib.ext.dir" value="${lib.dir}/ext" />
+  <!-- directories for ant dependencies (i.e. ivy,
+       and jars with custom ant tasks) -->
+  <property name="lib.ivy.build.dir" value="${lib.ivy.dir}/build" />
+  <property name="lib.ext.build.dir" value="${lib.ext.dir}/build" />
+  <!-- path info for ivy; ${ivy.version} is specified in build.properties -->
+  <property name="ivy.jar.name" value="ivy-${ivy.version}.jar" />
+  <property name="ivy.jar.path" value="${lib.ivy.build.dir}/${ivy.jar.name}" />
+  <!-- top-level output build directory -->
+  <property name="build.dir" value="${basedir}/build" />
+
+  <!-- distribution jar file path info -->
+  <property name="dist.dir" value="${build.dir}/dist" />
+  <property name="jar.path"
+      value="${dist.dir}/${natural-name}-${version}.jar" />
+
+  <target name="ivy-init">
+    <mkdir dir="${lib.ivy.build.dir}" />
+    <condition property="ivy.jar.exists">
+      <available file="${ivy.jar.path}" />
+    </condition>
+  </target>
+
+  <target name="ivy-download" unless="ivy.jar.exists" depends="ivy-init">
+    <get src="${ivy.url}/${ivy.version}/${ivy.jar.name}"
+        dest="${ivy.jar.path}" usetimestamp="true" />
+  </target>
+
+  <target name="ivy-enable" depends="ivy-download" unless="ivy.enabled">
+    <taskdef resource="org/apache/ivy/ant/antlib.xml"
+        uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.path}" />
+    <!-- ensure that ivy taskdef is only run once, otw ant will error -->
+    <property name="ivy.enabled" value="true" />
+  </target>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      main compliation information
+   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <!-- source code -->
+  <property name="main.src.dir" value="${src.dir}/main/java" />
+  <!-- resources -->
+  <property name="main.rsrcs.dir" value="${src.dir}/main/resources" />
+  <!-- ivy-managed dependency libs -->
+  <property name="lib.ivy.main.dir" value="${lib.ivy.dir}/main" />
+  <!-- user-managed dependency libs -->
+  <property name="lib.ext.main.dir" value="${lib.ext.dir}/main" />
+  <!-- comiled class directory -->
+  <property name="main.class.dir" value="${build.dir}/main/classes" />
+  <!-- flag indicating whether or not there are resources to be packaged -->
+  <available file="${main.rsrcs.dir}" property="main.rsrcs" type="dir" />
+
+  <target name="ivy-retrieve" depends="ivy-enable">
+    <mkdir dir="${lib.ivy.main.dir}"/>
+    <ivy:retrieve type="jar" conf="default"
+        pattern="${lib.ivy.main.dir}/[artifact]-[revision].[ext]" />
+  </target>
+
+  <!-- jars required for compliation -->
+  <path id="main.classpath">
+    <fileset dir="${lib.ivy.main.dir}" includes="*.jar" />
+    <fileset dir="${lib.ext.main.dir}" includes="*.jar" />
+  </path>
+
+  <target name="init">
+    <mkdir dir="${main.class.dir}" />
+    <mkdir dir="${lib.ext.main.dir}" />
+  </target>
+
+  <target name="compile" depends="init, ivy-retrieve">
+    <javac srcdir="${main.src.dir}"
+         destdir="${main.class.dir}"
+         debug="on" includeantruntime="false">
+      <classpath refid="main.classpath" />
+    </javac>
+  </target>
+
+  <!-- =================================
+        target: resources
+       ================================= -->
+  <target name="resources" depends="init" if="main.rsrcs"
+      description="--> copy static resource files in classpath">
+    <copy todir="${main.class.dir}">
+      <fileset dir="${main.rsrcs.dir}" includes="**/*" />
+    </copy>
+  </target>
+
+  <!-- =================================
+        target: build
+       ================================= -->
+  <target name="build" depends="compile, resources"
+      description="--> build the distribution jar file">
+    <mkdir dir="${dist.dir}" />
+    <jar destfile="${jar.path}" basedir="${main.class.dir}">
+    </jar>
+  </target>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      test compliation information
+   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <!-- source code -->
+  <property name="test.src.dir" value="${src.dir}/test/java" />
+  <!-- resources -->
+  <property name="test.rsrcs.dir" value="${src.dir}/test/resources" />
+  <!-- ivy-managed dependency libs -->
+  <property name="lib.ivy.test.dir" value="${lib.ivy.dir}/test" />
+  <!-- user-managed dependency libs -->
+  <property name="lib.ext.test.dir" value="${lib.ext.dir}/test" />
+  <!-- comiled class directory -->
+  <property name="test.class.dir" value="${build.dir}/test/classes" />
+  <!-- flag indicating whether or not there are resources to be packaged -->
+  <available file="${test.rsrcs.dir}" property="test.rsrcs" type="dir" />
+  <!-- test report directory -->
+  <property name="test.report.dir" value="${build.dir}/test/report" />
+
+  <target name="ivy-retrieve-test" depends="ivy-enable, ivy-retrieve">
+    <mkdir dir="${lib.ivy.test.dir}"/>
+    <ivy:retrieve type="jar" conf="test"
+        pattern="${lib.ivy.test.dir}/[artifact]-[revision].[ext]" />
+  </target>
+
+  <!-- jars required for compiling test cases -->
+  <path id="test.classpath">
+    <pathelement path="${test.libs}" />
+    <fileset dir="${lib.ivy.test.dir}" includes="*.jar" />
+    <fileset dir="${lib.ext.test.dir}" includes="*.jar" />
+    <path refid="main.classpath" />
+    <pathelement path="${main.class.dir}" />
+  </path>
+
+  <target name="testng-taskdef" depends="ivy-retrieve-test">
+    <taskdef resource="testngtasks" classpathref="test.classpath" />
+  </target>
+
+  <target name="init-test" depends="init">
+    <mkdir dir="${test.class.dir}" />
+    <mkdir dir="${lib.ext.test.dir}" />
+  </target>
+
+  <target name="compile-test" depends="init-test, compile, ivy-retrieve-test">
+    <javac srcdir="${test.src.dir}"
+         destdir="${test.class.dir}"
+         debug="on" includeantruntime="false">
+      <classpath refid="test.classpath" />
+    </javac>
+  </target>
+
+  <target name="resources-test" depends="init-test, resources" if="test.rsrcs"
+      description="--> copy static resource files in classpath">
+    <copy todir="${test.class.dir}">
+      <fileset dir="${test.rsrcs.dir}" includes="**/*" />
+    </copy>
+  </target>
+
+  <target name="test" depends="compile-test, resources-test, testng-taskdef">
+    <testng outputdir="${test.report.dir}">
+      <classpath refid="test.classpath" />
+      <classpath location="${test.class.dir}" />
+      <classfileset dir="${test.class.dir}" includes="**/*.class" />
+    </testng>
+  </target>
+
+  <target name="run" depends="build">
+    <echo>${user.dir}</echo>
+    <java fork="true" classname="scala.ioc.cli.Main">
+      <classpath>
+        <path refid="main.classpath" />
+        <pathelement location="${dist.dir}/scalaioc-java-example-1.0.0.jar" />
+      </classpath>
+    </java>
+  </target>
+
+  <target name="run-around" depends="build">
+    <echo>${user.dir}</echo>
+    <java fork="true" classname="scala.ioc.cli.Main">
+      <classpath>
+        <path refid="main.classpath" />
+        <pathelement location="${dist.dir}/scalaioc-java-example-1.0.0.jar" />
+      </classpath>
+      <arg value="--If" />
+      <arg value="src/main/resources/staff.fsp" />
+      <arg value="--Ii" />
+      <arg value="startup"/>
+      <arg value="-s"/>
+      <arg value="Greetings"/>
+      <arg value="-a"/>
+      <arg value="Scala Universe"/>
+    </java>
+  </target>
+
+  <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      clean up
+   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  <target name="clean">
+    <delete dir="${build.dir}" failonerror="false" />
+  </target>
+
+  <!-- deletes ivy-managed dependecies -->
+  <target name="sanitize" depends="clean">
+    <delete dir="${lib.ivy.dir}" failonerror="false" />
+  </target>
+</project>

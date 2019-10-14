@@ -10,6 +10,6 @@
 
 "testVar" `#=>` `#let`("var" -> "textText", `#ref`("varTest"))
 
-"promotion" `#=>` List(`#ref`("testVar"), `#id` = "prop")
+"promotion" `#=>` List[String](`#ref`("testVar"), `#id` = "prop")
 
 "propTest" `#=>` `#ref`("prop")

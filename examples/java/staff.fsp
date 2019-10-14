@@ -1,0 +1,6 @@
+`namespace|scalaioc`
+
+"init" `#=>`
+  com.example.CliParser.parseOptions(
+	`#$`("args"),
+  )

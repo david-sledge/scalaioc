@@ -34,7 +34,7 @@ class IocServlet extends GenericServlet {
       case Some(stream) => stream
       case _ => throw new ServletException(s"No resource found at the path '$staffPath'")
     }
-    // get the path to the sfs
+    // get the path to the fsp
     val (factory, _) = staffFactoryFromStream(
         stream,
         preprocessor = preprocessor,

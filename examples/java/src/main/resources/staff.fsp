@@ -1,10 +1,28 @@
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
-import com.example.hello._
-import java.time.ZonedDateTime
+"startup" `#=>` {
+  com.example.CliParser.parseOptions(
+    `#$`("args"),
+  )
+
+  com.example.hello.MainApp.run(
+    new java.util.function.Supplier[com.example.hello.HelloWorld]() {
+      def get() = scala.ioc.cast[com.example.hello.HelloWorld](`#ref`("helloWorld"))
+    },
+    new java.util.function.Supplier[java.time.ZonedDateTime]() {
+      def get() = scala.ioc.cast[java.time.ZonedDateTime](`#ref`("lazyManager"))
+    },
+    new java.util.function.Supplier[java.time.ZonedDateTime]() {
+      def get() = scala.ioc.cast[java.time.ZonedDateTime](`#ref`("eagerManager"))
+    },
+    new java.util.function.Supplier[com.example.hello.DateTimeHelloWorld]() {
+      def get() = scala.ioc.cast[com.example.hello.DateTimeHelloWorld](`#ref`("productiveSeniorManager"))
+    },
+  )
+}
 
 // this is a factory manager
-"helloWorld" `#=` HelloWorld("Hello World!")
+"helloWorld" `#=` new com.example.hello.HelloWorld("Hello World!")
 
 // Simple (lazy) factory manager
 // the first time a lazy manager is put to work, their result is stored.
@@ -13,11 +31,14 @@ import java.time.ZonedDateTime
 // This manager is so lazy they're having another manager do all the work.
 "lazyManager" `#=` `#ref`("eagerManager")
 
-// Simple (way-too-eager) factory managers
+// Simple (way-too-eager) factory manager
 // produce a new result each time they're put to work (even if their work
 // results in the exact same thing they produced last time).
-"eagerManager" `#=>` ZonedDateTime.now
+"eagerManager" `#=>` java.time.ZonedDateTime.now
 
 // This guy's such a workhorse, even other managers are more productive.
 "productiveSeniorManager" `#=>`
-  DateTimeHelloWorld("Hello World!", `#ref!`("lazyManager").asInstanceOf[ZonedDateTime])
+  new com.example.hello.DateTimeHelloWorld(
+    "Hello World!",
+    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
+  )
