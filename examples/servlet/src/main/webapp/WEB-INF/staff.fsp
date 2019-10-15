@@ -1,30 +1,25 @@
-`namespace|scala.xml.element`
-`namespace x|scala.xml`
-`namespace ioc|scala.ioc`
-`namespace web|scala.servlet`
+`namespace|scalaioc`
+`namespace x|scalaioc.xml`
+`namespace web|scalaioc.servlet`
+`namespace h|scalaioc.servlet.http`
 
-`#ioc|embed`("scala/ioc/xml/ppm/macroDefs.fsp")
-`#ioc|embed`("scala/ioc/servlet/ppm/macroDefs.fsp")
+`#embed`("scala/ioc/xml/macroDefs.fsp")
+`#embed`("scala/ioc/servlet/http/macroDefs.fsp")
 
-import scala.ioc.Factory._
-import scala.servlet.http._
-
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.xml.stream.XMLOutputFactory
-import scala.xml.stream.{writer => streamWriteXml}
-
-setManager(factory, "requestHandler", scala.ioc.servlet.http.createRequestHandler(
-	options = List("GET"),
-	getHandler =
-  Some((c: scala.collection.immutable.Map[Any, Any]) => {
-    val stream = c.get("resp").get.asInstanceOf[HttpServletResponse].getOutputStream
-    val enc = "utf-8"
-    `#ioc|let`(
-      "xmlWriter" -> ((
-        XMLOutputFactory.newInstance.createXMLStreamWriter(stream, enc),
-        streamWriteXml
-      )),
-      `#web|embed`("/WEB-INF/hello.fsp")
-    )
-  })))
+"requestHandler" `#=>`
+  `#h|http`(
+    handleGet =
+      (req: javax.servlet.http.HttpServletRequest, resp: javax.servlet.http.HttpServletResponse) => {
+        `#let`(
+          "enc" -> "utf-8",
+          "xmlWriter" -> javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(resp.getOutputStream, `#$`("enc")),
+          {
+            resp.setStatus(javax.servlet.http.HttpServletResponse.SC_OK)
+            resp.setContentType(s"application/xhtml+xml; charset=${`#$`("enc")}")
+            resp.setLocale(java.util.Locale.getDefault)
+            `#web|embed`("/WEB-INF/hello.fsp")
+            resp.flushBuffer
+          }
+        )
+      },
+  )

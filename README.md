@@ -9,7 +9,7 @@ TBD
 
 ## Goals
 
-* First and foremost support IoC and DI for Scala applications.
+* First and foremost support IoC and DI for Scala and Java applications.
   - Facilitate unit testing by allowing components to be instantiated with mock dependencies or inject test implementations.
   - Eliminate the need for global static state.
 * Non-invasive: Do not require imports from the framework's library in application code in order to configure the application.
@@ -23,12 +23,12 @@ TBD
 Add the following dependency to your `build.sbt` file:
 
 ```scala
-libraryDependencies += "io.github.david-sledge" % "scalaioc_2.12" % "v1.0.0-alpha.1"
+libraryDependencies += "io.github.david-sledge" % "scalaioc_2.12" % "1.0.0-alpha.2"
 ```
 
 ## Simple Tutorial
 
-Let's start with a plain-ol'-scala-object. (The following examples can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/simple/ "simple example").)
+Let's start with a plain-ol'-scala-object. (The following example can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/simple/ "simple example").)
 
 `HelloWorld.scala`:
 
@@ -52,7 +52,7 @@ Configuration file; factory staff plan.
 `staff.fsp`:
 
 ```
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
 // this is a factory manager
 "helloWorld" `#=` com.example.hello.HelloWorld("Hello World!")
@@ -78,7 +78,7 @@ object MainApp extends App {
 
 ### Factory managers
 
-factory managers are specified using `` `#=` `` (lazy) and `` `#=>` `` (productive).
+Factory managers are specified using `` `#=` `` (lazy) and `` `#=>` `` (productive). Factories contain workers that provide a service and/or produce a product. Managers are workers that can be referenced by name.
 
 * `` `#=` `` executes the first time and caches the result for later calls.
 * `` `#=>` `` executes without caching every time.
@@ -86,16 +86,16 @@ factory managers are specified using `` `#=` `` (lazy) and `` `#=>` `` (producti
 `staff.fsp`:
 
 ```
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
-// this is a factory manager
-"helloWorld" `#=` com.example.hello.HelloWorld("Hello World!")
+...
 
 // Simple (lazy) factory manager
 // the first time a lazy manager is put to work, their result is stored.
 // On subsequent requests for the manager to do some work, they just give you
 // what's stored from the first time.
-"lazyManager" `#=` java.time.ZonedDateTime.now
+// This manager is so lazy they're having another manager do all the work.
+"lazyManager" `#=` `#ref`("eagerManager")
 
 // Simple (way-too-eager) factory managers
 // produce a new result each time they're put to work (even if their work
@@ -158,28 +158,15 @@ object DateTimeHelloWorld {
 `staff.fsp`:
 
 ```
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
-// this is a factory manager
-"helloWorld" `#=` com.example.hello.HelloWorld("Hello World!")
-
-// Simple (lazy) factory manager
-// the first time a lazy manager is put to work, their result is stored.
-// On subsequent requests for the manager to do some work, they just give you
-// what's stored from the first time.
-// This manager is so lazy they're having another manager do all the work.
-"lazyManager" `#=` `#ref`("eagerManager")
-
-// Simple (way-too-eager) factory managers
-// produce a new result each time they're put to work (even if their work
-// results in the exact same thing they produced last time).
-"eagerManager" `#=>` java.time.ZonedDateTime.now
+...
 
 // This guy's such a workhorse, even other managers are more productive.
 "productiveSeniorManager" `#=>`
   com.example.hello.DateTimeHelloWorld(
-  	"Hello World!",
-  	`#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime]
+    "Hello World!",
+    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
   )
 ```
 
@@ -201,83 +188,57 @@ object DateTimeHelloWorld {
   println("The senior manager will make even the lazy manager perform some work.")
   println(s"Will the lazy manager give senior manager the same as before?"
       + s" ${if (dateTimeHelloWorld.dateTime.equals(dateTime)) "Yes" else "No"}")
-
-...
 ```
 
 ## Context parameters/variables
 
 Objects and values can be passed to managers when they're put to work.
 
-### Command-Line Arguments Example
+### Command-Line Arguments
 
-If the application utilizes command line arguments they can be past to a worker to be processed.  (The following examples can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/cli/ "cli example").)
+If the application utilizes command line arguments they can be past to a worker to be processed. The framework is packaged with a main class [scala.ioc.cli.Main](https://github.com/david-sledge/scalaioc/blob/master/src/main/scala/scala/ioc/cli/Main.scala "main class") that will pass on the command-line arguments to an initialization manager.
 
-The method Factory.putToWork has a second (optional) argument of type scala.collection.immutable.Map[Any, Any]. When not specified it defaults to an empty map. In this example, the second argument is used to pass the application's command-line arguments to the worker named "init".
-
-`MainApp.scala`:
-
-```scala
-package com.example.cli
-
-import scala.ioc.ppm._
-import scala.ioc.Factory
-
-import java.time.ZonedDateTime
-
-object MainApp extends App {
-
-  // build the factory and staff it
-  val (factory, _) = staffFactoryFromResource("staff.fsp")
-  // put the "helloWorld" manager to work and get the fruits of her labor
-  val obj = factory.putToWork("init", Map("args" -> args))
-
-}
-```
-
-And the definition of the worker named "init"...
+By default the main class reads the file name `staff.fsp` from the working directory, and instantiates a factory from the file. Then it puts the manager named `init` to work passing the command-line arguments. (The following example can be found [here](https://github.com/david-sledge/scalaioc/tree/master/examples/cli/ "CLI example"). There is also a [Java version of this example](https://github.com/david-sledge/scalaioc/tree/master/examples/java/ "Java CLI example").)
 
 `staff.fsp`:
 
 ```
-`namespace|scala.ioc`
+`namespace|scalaioc`
 
 "init" `#=>`
   com.example.cli.parseOptions(
-	c("args").asInstanceOf[Array[String]],
+    `#$`("args"),
   )
 ```
 
-This example uses jopt-simple to parse command line arguments. However, any other arg-parser library could be used.
+In the `init` manager, the arguments are retrieved using `` `#$` `` with the string `"args"` and passed to `parseOptions`. This example uses [jopt-simple](http://jopt-simple.github.io/jopt-simple/ "JOpt Simple") to parse command line arguments. However, any other arg-parser library could be used, or the arguments could be processed without the aid of a third-party library.
 
-`com/example/cli/package.scala`:
+`package.scala`:
 
 ```scala
 package com.example
 
-import scala.collection.immutable.Map
-
 import joptsimple._
 
 package object cli {
-  val parseOptions = (c: Map[Any, Any]) => {
+  val parseOptions = (args: Array[String]) => {
 
     val parser = new OptionParser( "s:a:" )
 
-    val options = parser.parse(c("args").asInstanceOf[Array[String]]:_*)
+    val options = parser.parse(args:_*)
 
     val salutation = if (options.has("s")) {
-    	options.valueOf("s")
+        options.valueOf("s")
     }
     else {
-    	"Hello"
+        "Hello"
     }
 
     val addressee = if (options.has("a")) {
-    	options.valueOf("a")
+        options.valueOf("a")
     }
     else {
-    	"World"
+        "World"
     }
 
     println(s"$salutation, $addressee!")
@@ -286,23 +247,51 @@ package object cli {
 }
 ```
 
+Other .fsp files can be specified using the flag `--If` followed by the file name. The main class will not pass these arguments to the initializing manager, nor any other argument starting with `--I` and any following associated arguments. The name of the initialization manager can be specified with `--Ii` followed by the manager's name.
+
+The example has an alternative staff.fsp and an initialization manager that can be invoked using:
+
+```sh
+$ sbt "run --If src/main/resources/staff.fsp --Ii startup"
+```
+
+Multiple .fsp files can be specified by passing in multiple `--If <filename>` arguments.
+
 ### Passing Context Variables between Workers
 
-`` `#let`(<key>, <value>, <worker>)``
+TBD
+
+`` `#let`(<key0> -> <value0>, <key1> -> <value1>, ... <keyN> -> <valueN>, <worker>)``
 
 ## Namespaces
 
 ### Namespace Declarations
 
-* `` `namespace|scala.ioc` `` assigns the namespace name "scala.ioc" as the default. (All worker definitions presented thus far have been in the "scala.ioc" namespace.)
-* `` `namespace ioc|scala.ioc` `` assigns the namespace name "scala.ioc" to the prefix "ioc".
+* `` `namespace|scalaioc` `` assigns the namespace name "scalaioc" as the default. All the example .fsp files thus far have started with this declaration, so all worker definitions presented have been in the "scalaioc" namespace.
+* `` `namespace i|scalaioc` `` assigns the namespace name "scalaioc" to the prefix "i".
 
 ### Namespaced Workers
 
 * `` `#ref` `` references the worker named "ref" in the default namespace.
-* `` `#ioc|let` `` references the worker named "let" in the namespace whose name assigned to the prefix "ioc".
-* `` `#scala.ioc#=` `` references the worker named "=" in the namespace whose name is "scala.ioc".
+* `` `#i|let` `` references the worker named "let" in the namespace whose name assigned to the prefix "i".
+* `` `#scalaioc#=` `` references the worker named "=" in the namespace whose name is "scalaioc".
 * `` `#|myWorker` `` references the worker named "myWorker" that's in the nameless namespace.
+
+### Workers in "scalaioc" Namespace
+
+TBD
+
+* `` `#=` ``
+* `` `#=>` ``
+* `` `#id` ``
+* `` `#id>` ``
+* `` `#ref` ``
+* `` `#ref!` ``
+* `` `#let` ``
+* `` `#$` ``
+* `` `#def` ``
+* `` `#resource` ``
+* `` `#embed` ``
 
 ## Multiple Factory Configuration Files
 
@@ -310,8 +299,12 @@ TBD
 
 ## Extending the Framework
 
-TBD
+TBD: ``<namespace name> `#def`(<local name>, <worker definition>)``
+
 
 ## Packaged Extensions
 
 TBD
+
+* Servlet extension: [servlet example](https://github.com/david-sledge/scalaioc/tree/master/examples/servlet/ "Servlet example")
+* XML writer

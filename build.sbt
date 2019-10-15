@@ -21,6 +21,6 @@ lazy val root = (project in file("."))
     mainClass in (Compile, packageBin) := Some("scala.ioc.cli.Main"),
   )
 
-publishTo := sonatypePublishTo.value
+publishTo := sonatypePublishToBundle.value
 //publishConfiguration := publishConfiguration.value.withOverwrite(true)
 //publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)

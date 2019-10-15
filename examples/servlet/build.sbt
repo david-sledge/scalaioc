@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
     organization := "io.github.david-sledge",
-    scalaVersion := "2.12.8",
+    scalaVersion := "2.12.10",
 	licenses := Seq("GPL3" -> url("https://www.gnu.org/licenses/gpl-3.0.en.html")),
   )
 
@@ -10,7 +10,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "io.github.david-sledge" % "scalaioc_2.12" % "v1.0.0-alpha.1",
+  "io.github.david-sledge" % "scalaioc_2.12" % "1.0.0-alpha.2",
 )
 
 lazy val root = (project in file("."))

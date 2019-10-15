@@ -1,10 +1,7 @@
-`namespace|scala.ioc`
-
-import com.example.hello._
-import java.time.ZonedDateTime
+`namespace|scalaioc`
 
 // this is a factory manager
-"helloWorld" `#=` HelloWorld("Hello World!")
+"helloWorld" `#=` com.example.hello.HelloWorld("Hello World!")
 
 // Simple (lazy) factory manager
 // the first time a lazy manager is put to work, their result is stored.
@@ -16,8 +13,11 @@ import java.time.ZonedDateTime
 // Simple (way-too-eager) factory managers
 // produce a new result each time they're put to work (even if their work
 // results in the exact same thing they produced last time).
-"eagerManager" `#=>` ZonedDateTime.now
+"eagerManager" `#=>` java.time.ZonedDateTime.now
 
 // This guy's such a workhorse, even other managers are more productive.
 "productiveSeniorManager" `#=>`
-  DateTimeHelloWorld("Hello World!", `#ref!`("lazyManager").asInstanceOf[ZonedDateTime])
+  com.example.hello.DateTimeHelloWorld(
+    "Hello World!",
+    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
+  )

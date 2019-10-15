@@ -1,7 +1,5 @@
 package com.example
 
-import scala.collection.immutable.Map
-
 import joptsimple._
 
 package object cli {
