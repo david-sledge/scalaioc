@@ -1,11 +1,8 @@
 `namespace|scalaioc`
-`namespace x|scalaioc.xml`
 
-"say hello" `#=>` ((out: java.io.StringWriter) =>
-    out.write("Hello, World!"))(`#$`("out"))
+"say hello" `#=>` `#$`[java.io.StringWriter]("out").write("Hello, World!")
 
-"say hello once" `#=` ((out: java.io.StringWriter) =>
-    out.write("Hello, World!  You'll have to force me to say it again."))(`#$`("out"))
+"say hello once" `#=` `#$`[java.io.StringWriter]("out").write("Hello, World!  You'll have to force me to say it again.")
 
 "hello to..." `#=>` s"Hello, ${`#$`("who")}!"
 
@@ -15,8 +12,7 @@
 
 "scope" `#=>` "World"
 
-"scoped hello" `#=>` ((out: java.io.StringWriter) =>
-    out.write(s"Hello, ${`#ref`("scope")}!"))(`#$`("out"))
+"scoped hello" `#=>` `#$`[java.io.StringWriter]("out").write(s"Hello, ${`#ref`("scope")}!")
 
 "scoped hello2" `#=>` `#let`("who" -> `#ref`("scope"), `#ref`("hello to..."))
 

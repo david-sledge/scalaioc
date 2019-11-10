@@ -30,8 +30,9 @@ package object ppm {
 
     def postManagerJob(name: String)
         (namespaceName: Option[String], localName: String)
-        (exprOpt: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+        (macroArgs: MacroArgs): Tree = {
 
+      val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
           args,
@@ -53,16 +54,22 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(wo
 
     def postRefJob(name: String)
         (namespaceName: Option[String] = None, localName: String)
-        (exprOpt: Option[Tree] = None, args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+        (macroArgs: MacroArgs): Tree = {
+
+      val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
       val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
           exprOpt,
           args,
           ListSet(id),
         )
 
-      q"""
-scala.ioc.cast(factory.${TermName(name)}(${named(id)}, c))
-"""
+      val rargs = List(q"factory.${TermName(name)}(${named(id)}, c)")
+      val rexpr = q"scala.ioc.cast"
+
+      targs match {
+        case targ::rest => Apply(TypeApply(rexpr, List(targ)), rargs)
+        case _ => Apply(rexpr, rargs)
+      }
     }
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
@@ -73,62 +80,54 @@ scala.ioc.cast(factory.${TermName(name)}(${named(id)}, c))
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("let"),
-        ((namespaceName, localName) => (expr, args, tb, src) =>
+        ((namespaceName, localName) => (macroArgs) => {
+
+          val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+
           args.foldRight(EmptyTree)((block, acc) => {
             acc match {
               case EmptyTree => block
               case _ => q"""${toWorker(acc)}(c + (${block}))"""
             }
-          })))
+          })
+
+        })
+    )
 
     preprocessor.addMacro(
       Some(ScalaIocNamespaceName),
       Some("$"),
       (namespaceName, localName) =>
-        (expr, args, tb, src) => {
+        (macroArgs) => {
+
+          val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
           val ProcessedArgs(named, _, _, _) =
             validateThisExprAndArgs(
-              expr,
+              exprOpt,
               args,
               ListSet(id),
             )
 
-          q"scala.ioc.cast(c(${named(id)}))"
+          val rargs = List(q"c(${named(id)})")
+          val rexpr = q"scala.ioc.cast"
+
+          targs match {
+            case targ::rest => Apply(TypeApply(rexpr, List(targ)), rargs)
+            case _ => Apply(rexpr, rargs)
+          }
 
         }
     )
-
-    def postManagementPromotion(name: String)
-        (namespaceName: Option[String], localName: String)
-        (exprOpt: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
-
-      val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-          exprOpt,
-          args,
-          ListSet(id, worker),
-        )
-
-      q"""{
-var worker = ${toWorker(named(worker))}
-scala.ioc.Factory.${TermName(name)}(factory, ${named(id)}, worker)
-worker(c)
-}"""
-
-    }
-
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("id"), postManagementPromotion(lazyMgrMethod))
-
-    preprocessor.addMacro(Some(ScalaIocNamespaceName),
-        Some("id>"), postManagementPromotion(mgrMethod))
 
     preprocessor.addMacro(
         Some(ScalaIocNamespaceName),
         Some("resource"),
         (namespaceName, localName) =>
-          (expr, args, tb, src) => {
+          (macroArgs) => {
+
+            val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-                expr,
+                exprOpt,
                 args,
                 ListSet(path),
                 ListSet(enc),
@@ -150,18 +149,20 @@ factory = factory, preprocessor = preprocessor)"""
         Some(ScalaIocNamespaceName),
         Some("def"),
         (namespaceName, localName) =>
-          (expr, args, tb, src) => {
+          (macroArgs) => {
+
+            val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
             val localName = "localName"
             val defnArg = "defn"
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-                expr,
+                exprOpt,
                 args,
                 ListSet(),
                 ListSet(localName, defnArg),
                 thisExprPresence = Optional,
               )
 
-            val nsName = expr match {
+            val nsName = exprOpt match {
               case None => None
               case Some(Literal(Constant(ns: String))) => Some(ns)
               case _ => throw new IllegalArgumentException(
@@ -182,12 +183,12 @@ factory = factory, preprocessor = preprocessor)"""
 
                 tb.compile(named(defnArg))().asInstanceOf[
                   (Option[String], String) =>
-                    (Option[Tree], List[Tree], ToolBox[universe.type], Option[String]) =>
+                    MacroArgs =>
                       Tree]
               }
               else
                 (namespaceName: Option[String], localName: String) =>
-                  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]) =>
+                  (macroArgs: MacroArgs) =>
                     // no-op macro
                     q"()"
 
@@ -200,9 +201,11 @@ factory = factory, preprocessor = preprocessor)"""
         Some(ScalaIocNamespaceName),
         Some("embed"),
         (namespaceName, localName) =>
-          (expr, args, tb, src) => {
+          (macroArgs) => {
+
+            val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-                expr,
+                exprOpt,
                 args,
                 ListSet(path),
                 ListSet(enc),

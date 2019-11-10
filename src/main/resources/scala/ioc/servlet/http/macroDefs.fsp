@@ -1,1 +1,5 @@
-"scalaioc.servlet.http" `#scalaioc#def` ("http", scala.servlet.http.ioc.ppm.postMethodHandlersJob _)
+`namespace|scalaioc`
+
+"scalaioc.servlet.http" `#def` ("http", scala.servlet.http.ioc.ppm.postMethodHandlersJob _)
+"scalaioc.servlet.http" `#def` ("htmlResp", scala.servlet.http.ioc.ppm.postHtmlPageResponseJob _)
+//"scalaioc.servlet.http" `#def` ("jsonResp", scala.servlet.http.ioc.ppm.postJsonPageResponseJob _)

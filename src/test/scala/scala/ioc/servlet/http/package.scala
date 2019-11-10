@@ -1,12 +1,14 @@
 package scala.ioc.servlet
 
-import javax.servlet.http.HttpServletRequest
+import org.scalatest._
+
 import javax.servlet.http.HttpServletResponse
 
 package object http {
 
-  def testPost(req: HttpServletRequest, resp: HttpServletResponse) = {
+  def testPost(c: Map[Any, Any]) = {
 
+    val resp = c(scala.ioc.servlet.IocServlet.ResponseKey).asInstanceOf[HttpServletResponse]
     import resp._
 
     setStatus(HttpServletResponse.SC_OK)

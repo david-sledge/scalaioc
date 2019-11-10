@@ -132,6 +132,7 @@ final class Preprocessor {
           nsName: Option[String],
           localName: String,
           exprOpt: Option[Tree],
+          targs: List[Tree],
           args: List[Tree],
           pos: Position,
           processApplication: Tree => T,
@@ -144,7 +145,7 @@ final class Preprocessor {
 
             onExists = (makro) =>
               try {
-                processApplication(makro(exprOpt, args, tb, src))
+                processApplication(makro(MacroArgs(exprOpt, targs, args, tb, src)))
               }
               catch {
                 case e: Exception => throw MacroException(e, nsName, localName, src, pos)
@@ -159,6 +160,7 @@ final class Preprocessor {
           name: String,
           srcTree: Tree,
           expr: Option[Tree] = None,
+          targs: List[Tree] = Nil,
           args: List[Tree] = Nil,
           pos: Position,
         ) = {
@@ -172,6 +174,7 @@ final class Preprocessor {
                 namespaceName,
                 localName,
                 expr,
+                targs,
                 args,
                 pos,
                 transform,
@@ -229,7 +232,7 @@ final class Preprocessor {
           }
 
           front match {
-            case ((arg@AssignOrNamedArg(nameExpr@Ident(TermName(argName)), expr))::args) =>
+            case ((arg@NamedArg(nameExpr@Ident(TermName(argName)), expr))::args) =>
               parseQname(
                 argName,
                 nameExpr.pos,
@@ -242,12 +245,8 @@ final class Preprocessor {
         }
 
         tree match {
-          case Ident(TermName(name)) => {
-            if (extractReferrer(tree)) q"()"
-            else handlePrefix(name, tree, None, Nil, tree.pos)
-          }
 
-          case Apply(expr, args) => {
+          case q"$expr(..$args)" => {
 
             findPropMacro(
               Nil,
@@ -258,22 +257,63 @@ final class Preprocessor {
                     nsName,
                     localName,
                     None,
+                    Nil,
                     List(expr_, Apply(expr, args_)),
                     expr_.pos,
                     transform,
                   )
               },
-              onNotFound =
-                expr match {
-                  case Ident(TermName(name)) => {
-                    handlePrefix(name, tree, None, args, expr.pos)
-                  }
+              onNotFound = {
+                val (texpr, targs) = expr match {
+                  case q"$texpr[..$targs]" => (texpr, targs)
+                  case _ => (expr, Nil)
+                }
+
+                texpr match {
                   case Select(sexpr, TermName(name)) => {
-                    handlePrefix(name, tree, Some(sexpr), args, expr.pos)
+                    handlePrefix(name, tree, Some(sexpr), targs, args, expr.pos)
+                  }
+                  case Ident(TermName(name)) => {
+                    handlePrefix(name, tree, None, targs, args, expr.pos)
                   }
                   case _ => super.transform(tree)
-                },
+                }
+              },
             )
+          }
+
+//          case q"$expr(..$args)" => {
+//
+//            findPropMacro(
+//              Nil,
+//              args,
+//              onFound = (nsName, localName, expr_, args_) => {
+//
+//                getAndApplyMacro(
+//                    nsName,
+//                    localName,
+//                    None,
+//                    List(expr_, Apply(expr, args_)),
+//                    expr_.pos,
+//                    transform,
+//                  )
+//              },
+//              onNotFound =
+//                expr match {
+//                  case Ident(TermName(name)) => {
+//                    handlePrefix(name, tree, None, args, expr.pos)
+//                  }
+//                  case Select(sexpr, TermName(name)) => {
+//                    handlePrefix(name, tree, Some(sexpr), args, expr.pos)
+//                  }
+//                  case _ => super.transform(tree)
+//                },
+//            )
+//          }
+
+          case Ident(TermName(name)) => {
+            if (extractReferrer(tree)) q"()"
+            else handlePrefix(name, tree, None, Nil, Nil, tree.pos)
           }
 
           case Block(exprs, expr) => {

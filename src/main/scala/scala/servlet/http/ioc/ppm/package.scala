@@ -13,34 +13,77 @@ import javax.servlet.ServletContext
 package object ppm {
 
   def postMethodHandlersJob(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+  (macroArgs: MacroArgs): Tree = {
 
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-      expr,
+      exprOpt,
       args,
       optionalArgNames = ListSet(
-        "handleGet",
-        "handlePost",
-        "handleDelete",
-        "handlePut",
+        "getHandler",
+        "postHandler",
+        "deleteHandler",
+        "putHandler",
         "methodMap",
         "getLastModified",
+        "id",
       ),
     )
 
+    val id = named.getOrElse("id", q""""requestHandler"""")
+    val handlers = named - "id"
     q"""
-scala.servlet.http.createRequestHandler(..${
-      named.foldLeft(List.empty[Tree]) {
+scala.ioc.Factory.setManager(
+  factory,
+  $id,
+  scala.servlet.http.createRequestHandler2(..${
+      handlers.foldLeft(List.empty[Tree]) {
         case (acc, (name, arg)) => {
 
-          AssignOrNamedArg(
+          NamedArg(
             Ident(TermName(name)),
-            arg,
+            q"Some(${scala.ioc.ppm.toWorker(arg)})",
           )::acc
 
         }
       }
-    })(`#$$`(scala.ioc.servlet.IocServlet.RequestKey), `#$$`(scala.ioc.servlet.IocServlet.ResponseKey))
+    })(scala.servlet.http.ioc.GetHttpServletTransaction),
+)
+"""
+
+  }
+
+  def postHtmlPageResponseJob(namespaceName: Option[String], localName: String)
+  (macroArgs: MacroArgs): Tree = {
+
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
+      exprOpt,
+      args,
+      ListSet("page"),
+      ListSet(
+        "status",
+        "enc",
+      ),
+    )
+
+    q"""
+{
+  val resp: javax.servlet.http.HttpServletResponse = `#scalaioc#$$`("resp")
+
+  `#scalaioc#let`(
+    "enc" -> ${named.getOrElse("enc", q""""utf-8"""")},
+    "xmlWriter" ->
+      javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(resp.getOutputStream, `#scalaioc#$$`("enc")),
+    {
+      resp.setStatus(${named.getOrElse("status", q"javax.servlet.http.HttpServletResponse.SC_OK")})
+      resp.setContentType(s"application/xhtml+xml; charset=$${`#scalaioc#$$`("enc")}")
+      resp.setLocale(java.util.Locale.getDefault)
+      `#scalaioc.servlet#embed`(${named("page")})
+      resp.flushBuffer
+    }
+  )
+}
 """
   }
 

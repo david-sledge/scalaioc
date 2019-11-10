@@ -1,0 +1,20 @@
+`namespace|scalaioc.xml.element`
+`namespace x|scalaioc.xml`
+
+`#x|xml`(
+  dtd = "<!DOCTYPE html>",
+  `#html`(
+    xmlns = "http://www.w3.org/1999/xhtml",
+    `#head`(`#title`("IoC Servlet Example")),
+    `#body`(
+      `#form`(
+        action = "",
+        method = "get",
+        `#input`(
+          `type` = "text",
+          name = "name",
+        ),// input
+      ),// form
+    ),// body
+  ),// html
+)// xml

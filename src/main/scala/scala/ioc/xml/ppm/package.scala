@@ -36,16 +36,15 @@ package object ppm {
   def postJobXml(
       namespaceName: Option[String],
       localName: String
-    )(expr: Option[Tree],
-      args: List[Tree], tb: ToolBox[universe.type], src: Option[String]
-    ): Tree = {
+    )(macroArgs: MacroArgs): Tree = {
 
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val enc = "enc"
     val ver = "ver"
     val dtd = "dtd"
     val ProcessedArgs(named, _, _, leftovers) =
       validateThisExprAndArgs(
-        expr,
+        exprOpt,
         args,
         allowExtraNamedArgs = true,
         allowExcessOrdinalArgs = true,
@@ -57,7 +56,7 @@ package object ppm {
       throw new Exception(s"unknown arguments: '${unknownArgs.mkString("', '")}'")
 
     val contentsAndEndDocument = List(
-      q"""..${postJobContent(leftovers.right.get)}""",
+      q"""..${postJobContent(leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")))}""",
       metaWriteXml("writeEndDocument", Nil),
     )
 
@@ -101,10 +100,11 @@ package object ppm {
 
   private def postJobCharacterData(methodName: String)
   (namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+  (macroArgs: MacroArgs): Tree = {
 
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-        expr,
+        exprOpt,
         args,
         ListSet("cdata"),
       )
@@ -118,10 +118,11 @@ package object ppm {
   def postJobComment = postJobCharacterData("writeComment")_
 
   def postJobProcInstr(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+  (macroArgs: MacroArgs): Tree = {
 
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-        expr,
+        exprOpt,
         args,
         ListSet("target"),
         ListSet("data"),
@@ -137,11 +138,13 @@ package object ppm {
   }
 
   def postJobElement(namespaceName: Option[String] = None, localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
-    val exprIsPresent = expr != None
+  (macroArgs: MacroArgs): Tree = {
+
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val exprIsPresent = exprOpt != None
     val ProcessedArgs(named, _, _, leftovers) =
       validateThisExprAndArgs(
-          expr,
+          exprOpt,
           args,
           allowExtraNamedArgs = true,
           allowExcessOrdinalArgs = true,
@@ -150,7 +153,7 @@ package object ppm {
     q"""..${
       metaWriteXml("writeStartElement", List(Literal(Constant(localName))))::
       named.foldLeft(List(
-          q"""..${postJobContent(leftovers.right.get)}""",
+          q"""..${postJobContent(leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")))}""",
           metaWriteXml("writeEndElement", Nil),
       )){
         case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(name)), value))::acc

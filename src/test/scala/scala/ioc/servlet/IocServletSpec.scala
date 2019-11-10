@@ -13,6 +13,8 @@ import scala.servlet.InjectableServletConfig
 import scala.servlet.InjectableServletContext
 import scala.servlet.InjectableServletResponse
 import scala.servlet.InjectableServletRequest
+import scala.servlet.http.InjectableHttpServletResponse
+import scala.servlet.http.InjectableHttpServletRequest
 
 class IocServletSpec extends FlatSpec with Matchers {
   "An IocServlet" should "load the staff.fsp by default" in {
@@ -129,7 +131,32 @@ class IocServletSpec extends FlatSpec with Matchers {
       )
     )
 
-    iocServlet.service(new InjectableServletRequest, new InjectableServletResponse)
+    val outputStream = new java.io.ByteArrayOutputStream
+    iocServlet.service(new InjectableHttpServletRequest(
+    ), new InjectableHttpServletResponse(
+      outputStream = new scala.servlet.InjectableServletOutputStream(
+        write = outputStream.write(_)
+      ),
+      setStatus = status => {},
+      setContentType = contentType => {},
+      setLocale = locale => {},
+      flushBuffer = () => (),
+    ))
+
+    outputStream.toString shouldBe """<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>IoC Servlet Example</title></head><body><form action="" method="get"><input type="text" name="name"></input></form></body></html>"""
+    outputStream.reset()
+
+    iocServlet.service(new InjectableHttpServletRequest(
+      paramterMap = Map("name" -> Array("Scala")),
+    ), new InjectableHttpServletResponse(
+      outputStream = new scala.servlet.InjectableServletOutputStream(
+        write = outputStream.write(_)
+      ),
+      setStatus = status => {},
+      setContentType = contentType => {},
+      setLocale = locale => {},
+      flushBuffer = () => (),
+    ))
 
     iocServlet.destroy()
 

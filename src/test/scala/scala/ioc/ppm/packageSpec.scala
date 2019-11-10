@@ -17,8 +17,6 @@ class packageSpec extends FlatSpec with Matchers {
           Some("ref!"),
           Some("let"),
           Some("$"),
-          Some("id"),
-          Some("id>"),
           Some("def"),
           Some("resource"),
           Some("embed"),
@@ -81,8 +79,5 @@ class packageSpec extends FlatSpec with Matchers {
     writer.getBuffer.setLength(0)
     factory.putToWork("scoped hello2", ctxMap) shouldBe "Hello, Universe!"
     writer.toString shouldBe ""
-    factory.putToWork("promotion")
-    factory.hasManager("prop") shouldBe true
-    factory.putToWork("propTest") shouldBe factory.putToWork("promotion")
   }
 }

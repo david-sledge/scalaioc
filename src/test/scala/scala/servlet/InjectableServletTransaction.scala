@@ -2,8 +2,12 @@ package scala.servlet
 
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
+import scala.jdk.CollectionConverters._
 
-class InjectableServletRequest(protocol: => String = ???) extends ServletRequest {
+class InjectableServletRequest(
+  protocol: => String = ???,
+  paramterMap: Map[String, Array[String]] = Map.empty,
+) extends ServletRequest {
   def getAsyncContext(): javax.servlet.AsyncContext = ???
   def getAttribute(x$1: String): Object = ???
   def getAttributeNames(): java.util.Enumeration[String] = ???
@@ -17,10 +21,23 @@ class InjectableServletRequest(protocol: => String = ???) extends ServletRequest
   def getLocalPort(): Int = ???
   def getLocale(): java.util.Locale = ???
   def getLocales(): java.util.Enumeration[java.util.Locale] = ???
-  def getParameter(x$1: String): String = ???
-  def getParameterMap(): java.util.Map[String,Array[String]] = ???
-  def getParameterNames(): java.util.Enumeration[String] = ???
-  def getParameterValues(x$1: String): Array[String] = ???
+  def getParameter(name: String): String = paramterMap.get(name) match {
+    case Some(values) => {
+      if (values.size > 0) {
+        values(0)
+      }
+      else {
+        null
+      }
+    }
+    case _ => null
+  }
+  def getParameterMap(): java.util.Map[String,Array[String]] = paramterMap.asJava
+  def getParameterNames(): java.util.Enumeration[String] = new scala.util.IteratorEnumeration(paramterMap.keys.iterator)
+  def getParameterValues(name: String): Array[String] = paramterMap.get(name) match {
+    case Some(values) => values
+    case _ => null
+  }
   def getProtocol(): String = protocol
   def getReader(): java.io.BufferedReader = ???
   def getRealPath(x$1: String): String = ???
@@ -47,8 +64,10 @@ class InjectableServletResponse(
   setContentLength: Int => Unit = _ => ???,
   setContentType: String => Unit = _ => ???,
   outputStream: => javax.servlet.ServletOutputStream = ???,
+  setLocale: java.util.Locale => Unit = local => ???,
+  flushBuffer: () => Unit = () => ???,
 ) extends ServletResponse {
-  def flushBuffer(): Unit = ???
+  def flushBuffer(): Unit = flushBuffer.apply()
   def getBufferSize(): Int = ???
   def getCharacterEncoding(): String = characterEncoding
   def getContentType(): String = ???
@@ -62,5 +81,5 @@ class InjectableServletResponse(
   def setCharacterEncoding(x$1: String): Unit = ???
   def setContentLength(len: Int): Unit = setContentLength.apply(len)
   def setContentType(typ: String): Unit = setContentType.apply(typ)
-  def setLocale(x$1: java.util.Locale): Unit = ???
+  def setLocale(locale: java.util.Locale): Unit = setLocale.apply(locale)
 }

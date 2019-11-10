@@ -1,0 +1,5 @@
+`namespace|scalaioc`
+
+"scalaioc.json" `#def` ("json", scala.ioc.json.ppm.postJobJson _)
+"scalaioc.json" `#def` ("{}", scala.ioc.json.ppm.postJobObject _)
+"scalaioc.json" `#def` ("[]", scala.ioc.json.ppm.postJobArray _)

@@ -3,10 +3,6 @@ IoC/DI Framework Written in Scala
 
 [![Build Status](https://travis-ci.org/david-sledge/scalaioc.svg?branch=master)](https://travis-ci.org/david-sledge/scalaioc)
 
-## Motivation
-
-TBD
-
 ## Goals
 
 * First and foremost support IoC and DI for Scala and Java applications.
@@ -259,7 +255,7 @@ Multiple .fsp files can be specified by passing in multiple `--If <filename>` ar
 
 ### Passing Context Variables between Workers
 
-TBD
+*TBD*
 
 `` `#let`(<key0> -> <value0>, <key1> -> <value1>, ... <keyN> -> <valueN>, <worker>)``
 
@@ -279,12 +275,10 @@ TBD
 
 ### Workers in "scalaioc" Namespace
 
-TBD
+*work-in-progress*
 
 * `` `#=` ``
 * `` `#=>` ``
-* `` `#id` ``
-* `` `#id>` ``
 * `` `#ref` ``
 * `` `#ref!` ``
 * `` `#let` ``
@@ -295,16 +289,34 @@ TBD
 
 ## Multiple Factory Configuration Files
 
-TBD
+*TBD*
 
-## Extending the Framework
+## Extending the Framework (unstable)
 
-TBD: ``<namespace name> `#def`(<local name>, <worker definition>)``
+*work-in-progress*
 
+``<namespace name> `#def`(<local name>, <worker definition>)``
+
+Worker definition must be functions with the follow signature:
+
+```scala
+(
+  Option[String], // namespace name of invoking worker
+  String,         // local name of invoking worker
+) => (
+  scala.ppm.MacroArgs(
+    Option[scala.reflect.runtime.universe.Tree],  // LHS value
+    List[scala.reflect.runtime.universe.Tree],    // Type parameters
+    List[scala.reflect.runtime.universe.Tree],    // RHS argument list
+    ToolBox[scala.reflect.runtime.universe.type], // Toolbox instance
+    Option[String],                               // description of the source of the trees
+  )
+) => scala.reflect.runtime.universe.Tree // resulting tree
+```
 
 ## Packaged Extensions
 
-TBD
+*work-in-progress*
 
-* Servlet extension: [servlet example](https://github.com/david-sledge/scalaioc/tree/master/examples/servlet/ "Servlet example")
-* XML writer
+* Servlet extension: [servlet example](https://github.com/david-sledge/scalaioc/tree/master/examples/servlet/ "Servlet example") (enable with `` `#embed`("scala/ioc/servlet/http/macroDefs.fsp")``)
+* XML writer (enable with `` `#embed`("scala/ioc/xml/macroDefs.fsp")``)

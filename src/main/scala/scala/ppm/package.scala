@@ -9,12 +9,15 @@ package object ppm {
     import universe._
   import scala.tools.reflect.ToolBox
 
-  type Macro = (
-      Option[Tree],
-      List[Tree],
-      ToolBox[universe.type],
-      Option[String],
-    ) => Tree
+  final case class MacroArgs(
+    thisExpr: Option[Tree],
+    targs: List[Tree],
+    args: List[Tree],
+    tb: ToolBox[universe.type],
+    src: Option[String],
+  )
+
+  type Macro = MacroArgs => Tree
 
   type NamespacedMacro = (Option[String], String) => Macro
 
@@ -55,7 +58,7 @@ package object ppm {
 
           t match {
             // named argument
-            case AssignOrNamedArg(Ident(TermName(name)), expr) => {
+            case NamedArg(Ident(TermName(name)), expr) => {
               if (map contains name) {
                 (
                   // remove it from the map
@@ -157,10 +160,10 @@ package object ppm {
         Nil
     val errorMsgs1 = requiredOrExcessArgError match {
         case MissingRequiredArgs => s"is missing arguments: '${
-            leftovers.left.get.mkString("', '")
+            leftovers.swap.getOrElse(throw new Exception("Programmatic error: flog the developer!")).mkString("', '")
           }'"::errorMsgs
         case ExcessiveOrdinalArgs => s"has ${
-          leftovers.right.get.size
+          leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")).size
         } too many arguments"::errorMsgs
         case _ => errorMsgs
       }
@@ -215,7 +218,7 @@ package object ppm {
     val requiredOrExcessArgError = 
       if (leftovers.isLeft)
         MissingRequiredArgs
-      else if (leftovers.right.get.size > 0 && !allowExcessOrdinalArgs)
+      else if (leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")).size > 0 && !allowExcessOrdinalArgs)
         ExcessiveOrdinalArgs
       else
         NoError

@@ -11,9 +11,11 @@ final class InjectableHttpServletRequest(
   method: => String = "GET",
   protocol: => String = "HTTP/1.1",
   requestUri: => String = ???,
-  headers: => Map[String, Array[String]] = Map.empty
+  headers: => Map[String, Array[String]] = Map.empty,
+  paramterMap: Map[String, Array[String]] = Map.empty,
 ) extends InjectableServletRequest(
   protocol = protocol,
+  paramterMap = paramterMap,
 ) with HttpServletRequest {
 
   private lazy val lcaseHeaders = headers.map(entry => entry._1.toLowerCase() -> entry._2)
@@ -78,11 +80,16 @@ final class InjectableHttpServletResponse(
   setContentLength: Int => Unit = _ => ???,
   setContentType: String => Unit = _ => ???,
   outputStream: => javax.servlet.ServletOutputStream = ???,
+  setStatus: Int => Unit = status => ???,
+  setLocale: java.util.Locale => Unit = locale => ???,
+  flushBuffer: () => Unit = () => ???,
 ) extends InjectableServletResponse(
   characterEncoding = characterEncoding,
   setContentLength = setContentLength,
   setContentType = setContentType,
   outputStream = outputStream,
+  setLocale = setLocale,
+  flushBuffer = flushBuffer,
 ) with HttpServletResponse {
   def addCookie(x$1: javax.servlet.http.Cookie): Unit = ???
   def addDateHeader(x$1: String,x$2: Long): Unit = ???
@@ -104,5 +111,5 @@ final class InjectableHttpServletResponse(
   def setHeader(name: String, value: String): Unit = setHeader.apply(name, value)
   def setIntHeader(x$1: String,x$2: Int): Unit = ???
   def setStatus(x$1: Int,x$2: String): Unit = ???
-  def setStatus(x$1: Int): Unit = ???
+  def setStatus(status: Int): Unit = setStatus.apply(status)
 }

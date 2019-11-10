@@ -1,5 +1,5 @@
 ThisBuild / organization := "io.github.david-sledge"
-ThisBuild / scalaVersion := "2.12.10"
+ThisBuild / scalaVersion := "2.13.1"
 //ThisBuild / version := "1.0.0-alpha.3"
 
 scalacOptions ++= Seq(
@@ -13,10 +13,11 @@ lazy val root = (project in file("."))
     unmanagedClasspath in Runtime += baseDirectory.value / "src/main/resources",
     name := "scalaioc",
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-compiler" % "2.12.10",
-      "org.scala-lang" % "scala-reflect" % "2.12.10",
-      "org.scalatest" %% "scalatest" % "3.0.4" % "test",
+      "org.scala-lang" % "scala-compiler" % "2.13.1",
+      "org.scala-lang" % "scala-reflect" % "2.13.1",
+      "org.scalatest" %% "scalatest" % "3.0.8" % "test",
       "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided",
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.0" % "runtime",
     ),
     mainClass in (Compile, packageBin) := Some("scala.ioc.cli.Main"),
   )

@@ -1,5 +1,6 @@
-`namespace|scalaioc.xml.element`
+`namespace i|scalaioc`
 `namespace x|scalaioc.xml`
+`namespace|scalaioc.xml.element`
 
 `#x|xml`(
   dtd = "<!DOCTYPE html>",
@@ -7,8 +8,8 @@
     `#head`(`#title`("IoC Servlet Example")),
     `#body`(
       `#h1`("IoC Servlet Example"),
-      `#p`("Hello, World!"),
-      `#p`(style = "display:none", "Hello, Scala World!"),
-    )// body
-  )// html
+      `#p`(s"Hello, ${`#i|$`("name")}!"),
+      `#p`(style = "opacity: 0.5;", "Hello, Scala World!"),
+    ),// body
+  ),// html
 )// xml

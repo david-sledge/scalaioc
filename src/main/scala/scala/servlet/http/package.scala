@@ -1,6 +1,6 @@
 package scala.servlet
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.language.reflectiveCalls
 
 import java.io.IOException
@@ -47,6 +47,30 @@ package object http {
         resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
     }
 
+  def handleDeleteDefault[T](t: T)(implicit getTransaction: GetHttpServletTransaction[T]) =
+    NotAllowedHandler("http.method_delete_not_supported")(
+      getTransaction.getRequest(t),
+      getTransaction.getResponse(t),
+    )
+
+  def handleGetDefault[T](t: T)(implicit getTransaction: GetHttpServletTransaction[T]) =
+    NotAllowedHandler("http.method_get_not_supported")(
+      getTransaction.getRequest(t),
+      getTransaction.getResponse(t),
+    )
+
+  def handlePostDefault[T](t: T)(implicit getTransaction: GetHttpServletTransaction[T]) =
+    NotAllowedHandler("http.method_post_not_supported")(
+      getTransaction.getRequest(t),
+      getTransaction.getResponse(t),
+    )
+
+  def handlePutDefault[T](t: T)(implicit getTransaction: GetHttpServletTransaction[T]) =
+    NotAllowedHandler("http.method_put_not_supported")(
+      getTransaction.getRequest(t),
+      getTransaction.getResponse(t),
+    )
+
   val DefaultDeleteHandler = (req: HttpServletRequest, resp: HttpServletResponse) =>
     NotAllowedHandler("http.method_delete_not_supported")(req, resp)
 
@@ -59,7 +83,18 @@ package object http {
   val DefaultPutHandler = (req: HttpServletRequest, resp: HttpServletResponse) =>
     NotAllowedHandler("http.method_put_not_supported")(req, resp)
 
-  def createRequestHandler(
+  def maybeSetLastModified(resp: HttpServletResponse, lastModified: Long) = {
+    if (!resp.containsHeader(HeaderLastMod) && lastModified >= 0)
+      resp.setDateHeader(HeaderLastMod, lastModified);
+  }
+
+  def template(handler: (HttpServletRequest, HttpServletResponse) => Unit,
+      defaultHandler: (HttpServletRequest, HttpServletResponse) => Unit,
+      method: String) =
+    (allow: Set[String]) =>
+      if (handler == defaultHandler) allow else allow + method
+
+  def createRequestHandler[T](
     handleGet: (HttpServletRequest, HttpServletResponse) =>
       Unit = DefaultGetHandler,
     handlePost: (HttpServletRequest, HttpServletResponse) =>
@@ -70,14 +105,116 @@ package object http {
       Unit = DefaultPutHandler,
     methodMap: Map[String, (HttpServletRequest, HttpServletResponse) => Unit] = Map.empty,
     getLastModified: (HttpServletRequest) => Long = (req) => -1,
-  ) = {
+  )(implicit getTransaction: GetHttpServletTransaction[T]): T => Unit = {
 
-    (req: HttpServletRequest, resp: HttpServletResponse) => {
+    val handleHead = (req: HttpServletRequest, resp: HttpServletResponse) => {
 
-      def maybeSetLastModified(resp: HttpServletResponse, lastModified: Long) = {
-        if (!resp.containsHeader(HeaderLastMod) && lastModified >= 0)
-          resp.setDateHeader(HeaderLastMod, lastModified);
+      val lastModified = getLastModified(req)
+      maybeSetLastModified(resp, lastModified)
+
+      if (handleGet == DefaultGetHandler) {
+
+        val msg = "HTTP method HEAD is not supported by this URL because GET is also not supported"
+
+        if (req.getProtocol.endsWith("1.1"))
+          resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
+        else
+          resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+
       }
+      else {
+
+        val response = new HttpServletResponseWrapper(resp) {
+
+          val noBody = new ServletOutputStream {
+
+            private var contentLength = 0
+
+            def getContentLength: Int = contentLength
+
+            def write(b: Int) = contentLength += 1
+
+            override def write(buf: Array[Byte], offset: Int, len: Int) =
+            {
+
+              if (len >= 0)
+                contentLength += len
+              else
+                throw new IllegalArgumentException(
+                  LocalStrings.getString("err.io.negativelength")
+                )
+            }
+          }
+
+          val writer = new PrintWriter(
+            new OutputStreamWriter(noBody, getCharacterEncoding))
+          var didSetContentLength = false
+
+          def setContentLength: Unit =
+            if (!didSetContentLength) {
+              writer.flush
+
+              setContentLength(noBody.getContentLength)
+            }
+
+          override def setContentLength(len: Int) = {
+            super.setContentLength(len)
+            didSetContentLength = true
+          }
+
+          override def getOutputStream = noBody
+
+          override def getWriter = writer
+        }
+
+        handleGet(req, response)
+        response.setContentLength
+      }
+
+    }
+
+    val allowHeaderResponse = template(
+        handleDelete,
+        DefaultDeleteHandler,
+        MethodDelete
+      )(
+        (
+          (allow: Set[String]) =>
+            if (handleGet == DefaultGetHandler)
+              allow
+            else
+              allow ++ Set(MethodGet, MethodHead)
+        )(
+          template(
+            handlePost,
+            DefaultPostHandler,
+            MethodPost,
+          )(
+            template(
+              handlePut,
+              DefaultPutHandler,
+              MethodPut,
+            )(
+              methodMap.keySet.diff(Set(
+                  MethodDelete,
+                  MethodGet,
+                  MethodHead,
+                  MethodOptions,
+                  MethodPost,
+                  MethodPut,
+                  MethodTrace,
+              )) ++ Set(
+                MethodOptions,
+                MethodTrace,
+              )
+            )
+          )
+        )
+      ).mkString(", ")
+
+    (t: T) => {
+      val req = getTransaction.getRequest(t)
+      val resp = getTransaction.getResponse(t)
 
       req.getMethod match {
 
@@ -101,73 +238,10 @@ package object http {
             else
               resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED)
           }
-        }
-
-        case MethodHead => {
-
-          val lastModified = getLastModified(req)
-          maybeSetLastModified(resp, lastModified)
-
-          if (handleGet == DefaultGetHandler) {
-
-            val msg = "HTTP method HEAD is not supported by this URL because GET is also not supported"
-
-            if (req.getProtocol.endsWith("1.1"))
-              resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
-            else
-              resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
-
-          }
-          else {
-
-            val response = new HttpServletResponseWrapper(resp) {
-
-              val noBody = new ServletOutputStream {
-
-                private var contentLength = 0
-
-                def getContentLength: Int = contentLength
-
-                def write(b: Int) = contentLength += 1
-
-                override def write(buf: Array[Byte], offset: Int, len: Int) =
-                {
-
-                  if (len >= 0)
-                    contentLength += len
-                  else
-                    throw new IllegalArgumentException(
-                      LocalStrings.getString("err.io.negativelength")
-                    )
-                }
-              }
-
-              val writer = new PrintWriter(
-                new OutputStreamWriter(noBody, getCharacterEncoding))
-              var didSetContentLength = false
-
-              def setContentLength: Unit =
-                if (!didSetContentLength) {
-                  writer.flush
-
-                  setContentLength(noBody.getContentLength)
-                }
-
-              override def setContentLength(len: Int) = {
-                super.setContentLength(len)
-                didSetContentLength = true
-              }
-
-              override def getOutputStream = noBody
-
-              override def getWriter = writer
-            }
-
-            handleGet(req, response)
-            response.setContentLength
-          }
 
         }
+
+        case MethodHead => handleHead(req, resp)
 
         case MethodPost => handlePost(req, resp)
 
@@ -177,45 +251,11 @@ package object http {
 
         case MethodOptions => {
 
-          def template(handler: (HttpServletRequest, HttpServletResponse) => Unit,
-              defaultHandler: (HttpServletRequest, HttpServletResponse) => Unit,
-              method: String) =
-            (allow: List[String]) =>
-              if (handler == defaultHandler) allow else method :: allow
-
           resp.setHeader(
             "Allow",
-            template(
-              handleDelete,
-              DefaultDeleteHandler,
-              MethodDelete
-            )(
-              (
-                (allow: List[String]) =>
-                  if (handleGet == DefaultGetHandler)
-                    allow
-                  else
-                    MethodGet :: MethodHead :: allow
-              )(
-                template(
-                  handlePost,
-                  DefaultPostHandler,
-                  MethodPost,
-                )(
-                  template(
-                    handlePut,
-                    DefaultPutHandler,
-                    MethodPut,
-                  )(
-                    List[String](
-                      MethodOptions,
-                      MethodTrace,
-                    )
-                  )
-                )
-              )
-            ).mkString(", ")
+            allowHeaderResponse,
           )
+
         }
 
         case MethodTrace => {
@@ -235,7 +275,7 @@ package object http {
         case method @ _ => {
 
           methodMap.get(method) match {
-            case Some(handler) => handler(req, resp)
+            case Some(handleMethod) => handleMethod(req, resp)
             case _ => 
               //
               // Other HTTP servlets in the container may support the requested
@@ -250,5 +290,226 @@ package object http {
       }
 
     }
+
   }
+
+  def template2[T](handler: Option[T => Unit],
+      method: String) =
+    (allow: Set[String]) =>
+      if (handler == None) allow else allow + method
+
+  def createRequestHandler2(
+    getHandler: Option[Map[Any, Any] => Unit] = None,
+    postHandler: Option[Map[Any, Any] => Unit] = None,
+    deleteHandler: Option[Map[Any, Any] => Unit] = None,
+    putHandler: Option[Map[Any, Any] => Unit] = None,
+    methodMap: Map[String, Map[Any, Any] => Unit] = Map.empty,
+    getLastModified: (Map[Any, Any]) => Long = (t: Map[Any, Any]) => -1,
+  )(implicit getTransaction: GetHttpServletTransaction[Map[Any, Any]]): Map[Any, Any] => Unit = {
+
+    val handleGet = getHandler.getOrElse(
+      (t: Map[Any, Any]) => handleGetDefault(t)(getTransaction)
+    )
+
+    val handlePost = postHandler.getOrElse(
+      (t: Map[Any, Any]) => handlePostDefault(t)(getTransaction)
+    )
+
+    val handleDelete = deleteHandler.getOrElse(
+      (t: Map[Any, Any]) => handleDeleteDefault(t)(getTransaction)
+    )
+
+    val handlePut = putHandler.getOrElse(
+      (t: Map[Any, Any]) => handlePutDefault(t)(getTransaction)
+    )
+
+    val handleHead = (t: Map[Any, Any]) => {
+
+      val req = getTransaction.getRequest(t)
+      val resp = getTransaction.getResponse(t)
+
+      val lastModified = getLastModified(t)
+      maybeSetLastModified(resp, lastModified)
+
+      getHandler match {
+        case Some(handle) => {
+          val response = new HttpServletResponseWrapper(resp) {
+
+            val noBody = new ServletOutputStream {
+
+              private var contentLength = 0
+
+              def getContentLength: Int = contentLength
+
+              def write(b: Int) = contentLength += 1
+
+              override def write(buf: Array[Byte], offset: Int, len: Int) =
+              {
+
+                if (len >= 0)
+                  contentLength += len
+                else
+                  throw new IllegalArgumentException(
+                    LocalStrings.getString("err.io.negativelength")
+                  )
+              }
+            }
+
+            val writer = new PrintWriter(
+              new OutputStreamWriter(noBody, getCharacterEncoding))
+            var didSetContentLength = false
+
+            def setContentLength: Unit =
+              if (!didSetContentLength) {
+                writer.flush
+
+                setContentLength(noBody.getContentLength)
+              }
+
+            override def setContentLength(len: Int) = {
+              super.setContentLength(len)
+              didSetContentLength = true
+            }
+
+            override def getOutputStream = noBody
+
+            override def getWriter = writer
+          }
+
+          handle(getTransaction.setResponse(t, response))
+          response.setContentLength
+        }
+
+        case _ => {
+
+          val msg = "HTTP method HEAD is not supported by this URL because GET is also not supported"
+
+          if (req.getProtocol.endsWith("1.1"))
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
+          else
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+
+        }
+
+      }
+
+    }
+
+    val allowHeaderResponse = template2(
+        deleteHandler,
+        MethodDelete
+      )(
+        (
+          (allow: Set[String]) =>
+            if (getHandler == None)
+              allow
+            else
+              allow ++ Set(MethodGet, MethodHead)
+        )(
+          template2(
+            postHandler,
+            MethodPost,
+          )(
+            template2(
+              putHandler,
+              MethodPut,
+            )(
+              methodMap.keySet.diff(Set(
+                  MethodDelete,
+                  MethodGet,
+                  MethodHead,
+                  MethodOptions,
+                  MethodPost,
+                  MethodPut,
+                  MethodTrace,
+              )) ++ Set(
+                MethodOptions,
+                MethodTrace,
+              )
+            )
+          )
+        )
+      ).mkString(", ")
+
+    (t: Map[Any, Any]) => {
+      val req = getTransaction.getRequest(t)
+      val resp = getTransaction.getResponse(t)
+
+      req.getMethod match {
+
+        case MethodGet => {
+          val lastModified = getLastModified(t)
+
+          if (lastModified == -1)
+            // servlet doesn't support if-modified-since, no reason
+            // to go through further expensive logic
+            handleGet(t)
+          else {
+            val ifModifiedSince = req.getDateHeader(HeaderIfModSince);
+
+            if (ifModifiedSince < lastModified) {
+              // If the mod time is later, call handleGet()
+              // Round down to the nearest second for a proper compare
+              // A ifModifiedSince of -1 will always be less
+              maybeSetLastModified(resp, lastModified)
+              handleGet(t)
+            }
+            else
+              resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED)
+          }
+
+        }
+
+        case MethodHead => handleHead(t)
+
+        case MethodPost => handlePost(t)
+
+        case MethodPut => handlePut(t)
+
+        case MethodDelete => handleDelete(t)
+
+        case MethodOptions => {
+
+          resp.setHeader(
+            "Allow",
+            allowHeaderResponse,
+          )
+
+        }
+
+        case MethodTrace => {
+
+          val CRLF = "\r\n"
+          val response =
+            ("TRACE " :: req.getRequestURI :: " " :: req.getProtocol ::
+              req.getHeaderNames.asScala.toList.foldLeft(List(CRLF))((acc, s) => {
+                  CRLF :: s :: ": " :: req.getHeader(s) :: acc
+                })).mkString
+          resp.setContentType("message/http")
+          resp.setContentLength(response.length)
+          resp.getOutputStream.print(response)
+
+        }
+
+        case method @ _ => {
+
+          methodMap.get(method) match {
+            case Some(handleMethod) => handleMethod(t)
+            case _ =>
+              //
+              // Other HTTP servlets in the container may support the requested
+              // method, but this one does not.
+              //
+              resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                  MessageFormat.format(LocalStrings.getString(
+                      "http.method_not_implemented"), method))
+          }
+
+        }
+      }
+
+    }
+
+  }
+
 }

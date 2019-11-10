@@ -12,9 +12,11 @@ import javax.servlet.ServletContext
 package object ppm {
 
   def embedImpl(ctx: ServletContext)(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+  (macroArgs: MacroArgs): Tree = {
+
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-        expr,
+        exprOpt,
         args,
         ListSet("path"),
         ListSet("encoding"),
@@ -40,9 +42,11 @@ package object ppm {
   }
 
   def postJobResource(namespaceName: Option[String], localName: String)
-  (expr: Option[Tree], args: List[Tree], tb: ToolBox[universe.type], src: Option[String]): Tree = {
+  (macroArgs: MacroArgs): Tree = {
+
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-        expr,
+        exprOpt,
         args,
         ListSet("path"),
         ListSet("encoding"),
@@ -51,12 +55,12 @@ package object ppm {
     val pathExpr = named("path")
     named.get("encoding") match {
       case Some(encExpr) => q"""scala.ioc.ppm.staffFactoryFromStream(
-${expr.get}.getResourceAsStream(${named("path")}),
+${exprOpt.get}.getResourceAsStream(${named("path")}),
 $encExpr,
 factory = factory,
 preprocessor = preprocessor)"""
       case _ => q"""scala.ioc.ppm.staffFactoryFromStream(
-${expr.get}.getResourceAsStream(${named("path")}),
+${exprOpt.get}.getResourceAsStream(${named("path")}),
 factory = factory,
 preprocessor = preprocessor)"""
     }

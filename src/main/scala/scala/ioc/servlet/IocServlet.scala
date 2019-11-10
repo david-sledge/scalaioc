@@ -2,7 +2,7 @@ package scala.ioc.servlet
 
   import ppm._
 import scala.ppm._
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.ioc._
   import Factory._
 import scala.ioc.ppm._

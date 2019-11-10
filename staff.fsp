@@ -1,4 +1,5 @@
+import scala.ioc.macros.$
+
 `namespace|scalaioc`
-`namespace x|scalaioc.xml`
 
 "letsGetStarted" `#=` scala.ioc.cli.MainSpec.processArgs(`#$`("args"))

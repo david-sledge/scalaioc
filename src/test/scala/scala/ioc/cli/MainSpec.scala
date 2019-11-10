@@ -12,7 +12,7 @@ class MainSpec extends FlatSpec with Matchers {
     ))
 
     MainSpec.args should not be (None)
-    MainSpec.args.get.deep should be (Array("A", "b", "C").deep)
+    MainSpec.args.get should be (Array("A", "b", "C"))
   }
 
   it should "default to 'staff.fsp' when '--If' is not supplied" in {

@@ -7,9 +7,17 @@ import javax.servlet.http._
 
 class packageSpec extends FlatSpec with Matchers {
 
-  "createRequestHandler()" should "return a function that accepts an HttpServletRequest object and an HttpServletResponse object" in {
+  implicit object GetTransaction extends scala.servlet.http.GetHttpServletTransaction[(HttpServletRequest, HttpServletResponse)] {
 
-    createRequestHandler() shouldBe a[(_, HttpServletResponse) => Unit]
+    def getRequest(c: (HttpServletRequest, HttpServletResponse)) = c._1
+
+    def getResponse(c: (HttpServletRequest, HttpServletResponse)) = c._2
+
+  }
+
+  "createRequestHandler()" should "return a function" in {
+
+    createRequestHandler()(GetTransaction) shouldBe a[_ => Unit]
 
   }
 
@@ -17,8 +25,8 @@ class packageSpec extends FlatSpec with Matchers {
 
     var status = 0
     var statusMsg = ""
-    val httpHandler = createRequestHandler()
-    httpHandler.apply(
+    val httpHandler = createRequestHandler()(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest,
       new InjectableHttpServletResponse(
         sendError = (int, msg) => {
@@ -26,7 +34,7 @@ class packageSpec extends FlatSpec with Matchers {
           statusMsg = msg
         },
       ),
-    )
+    ))
 
     status shouldBe 405
     statusMsg shouldBe LocalStrings.getString("http.method_get_not_supported")
@@ -46,7 +54,7 @@ class packageSpec extends FlatSpec with Matchers {
     status shouldBe 405
     statusMsg shouldBe LocalStrings.getString("http.method_post_not_supported")
 
-    httpHandler.apply(
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "BLAH"
       ),
@@ -56,7 +64,7 @@ class packageSpec extends FlatSpec with Matchers {
           statusMsg = msg
         }
       )
-    )
+    ))
 
     status shouldBe 405
     statusMsg shouldBe java.text.MessageFormat.format(LocalStrings.getString(
@@ -70,8 +78,8 @@ class packageSpec extends FlatSpec with Matchers {
     var value_ = ""
     var httpHandler = createRequestHandler(
 //      handleGet = (_, _) => {},
-    )
-    httpHandler.apply(
+    )(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
@@ -81,15 +89,15 @@ class packageSpec extends FlatSpec with Matchers {
           value_ = value
         }
       )
-    )
+    ))
 
     name_ shouldBe "Allow"
-    value_ shouldBe "OPTIONS, TRACE"
+    value_.split(", ").toSet shouldBe Set("OPTIONS", "TRACE")
 
     httpHandler = createRequestHandler(
       handleGet = (_, _) => {},
-    )
-    httpHandler.apply(
+    )(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
@@ -99,15 +107,15 @@ class packageSpec extends FlatSpec with Matchers {
           value_ = value
         }
       )
-    )
+    ))
 
     name_ shouldBe "Allow"
-    value_ shouldBe "GET, HEAD, OPTIONS, TRACE"
+    value_.split(", ").toSet shouldBe Set("OPTIONS", "TRACE", "GET", "HEAD")
 
     httpHandler = createRequestHandler(
       handlePost = (_, _) => {},
-    )
-    httpHandler.apply(
+    )(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
@@ -117,18 +125,18 @@ class packageSpec extends FlatSpec with Matchers {
           value_ = value
         }
       )
-    )
+    ))
 
     name_ shouldBe "Allow"
-    value_ shouldBe "POST, OPTIONS, TRACE"
+    value_.split(", ").toSet shouldBe Set("POST", "OPTIONS", "TRACE")
 
     httpHandler = createRequestHandler(
       handleDelete = (_, _) => {},
       handleGet = (_, _) => {},
       handlePost = (_, _) => {},
       handlePut = (_, _) => {},
-    )
-    httpHandler.apply(
+    )(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
@@ -138,10 +146,10 @@ class packageSpec extends FlatSpec with Matchers {
           value_ = value
         }
       )
-    )
+    ))
 
     name_ shouldBe "Allow"
-    value_ shouldBe "DELETE, GET, HEAD, POST, PUT, OPTIONS, TRACE"
+    value_.split(", ").toSet shouldBe Set("DELETE", "GET", "HEAD", "POST", "PUT", "OPTIONS", "TRACE")
 
   }
 
@@ -150,8 +158,8 @@ class packageSpec extends FlatSpec with Matchers {
     var status = 0
     var statusMsg = ""
 
-    val httpHandler = createRequestHandler()
-    httpHandler.apply(
+    val httpHandler = createRequestHandler()(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "HEAD"
       ),
@@ -163,7 +171,7 @@ class packageSpec extends FlatSpec with Matchers {
         containsHeader = name => false,
         setContentLength = _ => {},
       )
-    )
+    ))
 
     status shouldBe 405
     statusMsg shouldBe "HTTP method HEAD is not supported by this URL because GET is also not supported"
@@ -177,8 +185,8 @@ class packageSpec extends FlatSpec with Matchers {
 
     val httpHandler = createRequestHandler(
       handleGet = (req, resp) => {}
-    )
-    httpHandler.apply(
+    )(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "HEAD"
       ),
@@ -186,7 +194,7 @@ class packageSpec extends FlatSpec with Matchers {
         containsHeader = name => false,
         setContentLength = _ => {},
       )
-    )
+    ))
 
   }
 
@@ -195,8 +203,8 @@ class packageSpec extends FlatSpec with Matchers {
     var status = 0
     var statusMsg = ""
 
-    val httpHandler = createRequestHandler()
-    httpHandler.apply(
+    val httpHandler = createRequestHandler()(GetTransaction)
+    httpHandler.apply((
       new InjectableHttpServletRequest(
         method = "TRACE",
         requestUri = "test",
@@ -206,7 +214,7 @@ class packageSpec extends FlatSpec with Matchers {
         setContentLength = _ => {},
         outputStream = new InjectableServletOutputStream(),
       )
-    )
+    ))
 
   }
 
