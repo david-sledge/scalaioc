@@ -1,1 +1,1 @@
-"scalaioc.servlet" `#scalaioc#def` ("resource", scala.ioc.servlet.ppm.postJobResource _)
+`#scalaioc#def` ("scalaioc.servlet", "resource", scala.ioc.servlet.ppm.postJobResource _)

@@ -153,46 +153,35 @@ factory = factory, preprocessor = preprocessor)"""
 
             val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
             val localName = "localName"
-            val defnArg = "defn"
-            val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
-                exprOpt,
-                args,
-                ListSet(),
-                ListSet(localName, defnArg),
-                thisExprPresence = Optional,
-              )
+            val defn = "defn"
+            val ns = "ns"
+            val ProcessedArgs(named, _, _, leftovers) = validateThisExprAndArgs(
+              exprOpt,
+              args.reverse,
+              ListSet(defn),
+              ListSet(localName, ns),
+            )
 
-            val nsName = exprOpt match {
+            val nsName = named.get(ns) match {
               case None => None
               case Some(Literal(Constant(ns: String))) => Some(ns)
               case _ => throw new IllegalArgumentException(
-                  s"LHS of #$namespaceName#$localName if supplied must be a string literal")
+                  s"'ns' argument if supplied must be a string literal Found ${named(ns)}")
             }
 
-            val localNameOpt = if (named contains localName)
-              named(localName) match {
-                case Ident(TermName("None")) => None
-                case Literal(Constant(localName: String)) => Some(localName)
-                case Apply(TermName("Some"), Literal(Constant(localName: String))) => Some(localName)
-                case _ => throw new IllegalArgumentException(
-                    s"'localName' argument must be a string literal or None. Found: ${named(localName).getClass}")
-              }
-            else None
+            val localNameOpt = named.get(localName) match {
+              case None => None
+              case Some(Literal(Constant(localName: String))) => Some(localName)
+              case _ => throw new IllegalArgumentException(
+                  s"'localName' argument if supplied must be a string literal. Found ${named(localName)}")
+            }
 
-            val defn = if (named contains defnArg) {
-
-                tb.compile(named(defnArg))().asInstanceOf[
+            val defnTree = tb.compile(named(defn))().asInstanceOf[
                   (Option[String], String) =>
                     MacroArgs =>
                       Tree]
-              }
-              else
-                (namespaceName: Option[String], localName: String) =>
-                  (macroArgs: MacroArgs) =>
-                    // no-op macro
-                    q"()"
 
-            preprocessor.addMacro(nsName, localNameOpt, defn)
+            preprocessor.addMacro(nsName, localNameOpt, defnTree)
             q"()"
 
           })

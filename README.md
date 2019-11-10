@@ -295,7 +295,7 @@ Multiple .fsp files can be specified by passing in multiple `--If <filename>` ar
 
 *work-in-progress*
 
-``<namespace name> `#def`(<local name>, <worker definition>)``
+```#def`([[<namespace name>, ]<local name>, ]<worker definition>)``
 
 Worker definition must be functions with the follow signature:
 
@@ -306,8 +306,8 @@ Worker definition must be functions with the follow signature:
 ) => (
   scala.ppm.MacroArgs(
     Option[scala.reflect.runtime.universe.Tree],  // LHS value
-    List[scala.reflect.runtime.universe.Tree],    // Type parameters
-    List[scala.reflect.runtime.universe.Tree],    // RHS argument list
+    List[scala.reflect.runtime.universe.Tree],    // Type arguments
+    List[scala.reflect.runtime.universe.Tree],    // arguments
     ToolBox[scala.reflect.runtime.universe.type], // Toolbox instance
     Option[String],                               // description of the source of the trees
   )

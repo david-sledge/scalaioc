@@ -42,7 +42,7 @@ class IocServlet extends GenericServlet {
           if (paramNames contains StaffEncodingParam)
             getInitParameter(StaffEncodingParam)
           else DefaultStaffEncoding,// */
-        src = Some(DefaultStaffPath),
+        src = Some(staffPath),
       )
     this.factory = Some(factory)
 

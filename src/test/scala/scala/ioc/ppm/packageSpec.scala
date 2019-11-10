@@ -34,7 +34,7 @@ class packageSpec extends FlatSpec with Matchers {
 "id" `#=` (worker = "worker")
 "id".`#=`(worker = "worker")
 "id" `#=>` "worker"
-`#def`(None, {
+`#def`({
   import scala.collection.immutable._
   import scala.reflect.runtime.universe._
 

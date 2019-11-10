@@ -3,8 +3,8 @@
 `namespace i|scalaioc`
 `namespace web|scalaioc.servlet`
 
-"ioc.xml" `#i|def` ("xml", scala.ioc.xml.ppm.postJobXml)
-"ioc.xml" `#i|def` ("cdata", scala.ioc.xml.ppm.postJobCdata)
-"ioc.xml" `#i|def` ("!", scala.ioc.xml.ppm.postJobComment)
-"ioc.xml" `#i|def` ("?", scala.ioc.xml.ppm.postJobProcInstr)
-"ioc.xml.element" `#i|def` (None, scala.ioc.xml.ppm.postJobElement)
+`#i|def`("ioc.xml", "xml", scala.ioc.xml.ppm.postJobXml)
+`#i|def`("ioc.xml", "cdata", scala.ioc.xml.ppm.postJobCdata)
+`#i|def`("ioc.xml", "!", scala.ioc.xml.ppm.postJobComment)
+`#i|def`("ioc.xml", "?", scala.ioc.xml.ppm.postJobProcInstr)
+`#i|def`("ioc.xml.element", None, scala.ioc.xml.ppm.postJobElement)
