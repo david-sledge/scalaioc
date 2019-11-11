@@ -6,10 +6,10 @@
   )
 
   com.example.hello.run(
-    scala.ioc.cast[com.example.hello.HelloWorld](`#ref`("helloWorld")),
-    scala.ioc.cast[java.time.ZonedDateTime](`#ref`("lazyManager")),
-    scala.ioc.cast[java.time.ZonedDateTime](`#ref`("eagerManager")),
-    scala.ioc.cast[com.example.hello.DateTimeHelloWorld](`#ref`("productiveSeniorManager")),
+    `#ref`[com.example.hello.HelloWorld]("helloWorld"),
+    `#ref`[java.time.ZonedDateTime]("lazyManager"),
+    `#ref`[java.time.ZonedDateTime]("eagerManager"),
+    `#ref`[com.example.hello.DateTimeHelloWorld]("productiveSeniorManager"),
   )
 }
 
@@ -32,5 +32,5 @@
 "productiveSeniorManager" `#=>`
   com.example.hello.DateTimeHelloWorld(
     "Hello World!",
-    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
+    `#ref!`("lazyManager"),
   )

@@ -1,25 +1,29 @@
 `namespace|scalaioc`
-`namespace x|scalaioc.xml`
-`namespace web|scalaioc.servlet`
 `namespace h|scalaioc.servlet.http`
 
-`#embed`("scala/ioc/xml/macroDefs.fsp")
 `#embed`("scala/ioc/servlet/http/macroDefs.fsp")
+`#embed`("scala/ioc/xml/macroDefs.fsp")
 
-"requestHandler" `#=>`
-  `#h|http`(
-    handleGet =
-      (req: javax.servlet.http.HttpServletRequest, resp: javax.servlet.http.HttpServletResponse) => {
-        `#let`(
-          "enc" -> "utf-8",
-          "xmlWriter" -> javax.xml.stream.XMLOutputFactory.newInstance.createXMLStreamWriter(resp.getOutputStream, `#$`("enc")),
-          {
-            resp.setStatus(javax.servlet.http.HttpServletResponse.SC_OK)
-            resp.setContentType(s"application/xhtml+xml; charset=${`#$`("enc")}")
-            resp.setLocale(java.util.Locale.getDefault)
-            `#web|embed`("/WEB-INF/hello.fsp")
-            resp.flushBuffer
-          }
-        )
-      },
+"helloView" `#=>` `#h|htmlResp`("/WEB-INF/hello.fsp")
+
+"askNameView" `#=>` `#h|htmlResp`("/WEB-INF/askName.fsp")
+
+"handler" `#=>` scala.continuation.contOption[String, Unit](
+
+    // get "name" request parameter
+    `#$`[javax.servlet.http.HttpServletRequest]("req").getParameter("name"),
+
+    // name parameter has not been supplied: ask
+    `#ref`[Unit]("askNameView"),
+
+    // name parameter has been supplied: say "hello"
+    name => `#let`(
+      "name" -> name,
+      `#ref`("helloView"),
+    ),
   )
+
+`#h|http`(
+  getHandler = `#ref`("handler"),
+  postHandler = `#ref`("handler"),
+)

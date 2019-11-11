@@ -7,16 +7,16 @@
 
   com.example.hello.MainApp.run(
     new java.util.function.Supplier[com.example.hello.HelloWorld]() {
-      def get() = scala.ioc.cast[com.example.hello.HelloWorld](`#ref`("helloWorld"))
+      def get() = `#ref`[com.example.hello.HelloWorld]("helloWorld")
     },
     new java.util.function.Supplier[java.time.ZonedDateTime]() {
-      def get() = scala.ioc.cast[java.time.ZonedDateTime](`#ref`("lazyManager"))
+      def get() = `#ref`[java.time.ZonedDateTime]("lazyManager")
     },
     new java.util.function.Supplier[java.time.ZonedDateTime]() {
-      def get() = scala.ioc.cast[java.time.ZonedDateTime](`#ref`("eagerManager"))
+      def get() = `#ref`[java.time.ZonedDateTime]("eagerManager")
     },
     new java.util.function.Supplier[com.example.hello.DateTimeHelloWorld]() {
-      def get() = scala.ioc.cast[com.example.hello.DateTimeHelloWorld](`#ref`("productiveSeniorManager"))
+      def get() = `#ref`[com.example.hello.DateTimeHelloWorld]("productiveSeniorManager")
     },
   )
 }
@@ -40,5 +40,5 @@
 "productiveSeniorManager" `#=>`
   new com.example.hello.DateTimeHelloWorld(
     "Hello World!",
-    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
+    `#ref!`("lazyManager"),
   )

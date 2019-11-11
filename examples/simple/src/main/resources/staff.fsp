@@ -19,5 +19,5 @@
 "productiveSeniorManager" `#=>`
   com.example.hello.DateTimeHelloWorld(
     "Hello World!",
-    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
+    `#ref!`("lazyManager"),
   )

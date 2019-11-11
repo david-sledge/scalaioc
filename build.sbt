@@ -1,6 +1,6 @@
 ThisBuild / organization := "io.github.david-sledge"
 ThisBuild / scalaVersion := "2.13.1"
-//ThisBuild / version := "1.0.0-alpha.3"
+//ThisBuild / version := "1.0.0-alpha.4"
 
 scalacOptions ++= Seq(
   "-deprecation", "-feature",

@@ -234,6 +234,7 @@
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
   <target name="clean">
     <delete dir="${build.dir}" failonerror="false" />
+    <delete dir="${lib.ivy.dir}" failonerror="false" />
   </target>
 
   <!-- deletes ivy-managed dependecies -->

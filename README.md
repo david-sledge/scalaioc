@@ -19,7 +19,7 @@ IoC/DI Framework Written in Scala
 Add the following dependency to your `build.sbt` file:
 
 ```scala
-libraryDependencies += "io.github.david-sledge" % "scalaioc_2.12" % "1.0.0-alpha.2"
+libraryDependencies += "io.github.david-sledge" % "scalaioc_2.13" % "1.0.0-alpha.3"
 ```
 
 ## Simple Tutorial
@@ -162,7 +162,7 @@ object DateTimeHelloWorld {
 "productiveSeniorManager" `#=>`
   com.example.hello.DateTimeHelloWorld(
     "Hello World!",
-    `#ref!`("lazyManager").asInstanceOf[java.time.ZonedDateTime],
+    `#ref!`("lazyManager"),
   )
 ```
 
@@ -295,7 +295,7 @@ Multiple .fsp files can be specified by passing in multiple `--If <filename>` ar
 
 *work-in-progress*
 
-```#def`([[<namespace name>, ]<local name>, ]<worker definition>)``
+`` `#def`([[<namespace name>, ]<local name>, ]<worker definition>)``
 
 Worker definition must be functions with the follow signature:
 

@@ -1,6 +1,5 @@
 `namespace|scalaioc.xml.element`
 `namespace x|scalaioc.xml`
-`namespace i|scalaioc`
 
 `#x|xml`(
   dtd = "<!DOCTYPE html>",
@@ -8,9 +7,16 @@
     xmlns = "http://www.w3.org/1999/xhtml",
     `#head`(`#title`("IoC Servlet Example")),
     `#body`(
-      `#h1`("IoC Servlet Example"),
+    `#h1`("IoC Servlet Example"),
       `#p`(style = "opacity: 0.5;", "Hello, Scala World!"),
-      `#p`(s"Hello, ${`#i|$`("name")}!"),
+      `#form`(
+        action = "",
+        method = "get",
+        "Got a name? ", `#input`(
+          `type` = "text",
+          name = "name",
+        ),// input
+      ),// form
     ),// body
   ),// html
 )// xml
