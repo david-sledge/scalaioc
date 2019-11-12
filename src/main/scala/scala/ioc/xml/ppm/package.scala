@@ -11,9 +11,7 @@ package object ppm {
 
   private def metaWriteXml(name: String, args: List[Tree]) =
     q"""
-((writer: javax.xml.stream.XMLStreamWriter) => {
-  writer.${TermName(name)}(..$args)
-})(`#scalaioc#$$`("xmlWriter"))
+`#scalaioc#$$`[javax.xml.stream.XMLStreamWriter]("xmlWriter").${TermName(name)}(..$args)
 """
 
   private def postJobContent(args: List[Tree]): Tree = {
@@ -74,17 +72,17 @@ package object ppm {
           metaWriteXml("writeStartDocument", List(named(enc), version))
         else
           q"""
-((writer: javax.xml.stream.XMLStreamWriter) => {
-  if (c contains "enc")
-    writer.writeStartDocument(`#scalaioc#$$`("enc"), ${version})
-  else
-    writer.writeStartDocument(..${
-            if (containsVersion)
-              List(named(ver))
-            else
-              Nil
-          })
-})(`#scalaioc#$$`("xmlWriter"))
+if (c contains "enc")
+  ${metaWriteXml("writeStartDocument", List(q"""`#scalaioc#$$`("enc")""", version))}
+else
+  ${
+    metaWriteXml("writeStartDocument",
+      if (containsVersion)
+        List(named(ver))
+      else
+        Nil
+    )
+  }
 """
       )::
       (
@@ -156,7 +154,7 @@ package object ppm {
           q"""..${postJobContent(leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")))}""",
           metaWriteXml("writeEndElement", Nil),
       )){
-        case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(name)), value))::acc
+        case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(scala.reflect.NameTransformer.decode(name))), value))::acc
       }
     }"""
   }

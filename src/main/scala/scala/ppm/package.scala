@@ -2,7 +2,7 @@ package scala
 
 package object ppm {
 
-  import scala.collection.immutable.Map
+  import scala.collection.immutable.ListMap
   import scala.collection.immutable.ListSet
   import scala.io.Source._
   import scala.reflect.runtime.universe
@@ -22,8 +22,8 @@ package object ppm {
   type NamespacedMacro = (Option[String], String) => Macro
 
   final case class ProcessedArgs(
-    named: Map[String, Tree],
-    duplicates: Map[String, List[Tree]],
+    named: ListMap[String, Tree],
+    duplicates: ListMap[String, List[Tree]],
     missingArguments: Set[String],
     leftovers: Either[ListSet[String], List[Tree]],
   )
@@ -51,7 +51,7 @@ package object ppm {
     val argNames = requiredArgNames ++ optionalArgNames
     // address the named arguments first, then handle the ordinal arguments
     val (named, duplicates, ordinal, ordNames) = args.foldRight(
-        (Map.empty[String, Tree], Map.empty[String, List[Tree]], List.empty[Tree], argNames)
+        (ListMap.empty[String, Tree], ListMap.empty[String, List[Tree]], List.empty[Tree], argNames)
       )(
         (t, acc) => {
           val (map, dups, list, ordArgNames) = acc
@@ -144,8 +144,8 @@ package object ppm {
   case object MissingRequiredArgs extends RequiredOrExcessArgError
 
   val buildErrorMessage = (
-      named: Map[String, Tree],
-      duplicates: Map[String, List[Tree]],
+      named: ListMap[String, Tree],
+      duplicates: ListMap[String, List[Tree]],
       extraNames: Set[String],
       leftovers: Either[ListSet[String], List[Tree]],
       hasUnsupportedArgNames: Boolean,
@@ -189,8 +189,8 @@ package object ppm {
       allowExcessOrdinalArgs: Boolean = false,
       onValid: ProcessedArgs => T = (a: ProcessedArgs) => a,
       onInvalid: (
-          Map[String, Tree],
-          Map[String, List[Tree]],
+          ListMap[String, Tree],
+          ListMap[String, List[Tree]],
           Set[String],
           Either[ListSet[String], List[Tree]],
           Boolean,
@@ -198,8 +198,8 @@ package object ppm {
           RequiredOrExcessArgError,
         ) => T =
           (
-            a: Map[String, Tree],
-            b: Map[String, List[Tree]],
+            a: ListMap[String, Tree],
+            b: ListMap[String, List[Tree]],
             c: Set[String],
             d: Either[ListSet[String], List[Tree]],
             e: Boolean,
@@ -264,8 +264,8 @@ package object ppm {
       onValid: ProcessedArgs => T = (a: ProcessedArgs) => a,
       onInvalid: (
           Option[Tree],
-          Map[String, Tree],
-          Map[String, List[Tree]],
+          ListMap[String, Tree],
+          ListMap[String, List[Tree]],
           Set[String],
           Either[ListSet[String], List[Tree]],
           Boolean,
@@ -276,8 +276,8 @@ package object ppm {
         T =
           (
             thisExpr: Option[Tree],
-            a: Map[String, Tree],
-            b: Map[String, List[Tree]],
+            a: ListMap[String, Tree],
+            b: ListMap[String, List[Tree]],
             c: Set[String],
             d: Either[ListSet[String], List[Tree]],
             hasThisExprError: Boolean,
@@ -316,8 +316,8 @@ package object ppm {
         allowExcessOrdinalArgs,
         onValid,
         (
-          a: Map[String, Tree],
-          b: Map[String, List[Tree]],
+          a: ListMap[String, Tree],
+          b: ListMap[String, List[Tree]],
           c: Set[String],
           d: Either[ListSet[String], List[Tree]],
           e: Boolean,

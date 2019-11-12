@@ -282,35 +282,6 @@ final class Preprocessor {
             )
           }
 
-//          case q"$expr(..$args)" => {
-//
-//            findPropMacro(
-//              Nil,
-//              args,
-//              onFound = (nsName, localName, expr_, args_) => {
-//
-//                getAndApplyMacro(
-//                    nsName,
-//                    localName,
-//                    None,
-//                    List(expr_, Apply(expr, args_)),
-//                    expr_.pos,
-//                    transform,
-//                  )
-//              },
-//              onNotFound =
-//                expr match {
-//                  case Ident(TermName(name)) => {
-//                    handlePrefix(name, tree, None, args, expr.pos)
-//                  }
-//                  case Select(sexpr, TermName(name)) => {
-//                    handlePrefix(name, tree, Some(sexpr), args, expr.pos)
-//                  }
-//                  case _ => super.transform(tree)
-//                },
-//            )
-//          }
-
           case Ident(TermName(name)) => {
             if (extractReferrer(tree)) q"()"
             else handlePrefix(name, tree, None, Nil, Nil, tree.pos)

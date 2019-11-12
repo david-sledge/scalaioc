@@ -15,7 +15,7 @@ package object ppm {
 
   def toWorker(stat: Tree) = {
     q"""
-(c: scala.collection.immutable.Map[Any, Any]) => $stat.asInstanceOf[Any]
+(c: scala.collection.immutable.Map[Any, Any]) => scala.ioc.cast[Any]($stat)
 """
   }
 

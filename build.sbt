@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
       "org.scala-lang" % "scala-reflect" % "2.13.1",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test",
       "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided",
-      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.0" % "runtime",
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.0" % "test,runtime",
     ),
     mainClass in (Compile, packageBin) := Some("scala.ioc.cli.Main"),
   )

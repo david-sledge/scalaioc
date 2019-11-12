@@ -11,27 +11,27 @@ package object ppm {
 
   private def metaWriteJson(name: String, args: List[Tree] = Nil) =
     q"""
-((writer: com.fasterxml.jackson.core.JsonGenerator) => {
-  writer.${TermName(name)}(..$args)
-})(`#scalaioc#$$`("jsonWriter"))
+`#scalaioc#$$`[com.fasterxml.jackson.core.JsonGenerator]("jsonWriter").${TermName(name)}(..$args)
 """
 
   private def postJobValue(treeVal: Tree): Tree = {
 
+    val valueTree = q"value"
+    val argTrees = List(valueTree)
     q"""
-$treeVal match {
-  case _: com.fasterxml.jackson.core.JsonGenerator => ()
-  case num: BigDecimal => ${metaWriteJson("write", List(q"""num"""))}
-  case num: BigInteger => ${metaWriteJson("write", List(q"""num"""))}
-  case bool: Boolean => ${metaWriteJson("write", List(q"""bool"""))}
-  case num: Float => ${metaWriteJson("write", List(q"""num"""))}
-  case num: Double => ${metaWriteJson("write", List(q"""num"""))}
-  case num: Byte => ${metaWriteJson("write", List(q"""num"""))}
-  case num: Short => ${metaWriteJson("write", List(q"""num"""))}
-  case num: Int => ${metaWriteJson("write", List(q"""num"""))}
-  case num: Long => ${metaWriteJson("write", List(q"""num"""))}
-  case _: None => ${metaWriteJson("writeNull")}
-  case _ => ${metaWriteJson("write", List(q"""cdata.toString"""))}
+scala.ioc.cast[Any]($treeVal) match {
+  case value: java.math.BigDecimal => ${metaWriteJson("writeNumber", argTrees)}
+  case value: java.math.BigInteger => ${metaWriteJson("writeNumber", argTrees)}
+  case value: Boolean => ${metaWriteJson("writeBoolean", argTrees)}
+  case value: Float => ${metaWriteJson("writeNumber", argTrees)}
+  case value: Double => ${metaWriteJson("writeNumber", argTrees)}
+  case value: Byte => ${metaWriteJson("writeNumber", argTrees)}
+  case value: Short => ${metaWriteJson("writeNumber", argTrees)}
+  case value: Int => ${metaWriteJson("writeNumber", argTrees)}
+  case value: Long => ${metaWriteJson("writeNumber", argTrees)}
+  case None => ${metaWriteJson("writeNull")}
+  case () => ()
+  case value => ${metaWriteJson("writeString", List(q"value.toString"))}
 }
 """
 
@@ -74,7 +74,7 @@ $treeVal match {
       )){
         case (acc, (name, treeValue)) => metaWriteJson(
           "writeFieldName",
-          List(Literal(Constant(name))),
+          List(Literal(Constant(scala.reflect.NameTransformer.decode(name)))),
         )::postJobValue(treeValue)::acc
       }
     }"""
