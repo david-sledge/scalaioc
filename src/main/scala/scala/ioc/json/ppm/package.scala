@@ -74,7 +74,7 @@ scala.ioc.cast[Any]($treeVal) match {
       )){
         case (acc, (name, treeValue)) => metaWriteJson(
           "writeFieldName",
-          List(Literal(Constant(scala.reflect.NameTransformer.decode(name)))),
+          List(Literal(Constant(name))),
         )::postJobValue(treeValue)::acc
       }
     }"""

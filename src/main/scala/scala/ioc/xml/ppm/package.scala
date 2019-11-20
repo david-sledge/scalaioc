@@ -154,7 +154,7 @@ else
           q"""..${postJobContent(leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")))}""",
           metaWriteXml("writeEndElement", Nil),
       )){
-        case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(scala.reflect.NameTransformer.decode(name))), value))::acc
+        case (acc, (name, value)) => metaWriteXml("writeAttribute", List(Literal(Constant(name)), value))::acc
       }
     }"""
   }

@@ -145,7 +145,11 @@ final class Preprocessor {
 
             onExists = (makro) =>
               try {
-                processApplication(makro(MacroArgs(exprOpt, targs, args, tb, src)))
+                processApplication(makro(MacroArgs(exprOpt, targs, args.map(_ match {
+                  case NamedArg(Ident(TermName(argName)), expr) => NamedArg(Ident(TermName(decode(argName))), expr)
+                  case arg => arg
+                }
+                    ), tb, src)))
               }
               catch {
                 case e: Exception => throw MacroException(e, nsName, localName, src, pos)
