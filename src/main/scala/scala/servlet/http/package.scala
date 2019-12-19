@@ -298,30 +298,17 @@ package object http {
     (allow: Set[String]) =>
       if (handler == None) allow else allow + method
 
-  def createRequestHandler2(
-    getHandler: Option[Map[Any, Any] => Unit] = None,
-    postHandler: Option[Map[Any, Any] => Unit] = None,
-    deleteHandler: Option[Map[Any, Any] => Unit] = None,
-    putHandler: Option[Map[Any, Any] => Unit] = None,
+  def createRequestHandler3(
     methodMap: Map[String, Map[Any, Any] => Unit] = Map.empty,
-    getLastModified: (Map[Any, Any]) => Long = (t: Map[Any, Any]) => -1,
-  )(implicit getTransaction: GetHttpServletTransaction[Map[Any, Any]]): Map[Any, Any] => Unit = {
+    getLastModified: Map[Any, Any] => Long = (t: Map[Any, Any]) => -1,
+  )(
+    implicit getTransaction: GetHttpServletTransaction[Map[Any, Any]]
+  ): Map[Any, Any] => Unit = {
 
-    val handleGet = getHandler.getOrElse(
-      (t: Map[Any, Any]) => handleGetDefault(t)(getTransaction)
-    )
-
-    val handlePost = postHandler.getOrElse(
-      (t: Map[Any, Any]) => handlePostDefault(t)(getTransaction)
-    )
-
-    val handleDelete = deleteHandler.getOrElse(
-      (t: Map[Any, Any]) => handleDeleteDefault(t)(getTransaction)
-    )
-
-    val handlePut = putHandler.getOrElse(
-      (t: Map[Any, Any]) => handlePutDefault(t)(getTransaction)
-    )
+    val getHandler = methodMap.get("GET")
+    val postHandler = methodMap.get("GET")
+    val deleteHandler = methodMap.get("GET")
+    val putHandler = methodMap.get("GET")
 
     val handleHead = (t: Map[Any, Any]) => {
 
@@ -440,6 +427,10 @@ package object http {
         case MethodGet => {
           val lastModified = getLastModified(t)
 
+          val handleGet = getHandler.getOrElse(
+            (t: Map[Any, Any]) => handleGetDefault(t)(getTransaction)
+          )
+
           if (lastModified == -1)
             // servlet doesn't support if-modified-since, no reason
             // to go through further expensive logic
@@ -462,11 +453,17 @@ package object http {
 
         case MethodHead => handleHead(t)
 
-        case MethodPost => handlePost(t)
+        case MethodPost => postHandler.getOrElse(
+            (t: Map[Any, Any]) => handlePostDefault(t)(getTransaction)
+          )(t)
 
-        case MethodPut => handlePut(t)
+        case MethodPut => putHandler.getOrElse(
+          (t: Map[Any, Any]) => handlePutDefault(t)(getTransaction)
+        )(t)
 
-        case MethodDelete => handleDelete(t)
+        case MethodDelete => deleteHandler.getOrElse(
+            (t: Map[Any, Any]) => handleDeleteDefault(t)(getTransaction)
+          )(t)
 
         case MethodOptions => {
 

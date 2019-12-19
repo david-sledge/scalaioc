@@ -4,24 +4,14 @@
 `#embed`("scala/ioc/servlet/http/macroDefs.fsp")
 `#embed`("scala/ioc/xml/macroDefs.fsp")
 
-"helloView" `#=>` `#h|htmlResp`("/WEB-INF/hello.fsp")
-
-"askNameView" `#=>` `#h|htmlResp`("/WEB-INF/askName.fsp")
-
-"handler" `#=>` scala.continuation.contOption[String, Unit](
-
-    // get "name" request parameter
-    `#$`[javax.servlet.http.HttpServletRequest]("req").getParameter("name"),
-
-    // name parameter has not been supplied: ask
-    `#ref`[Unit]("askNameView"),
-
-    // name parameter has been supplied: say "hello"
-    name => `#let`(
-      "name" -> name,
-      `#ref`("helloView"),
-    ),
-  )
+"handler" `#=>` hello.testAndConsumeName[Unit](
+  Option(`#$`[javax.servlet.http.HttpServletRequest]("req").getParameter("name")),
+  name => `#let`(
+    "name" -> name,
+    `#h|htmlResp`("/WEB-INF/hello.fsp"),
+  ),
+  `#h|htmlResp`("/WEB-INF/askName.fsp"),
+)
 
 `#h|http`(
   getHandler = `#ref`("handler"),

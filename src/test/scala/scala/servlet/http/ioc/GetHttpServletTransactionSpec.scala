@@ -28,8 +28,8 @@ class GetHttpServletTransactionSpec extends FlatSpec with Matchers {
       )
     ))
 
-    val httpHandler2 = createRequestHandler2(
-      getHandler = Some((c: Map[Any, Any]) => ())
+    val httpHandler3 = createRequestHandler3(
+      Map("GET" -> ((c: Map[Any, Any]) => ()))
     )(scala.servlet.http.ioc.GetHttpServletTransaction)
 
 //    httpHandler(Map[Any, Any](

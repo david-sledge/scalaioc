@@ -15,39 +15,69 @@ package object ppm {
   def postMethodHandlersJob(namespaceName: Option[String], localName: String)
   (macroArgs: MacroArgs): Tree = {
 
+    val methodMap = "methodMap"
+    val id = "id"
+    val getLastModified = "getLastModified"
+    val optionalArgNames = ListSet(
+      methodMap,
+      id,
+      getLastModified,
+    )
     val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
       exprOpt,
       args,
-      optionalArgNames = ListSet(
-        "getHandler",
-        "postHandler",
-        "deleteHandler",
-        "putHandler",
-        "methodMap",
-        "getLastModified",
-        "id",
-      ),
+      ListSet(),
+      optionalArgNames,
     )
 
-    val id = named.getOrElse("id", q""""requestHandler"""")
-    val handlers = named - "id"
+    val args1 = named.get(getLastModified) match {
+      case Some(tree) => List(NamedArg(
+          Ident(TermName(getLastModified)),
+          q"Some(${scala.ioc.ppm.toWorker(tree)})",
+        ))
+      case _ => Nil
+    }
+
     q"""
 scala.ioc.Factory.setManager(
   factory,
-  $id,
-  scala.servlet.http.createRequestHandler2(..${
-      handlers.foldLeft(List.empty[Tree]) {
-        case (acc, (name, arg)) => {
+  ${named.getOrElse(id, q""""requestHandler"""")},
+  scala.servlet.http.createRequestHandler3(..${
+    named.get(methodMap) match {
+      case Some(tree) => NamedArg(
+          Ident(TermName(methodMap)),
+          tree,
+        )::args1
+      case _ => args1
+    }
+  })(scala.servlet.http.ioc.GetHttpServletTransaction),
+)
+"""
 
-          NamedArg(
-            Ident(TermName(name)),
-            q"Some(${scala.ioc.ppm.toWorker(arg)})",
-          )::acc
+  }
 
-        }
-      }
-    })(scala.servlet.http.ioc.GetHttpServletTransaction),
+  def postMethodMap(namespaceName: Option[String], localName: String)
+  (macroArgs: MacroArgs): Tree = {
+
+    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val ProcessedArgs(named, _, _, leftovers) = validateThisExprAndArgs(
+      exprOpt,
+      args,
+      allowExtraNamedArgs = true,
+      allowExcessOrdinalArgs = true,
+    )
+
+    q"""
+Map[String, Map[Any, Any] => Unit](
+  ..${
+      named.foldLeft(
+        leftovers.getOrElse(throw new Exception("Programmatic error. Flog the developer!")).toList
+      )(
+        (acc, entry) =>
+          q"${Literal(Constant(entry._1))} -> ${scala.ioc.ppm.toWorker(entry._2)}"::acc
+      )
+    }
 )
 """
 

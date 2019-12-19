@@ -24,6 +24,8 @@
   )
 
 `#h|http`(
-  getHandler = `#ref`("handler"),
-  postHandler = `#ref`("handler"),
+  `#h|methods`(
+    GET = `#ref`("handler"),
+    POST = `#ref`("handler"),
+  ),
 )

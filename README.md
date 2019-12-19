@@ -12,7 +12,7 @@ IoC/DI Framework Written in Scala
   - Allow configuration to be fully external to application code.
   - Eliminate the need for annotation-based configuration.
   - Eliminate the need to extend framework classes and interfaces in application code.
-* Allow the framework to be extended using the framework. Developers can create their own worker definitions.
+* Allow the framework to be extended using the framework. Developers can define their own constructs within the framework.
 
 ## Setup
 
