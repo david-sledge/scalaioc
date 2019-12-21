@@ -1,19 +1,13 @@
 package scala.servlet.http
 
+  import ioc.{IocHttpServletTransactionTypeClass => GetTransaction}
+
 import org.scalatest._
 
 import scala.servlet.InjectableServletOutputStream
 import javax.servlet.http._
 
 class packageSpec extends FlatSpec with Matchers {
-
-  implicit object GetTransaction extends scala.servlet.http.GetHttpServletTransaction[(HttpServletRequest, HttpServletResponse)] {
-
-    def getRequest(c: (HttpServletRequest, HttpServletResponse)) = c._1
-
-    def getResponse(c: (HttpServletRequest, HttpServletResponse)) = c._2
-
-  }
 
   "createRequestHandler()" should "return a function" in {
 
@@ -26,9 +20,9 @@ class packageSpec extends FlatSpec with Matchers {
     var status = 0
     var statusMsg = ""
     val httpHandler = createRequestHandler()(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest,
-      new InjectableHttpServletResponse(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest,
+      "resp" -> new InjectableHttpServletResponse(
         sendError = (int, msg) => {
           status = int
           statusMsg = msg
@@ -39,26 +33,26 @@ class packageSpec extends FlatSpec with Matchers {
     status shouldBe 405
     statusMsg shouldBe LocalStrings.getString("http.method_get_not_supported")
 
-    httpHandler.apply(
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "POST"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         sendError = (int, msg) => {
           status = int
           statusMsg = msg
         }
-      )
+      ))
     )
 
     status shouldBe 405
     statusMsg shouldBe LocalStrings.getString("http.method_post_not_supported")
 
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "BLAH"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         sendError = (int, msg) => {
           status = int
           statusMsg = msg
@@ -77,13 +71,13 @@ class packageSpec extends FlatSpec with Matchers {
     var name_ = ""
     var value_ = ""
     var httpHandler = createRequestHandler(
-//      handleGet = (_, _) => {},
+//        Map("GET" -> ((_) => {})),
     )(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         setHeader = (name, value) => {
           name_ = name
           value_ = value
@@ -95,13 +89,13 @@ class packageSpec extends FlatSpec with Matchers {
     value_.split(", ").toSet shouldBe Set("OPTIONS", "TRACE")
 
     httpHandler = createRequestHandler(
-      handleGet = (_, _) => {},
+      Map("GET" -> ((_) => {})),
     )(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         setHeader = (name, value) => {
           name_ = name
           value_ = value
@@ -113,13 +107,13 @@ class packageSpec extends FlatSpec with Matchers {
     value_.split(", ").toSet shouldBe Set("OPTIONS", "TRACE", "GET", "HEAD")
 
     httpHandler = createRequestHandler(
-      handlePost = (_, _) => {},
+      Map("POST" -> ((_) => {})),
     )(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         setHeader = (name, value) => {
           name_ = name
           value_ = value
@@ -131,16 +125,18 @@ class packageSpec extends FlatSpec with Matchers {
     value_.split(", ").toSet shouldBe Set("POST", "OPTIONS", "TRACE")
 
     httpHandler = createRequestHandler(
-      handleDelete = (_, _) => {},
-      handleGet = (_, _) => {},
-      handlePost = (_, _) => {},
-      handlePut = (_, _) => {},
+      Map(
+        "DELETE" -> ((_) => {}),
+        "GET" -> ((_) => {}),
+        "POST" -> ((_) => {}),
+        "PUT" -> ((_) => {}),
+      ),
     )(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "OPTIONS"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         setHeader = (name, value) => {
           name_ = name
           value_ = value
@@ -159,11 +155,11 @@ class packageSpec extends FlatSpec with Matchers {
     var statusMsg = ""
 
     val httpHandler = createRequestHandler()(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "HEAD"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         sendError = (int, msg) => {
           status = int
           statusMsg = msg
@@ -184,13 +180,13 @@ class packageSpec extends FlatSpec with Matchers {
     var statusMsg = ""
 
     val httpHandler = createRequestHandler(
-      handleGet = (req, resp) => {}
+      Map("GET" -> ((_) => {})),
     )(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "HEAD"
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         containsHeader = name => false,
         setContentLength = _ => {},
       )
@@ -204,12 +200,12 @@ class packageSpec extends FlatSpec with Matchers {
     var statusMsg = ""
 
     val httpHandler = createRequestHandler()(GetTransaction)
-    httpHandler.apply((
-      new InjectableHttpServletRequest(
+    httpHandler.apply(Map(
+      "req" -> new InjectableHttpServletRequest(
         method = "TRACE",
         requestUri = "test",
       ),
-      new InjectableHttpServletResponse(
+      "resp" -> new InjectableHttpServletResponse(
         setContentType = _ => {},
         setContentLength = _ => {},
         outputStream = new InjectableServletOutputStream(),

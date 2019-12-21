@@ -7,16 +7,11 @@ package object ioc {
   import scala.ioc.servlet.IocServlet.RequestKey
   import scala.ioc.servlet.IocServlet.ResponseKey
 
-  implicit object GetHttpServletTransaction extends scala.servlet.http.GetHttpServletTransaction[Map[Any, Any]] {
-
-    def getRequest(c: Map[Any, Any]) = {
-      c(RequestKey).asInstanceOf[HttpServletRequest]
-    }
-
-    def getResponse(c: Map[Any, Any]) = {
-      c(ResponseKey).asInstanceOf[HttpServletResponse]
-    }
-
-  }
+  implicit val IocHttpServletTransactionTypeClass =
+    HttpServletTransactionTypeClass[Map[Any, Any]](
+      c => c(RequestKey).asInstanceOf[HttpServletRequest],
+      c => c(ResponseKey).asInstanceOf[HttpServletResponse],
+      (c, resp) => c + (ResponseKey -> resp),
+    )
 
 }

@@ -43,7 +43,7 @@ package object ppm {
 scala.ioc.Factory.setManager(
   factory,
   ${named.getOrElse(id, q""""requestHandler"""")},
-  scala.servlet.http.createRequestHandler3(..${
+  scala.servlet.http.createRequestHandler(..${
     named.get(methodMap) match {
       case Some(tree) => NamedArg(
           Ident(TermName(methodMap)),
@@ -51,7 +51,7 @@ scala.ioc.Factory.setManager(
         )::args1
       case _ => args1
     }
-  })(scala.servlet.http.ioc.GetHttpServletTransaction),
+  })(scala.servlet.http.ioc.IocHttpServletTransactionTypeClass),
 )
 """
 
