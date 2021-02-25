@@ -22,11 +22,9 @@ object Main extends App {
         args match {
 
           // make sure there's a follow up argument
-          case (aarg::tail) => {
+          case aarg::tail =>
 
             (tail, IocArgValues(aarg::iocArgValues.filenames, iocArgValues.workername))
-
-          }
 
           case _ => throw new Exception(s"No config file specified for '$prefix$arg'")
 
@@ -40,7 +38,7 @@ object Main extends App {
         args match {
 
           // make sure there's a follow up argument
-          case (aarg::tail) => {
+          case aarg::tail =>
 
             iocArgValues.workername match {
 
@@ -51,8 +49,6 @@ object Main extends App {
               case _ =>
                 (tail, IocArgValues(iocArgValues.filenames, Some(aarg)))
             }
-
-          }
 
           case _ => throw new Exception(s"No workername specified for '$prefix$arg'")
 
@@ -70,11 +66,9 @@ object Main extends App {
   private def extractIocArgs(
       args: List[String],
       splitArgs: (IocArgValues, List[String]),
-    ): (IocArgValues, List[String]) = {
+    ): (IocArgValues, List[String]) = args match {
 
-    args match {
-
-      case (arg::tail) => {
+      case arg::tail =>
 
         val (extracted, filtered) = splitArgs
 
@@ -101,14 +95,10 @@ object Main extends App {
 
         }
 
-      }
-
       // no more args; return the results
       case _ => splitArgs
 
     }
-
-  }
 
   private val (iocArgValues, filtered) = extractIocArgs(args.toList, (IocArgValues(), List.empty[String]))
 

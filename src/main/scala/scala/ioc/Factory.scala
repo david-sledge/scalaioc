@@ -33,24 +33,24 @@ final class Factory()
   /**
    * The lazy ones just give you the same-old same-old.
    */
-  def putToWork(id: Any, c: Map[Any, Any] = Map.empty) = getResult(true, id, c)
+  def putToWork(id: Any, c: Map[Any, Any] = Map.empty): Any = getResult(useCachedValue = true, id, c)
 
   /**
    * Makes even the lazy ones work hard.
    */
-  def crackTheWhip(id: Any, c: Map[Any, Any] = Map.empty) = getResult(false, id, c)
+  def crackTheWhip(id: Any, c: Map[Any, Any] = Map.empty): Any = getResult(useCachedValue = false, id, c)
 
   /**
    * Didn't we already hire this gal?
    */
-  def hasManager(id: Any) = managers contains id
+  def hasManager(id: Any): Boolean = managers contains id
 
   /**
    * Look up someone in the company directory
    */
   def getManager(id: Any): Option[Map[Any, Any] => Any] = {
     managers.get(id) match {
-      case Some(EvaledThunk(value, worker)) => Some(worker)
+      case Some(EvaledThunk(_, worker)) => Some(worker)
       case Some(Thunk(worker)) => Some(worker)
       case Some(Strict(worker)) => Some(worker)
       case _ => None
@@ -60,20 +60,20 @@ final class Factory()
   /**
    * Get the managers on roll.
    */
-  def getManagerIds = managers.keys
+  def getManagerIds: Iterable[Any] = managers.keys
 
-  def clearCache =
+  def clearCache(): Unit =
     managers.foreach {
       case (id, EvaledThunk(_, worker)) => managers += id -> Thunk(worker)
       case _ => ()
     }
 
-  def fireManager(id: Any) = {
+  def fireManager(id: Any): Unit = {
     managers -= id
     ()
   }
 
-  def fireEveryone() = {
+  def fireEveryone(): Unit = {
     managers.clear()
   }
 }
@@ -94,7 +94,7 @@ object Factory {
    * This guy?  Way too eager.  He'll work hard just to produce something you've
    * he's already given you.
    */
-  def setManager(factory: Factory, id: Any, worker: Map[Any, Any] => Any) = {
+  def setManager(factory: Factory, id: Any, worker: Map[Any, Any] => Any): Unit = {
     factory.managers += id -> Strict(worker)
     ()
   }
@@ -104,7 +104,7 @@ object Factory {
    * first time you ask him to, but after that he just hands you stuff he's
    * already produced unless you force him to do otherwise.
    */
-  def setLazyManager(factory: Factory, id: Any, worker: Map[Any, Any] => Any) = {
+  def setLazyManager(factory: Factory, id: Any, worker: Map[Any, Any] => Any): Unit = {
     factory.managers += id -> Thunk(worker)
     ()
   }

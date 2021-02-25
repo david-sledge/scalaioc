@@ -3,7 +3,7 @@ package scala
 package object continuation {
   final case class OptionC[T, R](onNone: () => R, onSome: T => R)
 
-  def contOption[T, R](value: T, onNone: => R, onSome: T => R) = {
+  def contOption[T, R](value: T, onNone: => R, onSome: T => R): R = {
 
     if (value == null)
       onNone

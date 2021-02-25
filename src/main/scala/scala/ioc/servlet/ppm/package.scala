@@ -1,20 +1,16 @@
 package scala.ioc.servlet
 
-import scala.collection.immutable.ListSet
-import scala.ioc.ppm._
-import scala.ppm._
-import scala.reflect.runtime.universe
-  import universe._
-import scala.tools.reflect.ToolBox
-
 import javax.servlet.ServletContext
+import scala.collection.immutable.ListSet
+import scala.ppm._
+import scala.reflect.runtime.universe._
 
 package object ppm {
 
   def embedImpl(ctx: ServletContext)(namespaceName: Option[String], localName: String)
   (macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val MacroArgs(exprOpt, _, args, tb, _) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         exprOpt,
         args,
@@ -23,7 +19,7 @@ package object ppm {
       )
 
     named("path") match {
-      case Literal(Constant(path: String)) => {
+      case Literal(Constant(path: String)) =>
         val encoding =
           if (named contains "encoding")
             named("encoding") match {
@@ -34,7 +30,6 @@ package object ppm {
           else "utf-8"
 
         tb.parse(scala.io.Source.fromInputStream(ctx.getResourceAsStream(path), encoding).mkString)
-      }
       case _ => throw new IllegalArgumentException(
           "'path' argument must be a string literal")
     }
@@ -44,7 +39,7 @@ package object ppm {
   def postJobResource(namespaceName: Option[String], localName: String)
   (macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
         exprOpt,
         args,
@@ -52,7 +47,6 @@ package object ppm {
         ListSet("encoding"),
       )
 
-    val pathExpr = named("path")
     named.get("encoding") match {
       case Some(encExpr) => q"""scala.ioc.ppm.staffFactoryFromStream(
 ${exprOpt.get}.getResourceAsStream(${named("path")}),

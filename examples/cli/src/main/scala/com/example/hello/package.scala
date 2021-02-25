@@ -1,8 +1,5 @@
 package com.example
 
-import scala.ioc.ppm._
-import scala.ioc.Factory
-
 import java.time.ZonedDateTime
 
 package object hello {
@@ -12,7 +9,7 @@ package object hello {
     dateTime0: => ZonedDateTime,
     anotherDateTime0: => ZonedDateTime,
     dateTimeHelloWorld0: => DateTimeHelloWorld,
-  ) = {
+  ): Unit = {
 
     // put the "helloWorld" manager to work and get the fruits of her labor
     obj0.printMessage

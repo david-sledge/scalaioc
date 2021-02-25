@@ -1,7 +1,7 @@
 package scala.ioc
 
 import scala.language.experimental.{macros => smacros}
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox
 
 package object macros {
 
@@ -9,7 +9,7 @@ package object macros {
 
   val DefaultEnc = "utf-8"
 
-  def refImpl(c: Context)(id: c.Tree, name: String) = {
+  def refImpl(c: whitebox.Context)(id: c.Tree, name: String): c.universe.Tree = {
 
     import c.universe._
 
@@ -17,9 +17,7 @@ package object macros {
 
   }
 
-  def refStrictImpl(c: Context)(id: c.Tree) = {
-
-    import c.universe._
+  def refStrictImpl(c: whitebox.Context)(id: c.Tree): c.universe.Tree = {
 
     refImpl(c)(id, "crackTheWhip")
 
@@ -27,9 +25,7 @@ package object macros {
 
   def refF(id: Any): Any = macro refStrictImpl
 
-  def refLazyImpl(c: Context)(id: c.Tree) = {
-
-    import c.universe._
+  def refLazyImpl(c: whitebox.Context)(id: c.Tree): c.universe.Tree = {
 
     refImpl(c)(id, "putToWork")
 
@@ -37,7 +33,7 @@ package object macros {
 
   def ref(id: Any): Any = macro refLazyImpl
 
-  def vrefImpl(c: Context)(id: c.Tree) = {
+  def vrefImpl(c: whitebox.Context)(id: c.Tree): c.universe.Tree = {
 
     import c.universe._
 
@@ -47,12 +43,12 @@ package object macros {
 
   def $(id: Any): Any = macro vrefImpl
 
-  def embedImpl(c: Context)(path: c.Tree, enc: c.Tree) = {
+  def embedImpl(c: whitebox.Context)(path: c.Tree, enc: c.Tree): c.Tree = {
 
     import c.universe._
 
     path match {
-      case Literal(Constant(path: String)) => {
+      case Literal(Constant(path: String)) =>
         val encoding =
           enc match {
             case Literal(Constant(encoding: String)) => encoding
@@ -68,7 +64,6 @@ package object macros {
         catch {
           case e: Exception => throw new Exception(path, e)
         }
-      }
       case _ => throw new IllegalArgumentException(
           "'path' argument must be a string literal")
     }
@@ -77,7 +72,7 @@ package object macros {
 
   def embed(path: String, enc: String = DefaultEnc): Any = macro embedImpl
 
-  def resourceImpl(c: Context)(path: c.Tree, enc: c.Tree) = {
+  def resourceImpl(c: whitebox.Context)(path: c.Tree, enc: c.Tree): c.universe.Tree = {
 
     import c.universe._
 
@@ -91,14 +86,13 @@ package object macros {
     code: String,
     factory: Factory = Factory(),
     src: Option[String] = None,
-  ) = {
+  ): Factory = {
 
-    import scala.ioc._
-    import scala.tools.reflect.ToolBox
     import scala.reflect.runtime.universe._
+    import scala.tools.reflect.ToolBox
 
     // obtain toolbox
-    val tb = runtimeMirror(this.getClass().getClassLoader).mkToolBox(options = "")
+    val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
 
     try {
       // generate the AST
@@ -122,24 +116,29 @@ package object macros {
     fileName: String,
     encoding: String = DefaultEnc,
     factory: Factory = Factory(),
-  ) = staffFactory(
-      fromFile(fileName, encoding).mkString,
+  ): Factory = {
+    val source = fromFile(fileName, encoding)
+    val string = source.mkString
+    source.close
+    staffFactory(
+      string,
       factory,
       Some(fileName),
     )
+  }
 
   def staffFactoryFromStream(
     stream: java.io.InputStream,
     encoding: String = DefaultEnc,
     factory: Factory = Factory(),
     src: Option[String] = None,
-  ) = staffFactory(fromInputStream(stream, encoding).mkString, factory, src)
+  ): Factory = staffFactory(fromInputStream(stream, encoding).mkString, factory, src)
 
   def staffFactoryFromResource(
     path: String,
     enc: String = DefaultEnc,
     factory: Factory = Factory(),
-  ) = staffFactoryFromStream(
+  ): Factory = staffFactoryFromStream(
       this.getClass.getClassLoader.getResourceAsStream(path),
       enc,
       factory,
@@ -149,9 +148,8 @@ package object macros {
   object WishList {
 
     import scala.language.experimental.{macros => smacros}
-    import scala.reflect.macros.whitebox.Context
 
-    def toWorker(c: Context)(stat: c.Tree) = {
+    def toWorker(c: whitebox.Context)(stat: c.Tree): c.universe.Tree = {
 
       import c.universe._
 
@@ -160,7 +158,7 @@ package object macros {
   """
     }
 
-    def assign(c: Context)(work: c.Tree, methodName: String) = {
+    def assign(c: whitebox.Context)(work: c.Tree, methodName: String): c.universe.Tree = {
 
       import c.universe._
 
@@ -170,17 +168,13 @@ package object macros {
 
     }
 
-    def assignImpl(c: Context)(work: c.Tree) = {
-
-      import c.universe._
+    def assignImpl(c: whitebox.Context)(work: c.Tree): c.universe.Tree = {
 
       assign(c)(work, "setManager")
 
     }
 
-    def assignThunkImpl(c: Context)(work: c.Tree) = {
-
-      import c.universe._
+    def assignThunkImpl(c: whitebox.Context)(work: c.Tree): c.universe.Tree = {
 
       assign(c)(work, "setLazyManager")
 
@@ -191,7 +185,7 @@ package object macros {
       def *=(work: Any): Unit = macro assignThunkImpl
     }
 
-    def letImpl(c: Context)(lets: c.Tree*)(last: c.Tree) = {
+    def letImpl(c: whitebox.Context)(lets: c.Tree*)(last: c.Tree): c.Tree = {
 
       import c.universe._
 

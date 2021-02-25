@@ -1,7 +1,6 @@
 package com.example.hello
 
 import scala.ioc.ppm._
-import scala.ioc.Factory
 
 import java.time.ZonedDateTime
 

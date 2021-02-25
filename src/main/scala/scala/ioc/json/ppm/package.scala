@@ -1,11 +1,8 @@
 package scala.ioc.json
 
-import scala.ioc.ppm._
 import scala.collection.immutable.ListSet
 import scala.ppm._
-import scala.reflect.runtime.universe
-  import universe._
-import scala.tools.reflect.ToolBox
+import scala.reflect.runtime.universe._
 
 package object ppm {
 
@@ -42,7 +39,7 @@ scala.ioc.cast[Any]($treeVal) match {
       localName: String
     )(macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val MacroArgs(exprOpt, _, args, tb, src) = macroArgs
     val value = "value"
     val ProcessedArgs(named, _, _, _) =
       validateThisExprAndArgs(
@@ -58,8 +55,7 @@ scala.ioc.cast[Any]($treeVal) match {
   def postJobObject(namespaceName: Option[String] = None, localName: String)
   (macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
-    val exprIsPresent = exprOpt != None
+    val MacroArgs(exprOpt, _, args, tb, src) = macroArgs
     val ProcessedArgs(named, _, _, _) =
       validateThisExprAndArgs(
           exprOpt,
@@ -83,8 +79,7 @@ scala.ioc.cast[Any]($treeVal) match {
   def postJobArray(namespaceName: Option[String] = None, localName: String)
   (macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
-    val exprIsPresent = exprOpt != None
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
     val ProcessedArgs(_, _, _, leftovers) =
       validateThisExprAndArgs(
           exprOpt,
@@ -93,13 +88,11 @@ scala.ioc.cast[Any]($treeVal) match {
         )
 
     q"""..${
-      metaWriteJson("writeStartArray")::(
-        leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")).foldLeft(
-          List(metaWriteJson("writeEndArray"))
-        ){
-          case (acc, treeValue) => postJobValue(treeValue)::acc
-        }
-      )
+      metaWriteJson("writeStartArray"):: leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")).foldLeft(
+        List(metaWriteJson("writeEndArray"))
+      ){
+        case (acc, treeValue) => postJobValue(treeValue)::acc
+      }
     }"""
 
   }

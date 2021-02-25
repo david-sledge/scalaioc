@@ -1,14 +1,8 @@
 package scala.servlet.http.ioc
 
 import scala.collection.immutable.ListSet
-import scala.collection.immutable.ListMap
-import scala.ioc.ppm._
 import scala.ppm._
-import scala.reflect.runtime.universe
-  import universe._
-import scala.tools.reflect.ToolBox
-
-import javax.servlet.ServletContext
+import scala.reflect.runtime.universe._
 
 package object ppm {
 
@@ -23,7 +17,7 @@ package object ppm {
       id,
       getLastModified,
     )
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
       exprOpt,
       args,
@@ -72,7 +66,7 @@ scala.ioc.Factory.setManager(
 Map[String, Map[Any, Any] => Unit](
   ..${
       named.foldLeft(
-        leftovers.getOrElse(throw new Exception("Programmatic error. Flog the developer!")).toList
+        leftovers.getOrElse(throw new Exception("Programmatic error. Flog the developer!"))
       )(
         (acc, entry) =>
           q"${Literal(Constant(entry._1))} -> ${scala.ioc.ppm.toWorker(entry._2)}"::acc
@@ -86,7 +80,7 @@ Map[String, Map[Any, Any] => Unit](
   def postHtmlPageResponseJob(namespaceName: Option[String], localName: String)
   (macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
     val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
       exprOpt,
       args,

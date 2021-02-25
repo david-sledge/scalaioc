@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 class DateTimeHelloWorld(message: String, val dateTime: ZonedDateTime)
 {
-  def printMessage = {
+  def printMessage() = {
     println(s"Your Message : $message\nI was given the specific time of $dateTime.")
   }
 }

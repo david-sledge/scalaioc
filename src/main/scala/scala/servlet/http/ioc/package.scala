@@ -7,7 +7,7 @@ package object ioc {
   import scala.ioc.servlet.IocServlet.RequestKey
   import scala.ioc.servlet.IocServlet.ResponseKey
 
-  implicit val IocHttpServletTransactionTypeClass =
+  implicit val IocHttpServletTransactionTypeClass: HttpServletTransactionTypeClass[Map[Any, Any]] =
     HttpServletTransactionTypeClass[Map[Any, Any]](
       c => c(RequestKey).asInstanceOf[HttpServletRequest],
       c => c(ResponseKey).asInstanceOf[HttpServletResponse],

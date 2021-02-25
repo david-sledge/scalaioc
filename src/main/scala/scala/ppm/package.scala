@@ -1,5 +1,7 @@
 package scala
 
+import scala.reflect.runtime.universe
+
 package object ppm {
 
   import scala.collection.immutable.ListMap
@@ -47,7 +49,7 @@ package object ppm {
       args: List[Tree],
       requiredArgNames: ListSet[String] = ListSet.empty,
       optionalArgNames: ListSet[String] = ListSet.empty,
-    ) = {
+    ): ProcessedArgs = {
     val argNames = requiredArgNames ++ optionalArgNames
     // address the named arguments first, then handle the ordinal arguments
     val (named, duplicates, ordinal, ordNames) = args.foldRight(
@@ -58,7 +60,7 @@ package object ppm {
 
           t match {
             // named argument
-            case NamedArg(Ident(TermName(name)), expr) => {
+            case NamedArg(Ident(TermName(name)), expr) =>
               if (map contains name) {
                 (
                   // remove it from the map
@@ -86,7 +88,6 @@ package object ppm {
                   list,
                   ordArgNames - name
                 )
-            }
 
             // unnamed argument
             case _ => (
@@ -125,7 +126,7 @@ package object ppm {
         // don't care about the optional argument names because they're... optional
         val unusedRequiredArgNames = ordNames0 diff optionalArgNames
 
-        if (unusedRequiredArgNames.size > 0) {
+        if (unusedRequiredArgNames.nonEmpty) {
           // required arguments that were not supplied
           Left(unusedRequiredArgNames)
         }
@@ -143,7 +144,7 @@ package object ppm {
   case object ExcessiveOrdinalArgs extends RequiredOrExcessArgError
   case object MissingRequiredArgs extends RequiredOrExcessArgError
 
-  val buildErrorMessage = (
+  val buildErrorMessage: (ListMap[String, universe.Tree], ListMap[String, List[universe.Tree]], Set[String], Either[ListSet[String], List[universe.Tree]], Boolean, Boolean, RequiredOrExcessArgError) => String = (
       named: ListMap[String, Tree],
       duplicates: ListMap[String, List[Tree]],
       extraNames: Set[String],
@@ -173,7 +174,7 @@ package object ppm {
         }'"::errorMsgs1
     else errorMsgs1
 
-    if (errorMsgs2.size > 0)
+    if (errorMsgs2.nonEmpty)
       s"""macro call ${errorMsgs2.mkString("; ")}"""
     else
       ""
@@ -187,7 +188,7 @@ package object ppm {
       allowExtraNamedArgs: Boolean = false,
       allowDuplicateArgs: Boolean = false,
       allowExcessOrdinalArgs: Boolean = false,
-      onValid: ProcessedArgs => T = (a: ProcessedArgs) => a,
+      onValid: ProcessedArgs => T = (a: ProcessedArgs) => a : ProcessedArgs,
       onInvalid: (
           ListMap[String, Tree],
           ListMap[String, List[Tree]],
@@ -206,7 +207,7 @@ package object ppm {
             f: Boolean,
             g: RequiredOrExcessArgError,
           ) => throw new Exception(buildErrorMessage(a, b, c, d, e, f, g)),
-    ) = {
+    ): Any = {
 
     val processedArgs@ProcessedArgs(named, duplicates, extraNames, leftovers) =
       processArgs(
@@ -218,13 +219,13 @@ package object ppm {
     val requiredOrExcessArgError = 
       if (leftovers.isLeft)
         MissingRequiredArgs
-      else if (leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")).size > 0 && !allowExcessOrdinalArgs)
+      else if (leftovers.getOrElse(throw new Exception("Programmatic error: flog the developer!")).nonEmpty && !allowExcessOrdinalArgs)
         ExcessiveOrdinalArgs
       else
         NoError
 
-    lazy val extraNamedArgError = !allowExtraNamedArgs && extraNames.size > 0
-    lazy val duplicateArgError = !allowDuplicateArgs && duplicates.size > 0
+    lazy val extraNamedArgError = !allowExtraNamedArgs && extraNames.nonEmpty
+    lazy val duplicateArgError = !allowDuplicateArgs && duplicates.nonEmpty
 
     if (requiredOrExcessArgError != NoError ||
         extraNamedArgError ||
@@ -261,7 +262,7 @@ package object ppm {
       allowExtraNamedArgs: Boolean = false,
       allowDuplicateArgs: Boolean = false,
       allowExcessOrdinalArgs: Boolean = false,
-      onValid: ProcessedArgs => T = (a: ProcessedArgs) => a,
+      onValid: ProcessedArgs => T = (a: ProcessedArgs) => a : ProcessedArgs,
       onInvalid: (
           Option[Tree],
           ListMap[String, Tree],
@@ -288,7 +289,7 @@ package object ppm {
 
           throw new Exception(s"${
             if (hasThisExprError) s"${
-              if (thisExpr == None)
+              if (thisExpr.isEmpty)
                 missingExprErrorMessage
               else
                 unsupportedExprErrorMessage
@@ -298,9 +299,9 @@ package object ppm {
           }${buildErrorMessage(a, b, c, d, e, f, g)}")
 
         },
-    ) = {
+    ): Any = {
 
-    lazy val exprIsMissing = thisExpr == None
+    lazy val exprIsMissing = thisExpr.isEmpty
     lazy val hasThisExprError = thisExprPresence match {
         case Forbidden => !exprIsMissing
         case Required => exprIsMissing
@@ -364,15 +365,16 @@ package object ppm {
   }
 
   // TODO:  scaladoc
-  def executeFromFile[T](fileName: String, encoding: String = "utf-8", preprocessor: Preprocessor) =
+  def executeFromFile[T](fileName: String, encoding: String = "utf-8", preprocessor: Preprocessor): Nothing =
+  // TODO: close source
     execute(fromFile(fileName, encoding).mkString, preprocessor, Some(fileName))
 
   // TODO:  scaladoc
-  def executeFromResource[T](path: String, encoding: String = "utf-8", preprocessor: Preprocessor) =
+  def executeFromResource[T](path: String, encoding: String = "utf-8", preprocessor: Preprocessor): Nothing =
     executeFromStream(getClass.getClassLoader.getResourceAsStream(path), encoding, preprocessor, Some(path))
 
   // TODO:  scaladoc
-  def executeFromStream[T](stream: java.io.InputStream, encoding: String = "utf-8", preprocessor: Preprocessor, src: Option[String] = None) =
+  def executeFromStream[T](stream: java.io.InputStream, encoding: String = "utf-8", preprocessor: Preprocessor, src: Option[String] = None): Nothing =
     execute(scala.io.Source.fromInputStream(stream, encoding).mkString, preprocessor, src)
 
 }

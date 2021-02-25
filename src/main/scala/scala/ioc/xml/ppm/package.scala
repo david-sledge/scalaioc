@@ -1,11 +1,9 @@
 package scala.ioc.xml
 
-import scala.ioc.ppm._
 import scala.collection.immutable.ListSet
 import scala.ppm._
 import scala.reflect.runtime.universe
-  import universe._
-import scala.tools.reflect.ToolBox
+import scala.reflect.runtime.universe._
 
 package object ppm {
 
@@ -36,7 +34,7 @@ package object ppm {
       localName: String
     )(macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
     val enc = "enc"
     val ver = "ver"
     val dtd = "dtd"
@@ -50,7 +48,7 @@ package object ppm {
 
     val unknownArgs = named.keySet diff ListSet(enc, ver, dtd)
 
-    if (unknownArgs.size > 0)
+    if (unknownArgs.nonEmpty)
       throw new Exception(s"unknown arguments: '${unknownArgs.mkString("', '")}'")
 
     val contentsAndEndDocument = List(
@@ -111,9 +109,9 @@ else
 
   }
 
-  def postJobCdata = postJobCharacterData("writeCData")_
+  def postJobCdata: (Option[String], String) => MacroArgs => universe.Tree = postJobCharacterData("writeCData")
 
-  def postJobComment = postJobCharacterData("writeComment")_
+  def postJobComment: (Option[String], String) => MacroArgs => universe.Tree = postJobCharacterData("writeComment")
 
   def postJobProcInstr(namespaceName: Option[String], localName: String)
   (macroArgs: MacroArgs): Tree = {
@@ -138,8 +136,7 @@ else
   def postJobElement(namespaceName: Option[String] = None, localName: String)
   (macroArgs: MacroArgs): Tree = {
 
-    val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
-    val exprIsPresent = exprOpt != None
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
     val ProcessedArgs(named, _, _, leftovers) =
       validateThisExprAndArgs(
           exprOpt,

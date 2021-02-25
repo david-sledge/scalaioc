@@ -1,11 +1,10 @@
 package scala.ioc
 
-import scala.ppm._
 import scala.collection.immutable.ListSet
 import scala.io.Source._
+import scala.ppm._
 import scala.reflect.runtime.universe
-  import universe._
-import scala.tools.reflect.ToolBox
+import scala.reflect.runtime.universe._
 
 package object ppm {
 
@@ -13,13 +12,13 @@ package object ppm {
 
   val ScalaIocNamespaceName = "scalaioc"
 
-  def toWorker(stat: Tree) = {
+  def toWorker(stat: Tree): universe.Tree = {
     q"""
 (c: scala.collection.immutable.Map[Any, Any]) => scala.ioc.cast[Any]($stat)
 """
   }
 
-  def populateStaffingMacros(preprocessor: Preprocessor = Preprocessor()) = {
+  def populateStaffingMacros(preprocessor: Preprocessor = Preprocessor()): Preprocessor = {
 
     val worker = "worker"
     val id = "id"
@@ -80,27 +79,27 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(wo
 
     preprocessor.addMacro(Some(ScalaIocNamespaceName),
         Some("let"),
-        ((namespaceName, localName) => (macroArgs) => {
+        (namespaceName, _) => macroArgs => {
 
           val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
 
           args.foldRight(EmptyTree)((block, acc) => {
             acc match {
               case EmptyTree => block
-              case _ => q"""${toWorker(acc)}(c + (${block}))"""
+              case _ => q"""${toWorker(acc)}(c + ($block))"""
             }
           })
 
-        })
+        }
     )
 
     preprocessor.addMacro(
       Some(ScalaIocNamespaceName),
       Some("$"),
-      (namespaceName, localName) =>
-        (macroArgs) => {
+      (_, _) =>
+        macroArgs => {
 
-          val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+          val MacroArgs(exprOpt, targs, args, _, src) = macroArgs
           val ProcessedArgs(named, _, _, _) =
             validateThisExprAndArgs(
               exprOpt,
@@ -112,7 +111,7 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(wo
           val rexpr = q"scala.ioc.cast"
 
           targs match {
-            case targ::rest => Apply(TypeApply(rexpr, List(targ)), rargs)
+            case targ:: _ => Apply(TypeApply(rexpr, List(targ)), rargs)
             case _ => Apply(rexpr, rargs)
           }
 
@@ -122,10 +121,10 @@ scala.ioc.Factory.${TermName(name)}(factory, ${exprOpt.get}, ${toWorker(named(wo
     preprocessor.addMacro(
         Some(ScalaIocNamespaceName),
         Some("resource"),
-        (namespaceName, localName) =>
-          (macroArgs) => {
+        (_, _) =>
+          macroArgs => {
 
-            val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+            val MacroArgs(exprOpt, _, args, _, _) = macroArgs
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 exprOpt,
                 args,
@@ -148,14 +147,14 @@ factory = factory, preprocessor = preprocessor)"""
     preprocessor.addMacro(
         Some(ScalaIocNamespaceName),
         Some("def"),
-        (namespaceName, localName) =>
-          (macroArgs) => {
+        (_, _) =>
+          macroArgs => {
 
-            val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+            val MacroArgs(exprOpt, _, args, tb, _) = macroArgs
             val localName = "localName"
             val defn = "defn"
             val ns = "ns"
-            val ProcessedArgs(named, _, _, leftovers) = validateThisExprAndArgs(
+            val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
               exprOpt,
               args.reverse,
               ListSet(defn),
@@ -189,10 +188,10 @@ factory = factory, preprocessor = preprocessor)"""
     preprocessor.addMacro(
         Some(ScalaIocNamespaceName),
         Some("embed"),
-        (namespaceName, localName) =>
-          (macroArgs) => {
+        (_, _) =>
+          macroArgs => {
 
-            val MacroArgs(exprOpt, targs, args, tb, src) = macroArgs
+            val MacroArgs(exprOpt, _, args, tb, _) = macroArgs
             val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
                 exprOpt,
                 args,
@@ -201,7 +200,7 @@ factory = factory, preprocessor = preprocessor)"""
               )
   
             named(path) match {
-              case Literal(Constant(path: String)) => {
+              case Literal(Constant(path: String)) =>
                 val encoding =
                   if (named contains enc)
                     named(enc) match {
@@ -213,7 +212,6 @@ factory = factory, preprocessor = preprocessor)"""
 
                 val code = fromInputStream(getClass.getClassLoader.getResourceAsStream(path), encoding).mkString
                 tb.parse(code)
-              }
               case _ => throw new IllegalArgumentException(
                   "'path' argument must be a string literal")
             }
@@ -237,16 +235,17 @@ factory = factory, preprocessor = preprocessor)"""
 
   // TODO:  scaladoc
   def staffFactoryFromFile(fileName: String, encoding: String = DefaultEnc, factory: Factory = Factory()
-      , preprocessor: Preprocessor = Preprocessor()) =
+      , preprocessor: Preprocessor = Preprocessor()): (Factory, Preprocessor) =
+    // TODO: close source
     staffFactory(fromFile(fileName, encoding).mkString, factory, preprocessor, Some(fileName))
 
   // TODO:  scaladoc
   def staffFactoryFromResource(path: String, encoding: String = DefaultEnc, factory: Factory = Factory()
-      , preprocessor: Preprocessor = Preprocessor()) =
+      , preprocessor: Preprocessor = Preprocessor()): (Factory, Preprocessor) =
     staffFactoryFromStream(getClass.getClassLoader.getResourceAsStream(path), encoding, factory, preprocessor, Some(path))
 
   // TODO:  scaladoc
   def staffFactoryFromStream(stream: java.io.InputStream, encoding: String = DefaultEnc, factory: Factory = Factory()
-      , preprocessor: Preprocessor = Preprocessor(), src: Option[String] = None) =
+      , preprocessor: Preprocessor = Preprocessor(), src: Option[String] = None): (Factory, Preprocessor) =
     staffFactory(fromInputStream(stream, encoding).mkString, factory, preprocessor, src)
 }

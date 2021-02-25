@@ -2,7 +2,7 @@ package com.example.hello
 
 class HelloWorld(message: String)
 {
-  def printMessage = {
+  def printMessage() = {
     println(s"Your Message : $message")
   }
 }
