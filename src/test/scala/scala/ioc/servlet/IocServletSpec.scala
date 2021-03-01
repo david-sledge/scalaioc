@@ -133,6 +133,7 @@ class IocServletSpec extends FlatSpec with Matchers {
 
     val outputStream = new java.io.ByteArrayOutputStream
     iocServlet.service(new InjectableHttpServletRequest(
+      pathInfo = "xml",
     ), new InjectableHttpServletResponse(
       outputStream = new scala.servlet.InjectableServletOutputStream(
         write = outputStream.write(_)
@@ -143,11 +144,14 @@ class IocServletSpec extends FlatSpec with Matchers {
       flushBuffer = () => (),
     ))
 
-    outputStream.toString shouldBe """<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>IoC Servlet Example</title></head><body><form action="" method="get"><input type="text" name="name"></input></form></body></html>"""
+    outputStream.toString shouldBe """<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html>""" +
+      """<html xmlns="http://www.w3.org/1999/xhtml"><head><title>IoC Servlet Example</title></head><body>""" +
+      """<form action="" method="get"><input type="text" name="name"></input></form></body></html>"""
     outputStream.reset()
 
     iocServlet.service(new InjectableHttpServletRequest(
       paramterMap = Map("name" -> Array("Scala")),
+      pathInfo = "json",
     ), new InjectableHttpServletResponse(
       outputStream = new scala.servlet.InjectableServletOutputStream(
         write = outputStream.write(_)
@@ -157,6 +161,8 @@ class IocServletSpec extends FlatSpec with Matchers {
       setLocale = locale => {},
       flushBuffer = () => (),
     ))
+
+    outputStream.toString shouldBe "{\"int\":2,\"2.2\":2.2,\"true\":true,\"string\":\"2 None false 2.2\",\"bottom\":null,\"array\":[]}"
 
     iocServlet.destroy()
 

@@ -1,0 +1,10 @@
+`namespace|scalaioc.json`
+
+`#{}`(
+  `int` = 2,
+  `2.2` = 2.2,
+  `true` = true,
+  `string` = "2 None false 2.2",
+  bottom = None,
+  array = `#[]`(),
+)

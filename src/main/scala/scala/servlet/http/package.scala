@@ -83,8 +83,8 @@ package object http {
       if (handler.isEmpty) allow else allow + method
 
   def createRequestHandler(
-                            methodMap: Map[String, Map[Any, Any] => Unit] = Map.empty,
-                            getLastModified: Map[Any, Any] => Long = (_: Map[Any, Any]) => -1,
+    methodMap: Map[String, Map[Any, Any] => Unit] = Map.empty,
+    getLastModified: Map[Any, Any] => Long = (_: Map[Any, Any]) => -1,
   )(
     implicit getTransaction: HttpServletTransactionTypeClass[Map[Any, Any]]
   ): Map[Any, Any] => Unit = {

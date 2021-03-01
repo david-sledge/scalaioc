@@ -3,4 +3,4 @@
 `#def` ("scalaioc.servlet.http", "methods", scala.servlet.http.ioc.ppm.postMethodMap _)
 `#def` ("scalaioc.servlet.http", "http", scala.servlet.http.ioc.ppm.postMethodHandlersJob _)
 `#def` ("scalaioc.servlet.http", "htmlResp", scala.servlet.http.ioc.ppm.postHtmlPageResponseJob _)
-//`#def` ("scalaioc.servlet.http", "jsonResp", scala.servlet.http.ioc.ppm.postJsonPageResponseJob _)
+`#def` ("scalaioc.servlet.http", "jsonResp", scala.servlet.http.ioc.ppm.postJsonResponseJob _)

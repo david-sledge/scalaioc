@@ -12,4 +12,9 @@ package object continuation {
   }
 
   final case class EitherC[L, R, A](onLeft: L => A, onRight: R => A)
+
+  def fix[A](f: (=> A) => A): A = {
+    lazy val a: A = f(a)
+    a
+  }
 }

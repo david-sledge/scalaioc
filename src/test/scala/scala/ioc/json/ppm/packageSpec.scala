@@ -16,18 +16,6 @@ class packageSpec extends FlatSpec with Matchers {
     preprocessor
   }
 
-//  val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox(options = "")
-//
-//  "JSON worker defs" should "expand to AST that streams out JSON" in {
-//
-//    val tree = preprocessor.transformTree(scala.ioc.ppm.toWorker(q"""
-//`#scalaioc.json#json`(2.2)
-//"""), tb, None)
-//    println(tree)
-//    tb.compile(tree)
-//
-//  }
-
   "JSON worker defs" should "output using a JSON writer" in {
 
     def test(conf: String, expected: String) = {

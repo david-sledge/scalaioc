@@ -10,6 +10,7 @@ import java.util.Hashtable
 final class InjectableHttpServletRequest(
   method: => String = "GET",
   protocol: => String = "HTTP/1.1",
+  pathInfo: => String = "",
   requestUri: => String = ???,
   headers: => Map[String, Array[String]] = Map.empty,
   paramterMap: Map[String, Array[String]] = Map.empty,
@@ -52,7 +53,7 @@ final class InjectableHttpServletRequest(
   def getMethod(): String = method
   def getPart(x$1: String): javax.servlet.http.Part = ???
   def getParts(): java.util.Collection[javax.servlet.http.Part] = ???
-  def getPathInfo(): String = ???
+  def getPathInfo(): String = pathInfo
   def getPathTranslated(): String = ???
   def getQueryString(): String = ???
   def getRemoteUser(): String = ???

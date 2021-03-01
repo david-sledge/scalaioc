@@ -111,4 +111,44 @@ Map[String, Map[Any, Any] => Unit](
 """
   }
 
+  def postJsonResponseJob(namespaceName: Option[String], localName: String)
+                             (macroArgs: MacroArgs): Tree = {
+
+    val MacroArgs(exprOpt, _, args, _, _) = macroArgs
+    val ProcessedArgs(named, _, _, _) = validateThisExprAndArgs(
+      exprOpt,
+      args,
+      ListSet("page"),
+      ListSet(
+        "status",
+        "enc",
+      ),
+    )
+
+    q"""
+{
+  import javax.servlet.http._
+  import com.fasterxml.jackson.core._
+  val resp: HttpServletResponse = `#scalaioc#$$`("resp")
+
+  `#scalaioc#let`(
+    "enc" -> ${named.getOrElse("enc", q""""utf-8"""")},
+    "jsonWriter" ->
+      new JsonFactory().createGenerator(
+        new java.io.OutputStreamWriter(
+          resp.getOutputStream,
+          java.nio.charset.Charset.forName(`#scalaioc#$$`("enc")))
+      ),
+    {
+      resp.setStatus(${named.getOrElse("status", q"HttpServletResponse.SC_OK")})
+      resp.setContentType(s"application/json; charset=$${`#scalaioc#$$`("enc")}")
+      resp.setLocale(java.util.Locale.getDefault)
+      `#scalaioc.servlet#embed`(${named("page")})
+      `#scalaioc#$$`[JsonGenerator]("jsonWriter").flush
+    }
+  )
+}
+"""
+  }
+
 }

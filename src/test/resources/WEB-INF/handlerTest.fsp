@@ -3,25 +3,36 @@
 
 `#embed`("scala/ioc/servlet/http/macroDefs.fsp")
 `#embed`("scala/ioc/xml/macroDefs.fsp")
+`#embed`("scala/ioc/json/macroDefs.fsp")
 
 "helloView" `#=>` `#h|htmlResp`("/WEB-INF/hello.fsp")
 
 "askNameView" `#=>` `#h|htmlResp`("/WEB-INF/askName.fsp")
 
-"handler" `#=>` scala.continuation.contOption[String, Unit](
+"json" `#=>` `#h|jsonResp`("/WEB-INF/json.fsp")
 
-    // get "name" request parameter
-    `#$`[javax.servlet.http.HttpServletRequest]("req").getParameter("name"),
+"handler" `#=>` {
+  val req = `#scalaioc#$`[javax.servlet.http.HttpServletRequest]("req")
+  if (req.getPathInfo == "json") {
+    `#ref`("json")
+  }
+  else {
+    scala.continuation.contOption[String, Unit](
 
-    // name parameter has not been supplied: ask
-    `#ref`[Unit]("askNameView"),
+      // get "name" request parameter
+      `#$`[javax.servlet.http.HttpServletRequest]("req").getParameter("name"),
 
-    // name parameter has been supplied: say "hello"
-    name => `#let`(
-      "name" -> name,
-      `#ref`("helloView"),
-    ),
-  )
+      // name parameter has not been supplied: ask
+      `#ref`[Unit]("askNameView"),
+
+      // name parameter has been supplied: say "hello"
+      name => `#let`(
+        "name" -> name,
+        `#ref`("helloView"),
+      ),
+    )
+  }
+}
 
 `#h|http`(
   `#h|methods`(
